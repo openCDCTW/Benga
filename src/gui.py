@@ -2,16 +2,20 @@ import sys
 from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
 from utils import *
-import contigAnnotation
+import algorithms
+
+
+def set_enable(widgets, enabled):
+    for widget in widgets.values():
+        widget.setEnabled(enabled)
 
 
 class Window(QWidget):
     def __init__(self):
         super(Window, self).__init__()
-        self.createLayout()
+        self.createMainLayout()
 
-    def createLayout(self):
-
+    def createMainLayout(self):
         layout = QVBoxLayout()
         layout.addLayout(self.createTitle1Layout())
         layout.addLayout(self.createInput1Layout())
@@ -38,37 +42,39 @@ class Window(QWidget):
         return layout
 
     def createInput1Layout(self):
-        self.label1 = QLabel("Directory:")
-        self.label1.setFixedSize(80, 30)
-        self.line1 = QLineEdit()
-        self.browseButton1 = QPushButton("&Browse...")
-        self.browseButton1.setFixedSize(80, 30)
-        self.browseButton1.clicked.connect(lambda: self.browse(self.line1))
+        self.inputPanel1 = {}
+        self.inputPanel1["label"] = QLabel("Directory:")
+        self.inputPanel1["label"].setFixedSize(80, 30)
+        self.inputPanel1["line"] = QLineEdit()
+        self.inputPanel1["browseButton"] = QPushButton("&Browse...")
+        self.inputPanel1["browseButton"].setFixedSize(80, 30)
+        self.inputPanel1["browseButton"].clicked.connect(lambda: self.browse(self.inputPanel1))
 
         layout = QHBoxLayout()
-        layout.addWidget(self.label1)
-        layout.addWidget(self.line1)
-        layout.addWidget(self.browseButton1)
+        layout.addWidget(self.inputPanel1["label"])
+        layout.addWidget(self.inputPanel1["line"])
+        layout.addWidget(self.inputPanel1["browseButton"])
         return layout
 
     def createInput2Layout(self):
-        self.label2 = QLabel("Directory:")
-        self.label2.setFixedSize(80, 30)
-        self.line2 = QLineEdit()
-        self.browseButton2 = QPushButton("&Browse...")
-        self.browseButton2.setFixedSize(80, 30)
-        self.browseButton2.clicked.connect(lambda: self.browse(self.line2))
+        self.inputPanel2 = {}
+        self.inputPanel2["label"] = QLabel("Directory:")
+        self.inputPanel2["label"].setFixedSize(80, 30)
+        self.inputPanel2["line"] = QLineEdit()
+        self.inputPanel2["browseButton"] = QPushButton("&Browse...")
+        self.inputPanel2["browseButton"].setFixedSize(80, 30)
+        self.inputPanel2["browseButton"].clicked.connect(lambda: self.browse(self.inputPanel2))
 
         layout = QHBoxLayout()
-        layout.addWidget(self.label2)
-        layout.addWidget(self.line2)
-        layout.addWidget(self.browseButton2)
+        layout.addWidget(self.inputPanel2["label"])
+        layout.addWidget(self.inputPanel2["line"])
+        layout.addWidget(self.inputPanel2["browseButton"])
         return layout
 
     def createSubmit1Layout(self):
         self.submitButton1 = QPushButton("&Submit")
         self.submitButton1.setFixedSize(80, 30)
-        self.submitButton1.clicked.connect(lambda: self.submit(self.line1))
+        self.submitButton1.clicked.connect(lambda: self.submit(self.inputPanel1))
 
         layout = QHBoxLayout()
         layout.addWidget(self.submitButton1)
@@ -78,35 +84,30 @@ class Window(QWidget):
     def createSubmit2Layout(self):
         self.submitButton2 = QPushButton("&Submit")
         self.submitButton2.setFixedSize(80, 30)
-        self.submitButton2.clicked.connect(lambda: self.submit(self.line2))
+        self.submitButton2.clicked.connect(lambda: self.submit(self.inputPanel2))
 
         layout = QHBoxLayout()
         layout.addWidget(self.submitButton2)
         layout.setAlignment(Qt.AlignRight)
         return layout
 
-    def browse(self, line):
+    def browse(self, panel):
         dialog = QFileDialog()
         dialog.setFileMode(QFileDialog.Directory)
         dialog.setOption(QFileDialog.ShowDirsOnly, True)
         directory = dialog.getExistingDirectory(dialog, "Find Directory", QDir.currentPath())
 
         if directory:
-            line.setText(directory)
+            panel["line"].setText(directory)
 
-    def submit(self, line):
-        source_dir = str(line.text())
+    def submit(self, panel):
+        source_dir = str(panel["line"].text())
         parent_dir = os.path.dirname(source_dir)
         working_dir = os.path.join(parent_dir, "temp")
         clear_folder(working_dir)
-        self.line1.setEnabled(False)
-        self.submitButton1.setEnabled(False)
-        contigAnnotation.main(working_dir, source_dir)
-
-    @classmethod
-    def enable(cls, widgets, enabled):
-        for w in widgets.values():
-            w.setEnabled(enabled)
+        set_enable(panel, False)
+        algorithms.main(working_dir, source_dir)
+        set_enable(panel, True)
 
 
 if __name__ == "__main__":

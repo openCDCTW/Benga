@@ -1,4 +1,3 @@
-import shutil
 from collections import OrderedDict, defaultdict
 import pandas as pd
 from Bio import SeqIO
