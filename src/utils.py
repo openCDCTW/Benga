@@ -1,5 +1,6 @@
 import os
 import shutil
+import multiprocessing
 from functools import reduce
 from Bio.Alphabet import generic_dna
 from Bio.Seq import Seq
@@ -61,30 +62,51 @@ def replace_id(record, newid):
     return new_record(newid, str(record.seq))
 
 
-def form_prokka_cmd(newname):
+def use_docker(docker, path, procs=2):
+    def method_decorator(func):
+        def wrapper(items):
+            cmd = "docker run --rm -v {path}:/data {docker} python /program/batch.py {procs}".format(
+                **locals())
+            cmds = " ".join(map(func, items))
+            os.system(cmd + " " + cmds)
+        return wrapper
+    return method_decorator
+
+
+def use_parallel(procs=4):
+    def method_decorator(func):
+        def wrapper(items):
+            pool = multiprocessing.Pool(procs)
+            cmds = list(map(func, items))
+            pool.map(os.system, cmds)
+            pool.close()
+            pool.join()
+        return wrapper
+    return method_decorator
+
+
+@use_parallel(4)
+def prokka(newname):
     name, ext = newname.split(".")
-    return "'prokka --outdir /data/Assembly_ann/{name} --prefix {name} /data/Assembly/{newname}'".format(**locals())
+    return "prokka --outdir /data/Assembly_ann/{name} --prefix {name} /data/Assembly/{newname}".format(**locals())
 
 
-def annotate(newnames, path, procs=2):
-    cmd = "docker run --rm -v {path}:/data a504082002/prokka python /program/batch.py {procs}".format(**locals())
-    cmds = " ".join(map(form_prokka_cmd, newnames))
-    os.system(cmd + " " + cmds)
-
-
-def form_fastx_cmd(locus_file):
+@use_parallel(4)
+def fastx(locus_file):
     locus, _ = locus_file.split(".")
-    return "'fastx_collapser -i /data/{locus_file} -o /data/{locus}'".format(**locals())
-
-
-def run_fastx(locus_files, path, procs=2):
-    print(locus_files)
-    cmd = "docker run --rm -v {path}:/data a504082002/fastx-toolkit python /program/batch.py {procs}".format(**locals())
-    cmds = " ".join(map(form_fastx_cmd, locus_files))
-    os.system(cmd + " " + cmds)
+    return "fastx_collapser -i /data/locusfiles/{locus_file} -o /data/locusfiles/{locus}".format(**locals())
 
 
 def sort_dict(d):
     a = [(k, v) for k, v in d.items()]
     return sorted(a, key=lambda x: x[0])
+
+
+def makeblastdb(input, dbtype, output):
+    return "makeblastdb -in {input} -dbtype {dbtype} -out {output}".format(**locals())
+
+
+def blastn(num_threads, query, db, output, outfmt):
+    return "blastn -num_threads {num_threads} -query {query} -db {db} -out {output} -outfmt {outfmt}".format(**locals())
+
 
