@@ -2,13 +2,13 @@ import sys
 from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
 from .utils import *
-from . import algorithms
 
 
-def seqtool(input_dir, output_dir):
-    docker = "docker run --rm -v {input_dir}:/input -v {output_dir}:/output a504082002/seqtool-python3".format(**locals())
-    py = "python3 /program/algorithms.py"
+def docker_seqtool(input_dir, output_dir, action):
+    docker = "docker run --rm -v {input_dir}:/input -v {output_dir}:/output a504082002/seqtool-python3:test".format(**locals())
+    py = "python3 /program/algorithms.py {action}".format(**locals())
     os.system(docker + " " + py)
+
 
 def set_enable(widgets, enabled):
     for widget in widgets.values():
@@ -108,21 +108,22 @@ class Window(QWidget):
     def submit1(self):
         source_dir = str(self.inputPanel1["line"].text())
         parent_dir = os.path.dirname(source_dir)
-        temp_dir = os.path.join(parent_dir, "temp")
-        self.database_dir = os.path.join(parent_dir, "db")
-        clear_folder(temp_dir)
-        clear_folder(self.database_dir)
+        self.output_dir = os.path.join(parent_dir, "output")
+        database_dir = joinpath(self.output_dir, "db")
+        clear_folder(self.output_dir)
+        clear_folder(database_dir)
+
         set_enable(self.inputPanel1, False)
-        # algorithms.make_database(temp_dir, source_dir, self.database_dir)
-        seqtool(source_dir, self.database_dir)
+        docker_seqtool(source_dir, database_dir, "make_database")
         set_enable(self.inputPanel1, True)
 
     def submit2(self):
-        self.query_dir = str(self.inputPanel2["line"].text())
-        output_dir = os.path.join(os.path.dirname(self.query_dir), "output")
-        clear_folder(output_dir)
+        query_dir = str(self.inputPanel2["line"].text())
+        tree_dir = joinpath(self.output_dir, "tree")
+        clear_folder(tree_dir)
+
         set_enable(self.inputPanel2, False)
-        algorithms.build_tree(self.database_dir, self.query_dir, output_dir)
+        docker_seqtool(query_dir, self.output_dir, "build_tree")
         set_enable(self.inputPanel2, True)
 
 

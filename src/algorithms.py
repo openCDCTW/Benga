@@ -1,15 +1,18 @@
+import sys
 import json
 from collections import defaultdict, OrderedDict
 import functional
 
 import pandas as pd
+import matplotlib as mpl
+mpl.use("Agg")
 import matplotlib.pyplot as plt
-from matplotlib.backends.backend_pdf import PdfPages
 import fastcluster
 from scipy.cluster.hierarchy import dendrogram, to_tree
 from Bio import SeqIO
 
 from utils import *
+sys.setrecursionlimit(10000)
 
 
 namemap = None
@@ -24,10 +27,10 @@ SCHEMES = ["locusAP_core", "locusAP_core_10p_dispensable", "locusAP_core_20p_dis
            "wgMLST_pan", "wgMLST_unique"]
 
 
-def annotate_configs(temp_dir, source_dir, output_dir, number_per_docker=10):
+def annotate_configs(temp_dir, input_dir, database_dir, number_per_docker=10):
     print("## 02_reformatContigFile ##")
 
-    filenames = parse_filenames(source_dir)
+    filenames = parse_filenames(input_dir)
     working_dir = joinpath(temp_dir, "Assembly")
     create_if_not_exist(working_dir)
 
@@ -36,7 +39,7 @@ def annotate_configs(temp_dir, source_dir, output_dir, number_per_docker=10):
         newname = "Assembly_" + str(i) + ".fa"
         namemap[oldname] = newname
         with open(joinpath(working_dir, newname), "w") as file:
-            for j, contig in enumerate(SeqIO.parse(joinpath(source_dir, oldname), "fasta"), 1):
+            for j, contig in enumerate(SeqIO.parse(joinpath(input_dir, oldname), "fasta"), 1):
                 seqid = "A_{i}::C_{j}".format(**locals())
                 SeqIO.write(replace_id(contig, seqid), file, "fasta")
 
@@ -90,13 +93,13 @@ def annotate_configs(temp_dir, source_dir, output_dir, number_per_docker=10):
                 if seq_type != "CDS":
                     noncds[name].append(prokkaid)
 
-    with open(joinpath(output_dir, "nonCDS.json"), "w") as file:
+    with open(joinpath(database_dir, "nonCDS.json"), "w") as file:
         file.write(json.dumps(noncds))
 
     print("--Finished")
 
 
-def make_profiles(temp_dir, output_dir, threads=2, ident_min=95, number_per_docker=500):
+def make_profiles(temp_dir, database_dir, threads=2, ident_min=95, number_per_docker=500):
     print("## 01_reformat_ffn ##")
 
     ffn_dir = joinpath(temp_dir, "FFN")
@@ -163,11 +166,9 @@ def make_profiles(temp_dir, output_dir, threads=2, ident_min=95, number_per_dock
     for locus_file in locus_files:
         file_path = joinpath(locus_dir, locus_file.split(".")[0])
 
-        records = functional.seq(
-            SeqIO.parse(file_path, "fasta")
-        ).map(
-            lambda x: new_record(x.id.split("-")[0], str(x.seq))
-        ).to_list()
+        records = (functional.seq(SeqIO.parse(file_path, "fasta"))
+                   .map(lambda x: new_record(x.id.split("-")[0], str(x.seq)))
+                   .to_list())
 
         SeqIO.write(records, file_path, "fasta")
 
@@ -186,9 +187,9 @@ def make_profiles(temp_dir, output_dir, threads=2, ident_min=95, number_per_dock
         refseqs[filename] = maxlen_seq
 
     records = [new_record(key, value) for key, value in refseqs.items()]
-    SeqIO.write(records, joinpath(output_dir, "panRefSeq.fa"), "fasta")
+    SeqIO.write(records, joinpath(database_dir, "panRefSeq.fa"), "fasta")
 
-    with open(joinpath(output_dir, "panRefSeq.json"), "w") as file:
+    with open(joinpath(database_dir, "panRefSeq.json"), "w") as file:
         file.write(json.dumps(refseqs))
 
     print("--Finished")
@@ -249,17 +250,17 @@ def make_profiles(temp_dir, output_dir, threads=2, ident_min=95, number_per_dock
 
     print("## 08_output ##")
 
-    shutil.copy(joinpath(temp_dir, "roary", "summary_statistics.txt"), output_dir)
-    shutil.copy(joinpath(temp_dir, "locusmapping.txt"), output_dir)
-    shutil.move(scheme_dir, output_dir)
+    shutil.copy(joinpath(temp_dir, "roary", "summary_statistics.txt"), database_dir)
+    shutil.copy(joinpath(temp_dir, "locusmapping.txt"), database_dir)
+    shutil.move(scheme_dir, database_dir)
     for file in locus_files:
         if file.endswith(".tmp"):
             os.remove(joinpath(locus_dir, file))
-    shutil.move(locus_dir, output_dir)
+    shutil.move(locus_dir, database_dir)
 
     print("--Finished")
 
-    locusfiles_dir = joinpath(output_dir, "locusfiles")
+    locusfiles_dir = joinpath(database_dir, "locusfiles")
     for filename in os.listdir(locusfiles_dir):
         handle = SeqIO.parse(joinpath(locusfiles_dir, filename), "fasta")
         records = [new_record(filename + "::" + record.id, str(record.seq)) for record in handle]
@@ -278,7 +279,7 @@ def query_blast(m, dest_dir, dbsource, query, aligcov_cut, pident_cut, seqlen, t
     result = pd.read_csv(blast_out, sep="\t", header=None, names=cols)
     result["qlen"] = list(map(lambda x: seqlen[x], result["qseqid"]))
     result["aligcov"] = (result["length"] - result["gapopen"]) / result["qlen"]
-    result = result[result["aligcov"] >= aligcov_cut][result["pident"] >= pident_cut]
+    result = result[(result["aligcov"] >= aligcov_cut) & (result["pident"] >= pident_cut)]
     for index, row in result.iterrows():
         row_elements = [row["aligcov"], row["length"], row["qlen"], row["pident"], row["sseqid"], row["sstart"],
                         row["send"]]
@@ -295,7 +296,7 @@ def maxlen_locus(locus, pair):
         return locus, max(reversed(pair), key=lambda x: x[1])[0]
 
 
-def wg_profiling(temp_dir, input_dir, blastn_threads=2, aligcov_cut=0.5, pident_cut=90):
+def wg_profiling(temp_dir, query_dir, db_dir, blastn_threads=2, aligcov_cut=0.5, pident_cut=90):
     print("## 01_reformatContigFile ##")
 
     assemble_dir = joinpath(temp_dir, "query_assembly")
@@ -303,8 +304,8 @@ def wg_profiling(temp_dir, input_dir, blastn_threads=2, aligcov_cut=0.5, pident_
 
     global namemap
     namemap = {}
-    for i, filename in enumerate(sorted(os.listdir(input_dir)), 1):
-        file = SeqIO.parse(joinpath(input_dir, filename), "fasta")
+    for i, filename in enumerate(sorted(os.listdir(query_dir)), 1):
+        file = SeqIO.parse(joinpath(query_dir, filename), "fasta")
         records = []
         for j, record in enumerate(file, 1):
             newid = "Assembly_{i}::Contig_{j}".format(**locals())
@@ -312,7 +313,7 @@ def wg_profiling(temp_dir, input_dir, blastn_threads=2, aligcov_cut=0.5, pident_
 
         newname = "Assembly_{i}.fa".format(**locals())
         SeqIO.write(records, joinpath(assemble_dir, newname), "fasta")
-        namemap[newname] = filename
+        namemap[newname.split(".")[0]] = filename.split(".")[0]
 
     print("--Finished")
 
@@ -320,7 +321,7 @@ def wg_profiling(temp_dir, input_dir, blastn_threads=2, aligcov_cut=0.5, pident_
 
     scheme_dir = joinpath(temp_dir, "scheme")
     blastquery = joinpath(scheme_dir, "pan.txt")
-    shutil.copytree(joinpath(input_dir, "scheme"), scheme_dir)
+    shutil.copytree(joinpath(db_dir, "scheme"), scheme_dir)
 
     seqlen = {record.id: len(record.seq) for record in SeqIO.parse(blastquery, "fasta")}
     m = [(id, "") for id in seqlen.keys()]
@@ -328,16 +329,13 @@ def wg_profiling(temp_dir, input_dir, blastn_threads=2, aligcov_cut=0.5, pident_
 
     blast_cols = ["qseqid", "sseqid", "pident", "length", "mismatch", "gapopen", "qstart", "qend",
                   "sstart", "send", "evalue", "bitscore"]
-    for filename in os.listdir(assemble_dir):
+    for filename in os.listdir(assemble_dir):  # TODO: parallelize
         m_ = query_blast(m.copy(), temp_dir, joinpath(assemble_dir, filename), blastquery,
                          aligcov_cut, pident_cut, seqlen, blastn_threads, blast_cols)
-        output = functional.pseq(
-            m_.items()
-        ).map(
-            lambda k, v: (k, 1 if len(v) > 1 else 0)
-        ).map(
-            lambda x, hit: x + "\t" + hit
-        ).to_list()
+        output = (functional.seq(m_.items())
+                  .map(lambda x: (x[0], 1 if len(x[1]) > 1 else 0))
+                  .map(lambda x: x[0] + "\t" + str(x[1]))
+                  .to_list())
 
         name = filename.split(".")[0]
         with open(joinpath(temp_dir, "locusAP." + name + ".list"), "w") as file:
@@ -358,20 +356,21 @@ def wg_profiling(temp_dir, input_dir, blastn_threads=2, aligcov_cut=0.5, pident_
         allprofile = defaultdict(list)
         newloc = []
         aldic = {}
+        # TODO: parallelize
         for line in open(joinpath(temp_dir, "locusAP." + qfn2 + ".list"), "r").read().splitlines():
             locus, hits = line.split("\t")
             if hits == "0":
                 allprofile[locus] = [0]
                 newloc.append(locus)
             else:
-                qfile = joinpath(input_dir, "locusfiles", locus + ".new")
+                qfile = joinpath(db_dir, "locusfiles", locus + ".new")
                 for record in SeqIO.parse(qfile, "fasta"):
                     alleleno = record.id.split("::")[1]
                     aldic[(locus, alleleno)] = len(record.seq)
                 os.system("cat {qfile} >> {temp_dir}/qfile.fa".format(**locals()))
 
         os.system(blastn(blastn_threads, joinpath(temp_dir, "qfile.fa"), joinpath(temp_dir, "AssemblyDB_" + qfn2),
-                         joinpath(temp_dir, "blast." + qfn2 + ".out"), "'6 {blast_items}'".format(**locals())))
+                         joinpath(temp_dir, "blast." + qfn2 + ".out"), "'6 {items}'".format(items=" ".join(blast_cols))))
         os.remove(joinpath(temp_dir, "qfile.fa"))
         blast = pd.read_csv(joinpath(temp_dir, "blast." + qfn2 + ".out"), sep="\t", header=None, names=blast_cols)
         blast["loc"] = blast["qseqid"].str.split("::").str[0]
@@ -394,17 +393,10 @@ def wg_profiling(temp_dir, input_dir, blastn_threads=2, aligcov_cut=0.5, pident_
         with open(joinpath(temp_dir, qfn2, "tot.new"), "w") as file:
             file.write("\n".join(drop_duplicate(new_alleles)))
 
-        output = functional.pseq(
-            allprofile.items()
-        ).map(
-            lambda locus, pair: maxlen_locus(locus, pair)
-        ).map(
-            lambda a: sorted(a, key=lambda x: x[0])
-        ).map(
-            lambda locus, pair: str(locus) + "\t" + str(pair)
-        ).to_list()
-        with open(joinpath(temp_dir, "allele." + qfn2 + ".profile"), "w") as file:
-            file.write("\n".join(output))
+        candidate_loci = [maxlen_locus(locus, pair) for locus, pair in allprofile.items()]
+        (functional.seq(sorted(candidate_loci, key=lambda x: x[0]))
+         .map(lambda x: x[0] + "\t" + str(x[1]))
+         .to_file(joinpath(temp_dir, "allele." + qfn2 + ".profile"), delimiter="\n"))
 
     print("--Finished")
 
@@ -420,30 +412,21 @@ def wg_profiling(temp_dir, input_dir, blastn_threads=2, aligcov_cut=0.5, pident_
     for filename in os.listdir(assemble_dir):
         ass = filename.split(".")[0]
         for key, value in scheme.items():
-            locusAP_output = functional.pseq(
-                open(joinpath(temp_dir, "locusAP." + ass + ".list"), "r").read().splitlines()
-            ).map(
-                lambda x: x.split("\t")
-            ).filter(
-                lambda x: x[0] in value
-            ).map(
-                lambda x: x[0] + "\t" + x[1]
-            ).to_list()
+            locusAP_source = joinpath(temp_dir, "locusAP." + ass + ".list")
+            locusAP_sink = joinpath(temp_dir, "locusAP_" + key, "locusAP." + ass + "." + key + ".list")
+            (functional.seq(open(locusAP_source, "r").read().splitlines())
+             .map(lambda x: x.split("\t"))
+             .filter(lambda x: x[0] in value)
+             .map(lambda x: x[0] + "\t" + x[1])
+             .to_file(locusAP_sink, delimiter="\n"))
 
-            wgMLST_output = functional.pseq(
-                open(joinpath(temp_dir, "allele." + ass + ".profile"), "r").read().splitlines()
-            ).map(
-                lambda x: x.split("\t")
-            ).filter(
-                lambda x: x[0] in value
-            ).map(
-                lambda x: x[0] + "\t" + x[1]
-            ).to_list()
-
-            with open("{temp_dir}/locusAP_{key}/locusAP.{ass}.{key}.list".format(**locals()), "w") as file:
-                file.write("\n".join(locusAP_output))
-            with open("{temp_dir}/wgMLST_{key}/allele.{ass}.{key}.list".format(**locals()), "w") as file:
-                file.write("\n".join(wgMLST_output))
+            wgMLST_source = joinpath(temp_dir, "allele." + ass + ".profile")
+            wgMLST_sink = joinpath(temp_dir, "wgMLST_" + key, "allele." + ass + "." + key + ".list")
+            (functional.seq(open(wgMLST_source, "r").read().splitlines())
+             .map(lambda x: x.split("\t"))
+             .filter(lambda x: x[0] in value)
+             .map(lambda x: x[0] + "\t" + x[1])
+             .to_file(wgMLST_sink, delimiter="\n"))
 
     print("--Finished")
 
@@ -464,15 +447,15 @@ def wg_profiling(temp_dir, input_dir, blastn_threads=2, aligcov_cut=0.5, pident_
     for name in dir_names:
         locusap_name = joinpath(locusap_dir, "locusAP" + name)
         wgmlst_name = joinpath(wgmlst_dir, "wgMLST" + name)
-        os.system("ls {locusap_name} | grep 'locusAP'> " + joinpath(locusap_name, "files.list"))
-        os.system("ls {wgmlst_name} | grep 'allele'> " + joinpath(wgmlst_name, "files.list"))
+        os.system("ls " + locusap_name + " | grep 'locusAP'> " + joinpath(locusap_name, "files.list"))
+        os.system("ls " + wgmlst_name + " | grep 'allele'> " + joinpath(wgmlst_name, "files.list"))
 
     os.system("rm -rf Assembly*")
 
     print("--Finished")
 
 
-def getNewick(node, newick, parentdist, leaf_names):
+def linkage2newick(node, newick, parentdist, leaf_names):
     if node.is_leaf():
         return "{}:{:.2f}{}".format(leaf_names[node.id], parentdist - node.dist, newick)
     else:
@@ -480,8 +463,8 @@ def getNewick(node, newick, parentdist, leaf_names):
             newick = "):{:.2f}{}".format(parentdist - node.dist, newick)
         else:
             newick = ");"
-        newick = getNewick(node.get_left(), newick, node.dist, leaf_names)
-        newick = getNewick(node.get_right(), ",{}".format(newick), node.dist, leaf_names)
+        newick = linkage2newick(node.get_left(), newick, node.dist, leaf_names)
+        newick = linkage2newick(node.get_right(), ",{}".format(newick), node.dist, leaf_names)
         newick = "({}".format(newick)
         return newick
 
@@ -503,51 +486,58 @@ def clustering(temp_dir, output_dir, scheme_selection):
         file.write("\n".join(nodeLabel))
 
     # collect profiles
-    matrix = pd.DataFrame()
+    columns = []
     for filename in open(joinpath(target_dir, "files.list"), "r").read().splitlines():
-        column = pd.Series()
-        for line in open(joinpath(target_dir, filename)).read().splitlines():
-            if line == "":
-                continue
-            locus, hit = line.split("\t")
-            column[locus] = True if hit != 0 else False
         sample = filename.split(".")[1]
-        matrix[sample] = column
+        data = (functional.seq(open(joinpath(target_dir, filename)).read().splitlines())
+                .map(lambda line: tuple(line.split("\t")))
+                .map(lambda x: (x[0], True if x[1] != "0" else False))
+                .to_dict())
+        columns.append(pd.Series(data, name=sample))
+
+    matrix = pd.concat(columns, axis=1)
 
     # save profiles
     matrix.to_csv(joinpath(output_dir, "profiles.tsv"), sep="\t")
 
     # build phylogenetic tree
-    Y = fastcluster.linkage(matrix, method="average", metric="hamming")
+    Y = fastcluster.linkage(matrix.T, method="average", metric="hamming")
+
+    tree_dir = joinpath(output_dir, "tree")
+    clear_folder(tree_dir)
 
     # save to pdf
-    fig = plt.figure()
-    dendrogram(Y, orientation="left")
-    pp = PdfPages(joinpath(output_dir, "phylogenetic_tree.pdf"))
-    pp.savefig(fig)
+    fig = plt.figure(figsize=(9, 16))
+    dendrogram(Y, orientation="left", labels=matrix.columns)
+    plt.savefig(joinpath(tree_dir, "phylogenetic_tree.png"))
+    plt.savefig(joinpath(tree_dir, "phylogenetic_tree.pdf"))
+    plt.savefig(joinpath(tree_dir, "phylogenetic_tree.svg"))
     plt.close()
 
     # save to newick
     tree = to_tree(Y, False)
-    newick = getNewick(tree, "", tree.dist, leaf_names=matrix.columns)
-    with open(joinpath(output_dir, "phylogenetic_tree.newick"), "w") as file:
+    newick = linkage2newick(tree, "", tree.dist, list(matrix.columns))
+    with open(joinpath(tree_dir, "phylogenetic_tree.newick"), "w") as file:
         file.write(newick)
 
 
-def make_database(temp_dir, source_dir, output_dir):
-    annotate_configs(temp_dir, source_dir, output_dir)
-    make_profiles(temp_dir, output_dir)
+def make_database(temp_dir, source_dir, database_dir):
+    annotate_configs(temp_dir, source_dir, database_dir)
+    make_profiles(temp_dir, database_dir)
 
 
-def build_tree(database_dir, query_dir, output_dir, scheme_selection):
-    wg_profiling(database_dir, query_dir)
-    clustering(database_dir, output_dir, scheme_selection)
+def build_tree(temp_dir, query_dir, output_dir, scheme_selection):
+    wg_profiling(temp_dir, query_dir, joinpath(output_dir, "db"))
+    clustering(temp_dir, output_dir, scheme_selection)
 
 
 if __name__ == "__main__":
-    # dest_dir = sys.argv[1]
-    # source_dir = sys.argv[2]
+    action = sys.argv[1]
     scheme_selection = "locusAP_core_100p_dispensable"
-    # make_database("/data", "/input", "/output")
-    build_tree(dest_dir, scheme_selection)
+    if action == "make_database":
+        make_database("/data", "/input", "/output")
+    elif action == "build_tree":
+        build_tree("/data", "/input", "/output", scheme_selection)
+    else:
+        print("Error action!!")
 
