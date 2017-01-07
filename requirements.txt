@@ -1,0 +1,8 @@
+numpy
+scipy
+pandas
+pyfunctional
+fastcluster
+biopython
+PySide
+ete3
