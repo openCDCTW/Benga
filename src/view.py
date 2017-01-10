@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'gui/design.ui'
 #
-# Created: Sat Jan  7 23:44:22 2017
+# Created: Mon Jan  9 14:22:26 2017
 #      by: pyside-uic 0.2.15 running on PySide 1.2.4
 #
 # WARNING! All changes made in this file will be lost!
@@ -34,6 +34,7 @@ class Ui_mainTab(object):
         self.joblist_1.setGeometry(QtCore.QRect(410, 120, 101, 201))
         self.joblist_1.setObjectName("joblist_1")
         mainTab.addTab(self.panGenomeTab, "")
+
         self.profilerTab = QtGui.QWidget()
         self.profilerTab.setObjectName("profilerTab")
         self.profileSelectText = QtGui.QTextEdit(self.profilerTab)
@@ -55,23 +56,15 @@ class Ui_mainTab(object):
         self.profileSearcher.setGeometry(QtCore.QRect(410, 80, 101, 29))
         self.profileSearcher.setObjectName("profileSearcher")
         mainTab.addTab(self.profilerTab, "")
+
         self.dendrogramTab = QtGui.QWidget()
         self.dendrogramTab.setObjectName("dendrogramTab")
-        self.treeViewer = QtGui.QGraphicsView(self.dendrogramTab)
-        self.treeViewer.setGeometry(QtCore.QRect(30, 80, 361, 291))
-        self.treeViewer.setObjectName("treeViewer")
         self.plottingSelector = QtGui.QPushButton(self.dendrogramTab)
         self.plottingSelector.setGeometry(QtCore.QRect(410, 30, 101, 29))
         self.plottingSelector.setObjectName("plottingSelector")
         self.plottingSelectText = QtGui.QTextEdit(self.dendrogramTab)
         self.plottingSelectText.setGeometry(QtCore.QRect(30, 30, 361, 31))
         self.plottingSelectText.setObjectName("plottingSelectText")
-        self.toPdfButton = QtGui.QPushButton(self.dendrogramTab)
-        self.toPdfButton.setGeometry(QtCore.QRect(410, 290, 101, 29))
-        self.toPdfButton.setObjectName("toPdfButton")
-        self.toNewickButton = QtGui.QPushButton(self.dendrogramTab)
-        self.toNewickButton.setGeometry(QtCore.QRect(410, 340, 101, 29))
-        self.toNewickButton.setObjectName("toNewickButton")
         mainTab.addTab(self.dendrogramTab, "")
 
         self.retranslateUi(mainTab)
@@ -89,25 +82,20 @@ class Ui_mainTab(object):
         mainTab.setTabOrder(self.joblist_2, self.runButton)
         mainTab.setTabOrder(self.runButton, self.plottingSelectText)
         mainTab.setTabOrder(self.plottingSelectText, self.plottingSelector)
-        mainTab.setTabOrder(self.plottingSelector, self.treeViewer)
-        mainTab.setTabOrder(self.treeViewer, self.toPdfButton)
-        mainTab.setTabOrder(self.toPdfButton, self.toNewickButton)
 
     def retranslateUi(self, mainTab):
         mainTab.setWindowTitle(QtGui.QApplication.translate("mainTab", "wgMLST GUI", None, QtGui.QApplication.UnicodeUTF8))
-        self.fileSelectText.setPlaceholderText(QtGui.QApplication.translate("mainTab", "select files for buidling database...", None, QtGui.QApplication.UnicodeUTF8))
-        self.fileSelector.setText(QtGui.QApplication.translate("mainTab", "Select Files", None, QtGui.QApplication.UnicodeUTF8))
+        self.fileSelectText.setProperty("placeholderText", QtGui.QApplication.translate("mainTab", "select files for buidling database...", None, QtGui.QApplication.UnicodeUTF8))
+        self.fileSelector.setText(QtGui.QApplication.translate("mainTab", "Select Folder", None, QtGui.QApplication.UnicodeUTF8))
         self.fileSubmitter.setText(QtGui.QApplication.translate("mainTab", "Submit", None, QtGui.QApplication.UnicodeUTF8))
         self.jobFetcher.setText(QtGui.QApplication.translate("mainTab", "Fetch Job", None, QtGui.QApplication.UnicodeUTF8))
         mainTab.setTabText(mainTab.indexOf(self.panGenomeTab), QtGui.QApplication.translate("mainTab", "Pan-genome DB", None, QtGui.QApplication.UnicodeUTF8))
-        self.profileSelectText.setPlaceholderText(QtGui.QApplication.translate("mainTab", "select profile...", None, QtGui.QApplication.UnicodeUTF8))
-        self.profileSelector.setText(QtGui.QApplication.translate("mainTab", "Select Profile", None, QtGui.QApplication.UnicodeUTF8))
+        self.profileSelectText.setProperty("placeholderText", QtGui.QApplication.translate("mainTab", "select genome fasta folder...", None, QtGui.QApplication.UnicodeUTF8))
+        self.profileSelector.setText(QtGui.QApplication.translate("mainTab", "Select Folder", None, QtGui.QApplication.UnicodeUTF8))
         self.runButton.setText(QtGui.QApplication.translate("mainTab", "Run", None, QtGui.QApplication.UnicodeUTF8))
-        self.profileSearcher.setText(QtGui.QApplication.translate("mainTab", "Search Profiles", None, QtGui.QApplication.UnicodeUTF8))
+        self.profileSearcher.setText(QtGui.QApplication.translate("mainTab", "Use Database", None, QtGui.QApplication.UnicodeUTF8))
         mainTab.setTabText(mainTab.indexOf(self.profilerTab), QtGui.QApplication.translate("mainTab", "wgMLST Profiler", None, QtGui.QApplication.UnicodeUTF8))
         self.plottingSelector.setText(QtGui.QApplication.translate("mainTab", "Select Profile", None, QtGui.QApplication.UnicodeUTF8))
-        self.plottingSelectText.setPlaceholderText(QtGui.QApplication.translate("mainTab", "select profile for plotting...", None, QtGui.QApplication.UnicodeUTF8))
-        self.toPdfButton.setText(QtGui.QApplication.translate("mainTab", "Save as pdf", None, QtGui.QApplication.UnicodeUTF8))
-        self.toNewickButton.setText(QtGui.QApplication.translate("mainTab", "Save as newick", None, QtGui.QApplication.UnicodeUTF8))
+        self.plottingSelectText.setProperty("placeholderText", QtGui.QApplication.translate("mainTab", "select profile for plotting...", None, QtGui.QApplication.UnicodeUTF8))
         mainTab.setTabText(mainTab.indexOf(self.dendrogramTab), QtGui.QApplication.translate("mainTab", "Dendrogram", None, QtGui.QApplication.UnicodeUTF8))
 
