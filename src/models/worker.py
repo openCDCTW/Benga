@@ -1,4 +1,5 @@
 import threading
+from concurrent.futures import ProcessPoolExecutor
 from PySide import QtCore
 
 
@@ -39,4 +40,3 @@ class ThreadPool(QtCore.QObject):
     def start(self, f, args):
         self.pool.start(Worker(f, args))
         self.pool.waitForDone()
-

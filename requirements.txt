@@ -5,4 +5,5 @@ pyfunctional
 fastcluster
 biopython
 PySide
+docker
 ete3

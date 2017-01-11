@@ -3,12 +3,12 @@ import json
 import os
 import shutil
 from collections import defaultdict
-
 import functional
 import pandas as pd
 from Bio import SeqIO
+from concurrent.futures import ProcessPoolExecutor
 
-from src.utils import files, seq, docker
+from src.utils import files, seq, docker, cmd
 
 
 def parse_filenames(path, ext=".fna"):
@@ -139,7 +139,7 @@ def create_new_locusfiles(database_dir):
         SeqIO.write(records, files.joinpath(locusfiles_dir, filename + ".new"), "fasta")
 
 
-def annotate_configs(input_dir, output_dir, logger=None):
+def annotate_configs(input_dir, output_dir, logger=None, use_docker=True):
     if logger:
         logger.info("Formating contigs...")
     filenames = parse_filenames(input_dir)
@@ -152,10 +152,12 @@ def annotate_configs(input_dir, output_dir, logger=None):
         logger.info("Annotating...")
     annotate_dir = files.joinpath(output_dir, "Annotated")
     files.create_if_not_exist(annotate_dir)
-    docker.prokka(namemap.values(), annotate_dir, assembly_dir)
-
-    # change root permissions made by docker
-    # recursive_chown(annotate_dir, getpass.getuser())
+    if use_docker:
+        docker.prokka(namemap.values(), annotate_dir, assembly_dir)
+    else:
+        c = [cmd.prokka(x, annotate_dir, assembly_dir) for x in namemap.values()]
+        with ProcessPoolExecutor() as executor:
+            executor.map(os.system, c)
 
     # protein CDS file
     if logger:
@@ -176,14 +178,17 @@ def annotate_configs(input_dir, output_dir, logger=None):
     create_noncds(output_dir, gff_dir)
 
 
-def make_database(output_dir, logger=None, threads=2, ident_min=95):
+def make_database(output_dir, logger=None, threads=2, ident_min=95, use_docker=True):
     database_dir = files.joinpath(output_dir, "DB")
     files.create_if_not_exist(database_dir)
     ffn_dir = files.joinpath(output_dir, "FFN")
 
     if logger:
         logger.info("Calculating the pan genome")
-    docker.roary(output_dir, threads=threads, ident_min=ident_min)
+    if use_docker:
+        docker.roary(output_dir, threads=threads, ident_min=ident_min)
+    else:
+        cmd.roary(output_dir, output_dir, threads, ident_min)
 
     if logger:
         logger.info("Parsing csv...")
@@ -194,7 +199,18 @@ def make_database(output_dir, logger=None, threads=2, ident_min=95):
     if logger:
         logger.info("Reducing identical sequences in a FASTA file...")
     locus_files = [file for file in os.listdir(locus_dir) if file.endswith(".tmp")]
-    docker.fastx(locus_files, output_dir)  # TODO: bug -- docker never stops
+    if use_docker:
+        docker.fastx(locus_files, output_dir)  # TODO: bug -- docker never stops
+    else:
+        c = (functional.seq(locus_files)
+             .map(lambda f: (f, os.path.splitext(f)[0]))
+             .map(lambda x: cmd.fastx(files.joinpath(locus_dir, x[0]),
+                                      files.joinpath(locus_dir, x[1] + ".fa")))
+             .to_list())
+        with ProcessPoolExecutor() as executor:
+            executor.map(os.system, c)
+        for file in locus_files:
+            os.remove(files.joinpath(locus_dir, file))
 
     if logger:
         logger.info("Find longest sequence as pan RefSeq...")
@@ -268,8 +284,8 @@ def main():
     threads = args.threads
     ident_min = args.identity
 
-    annotate_configs(input_dir, output_dir)
-    make_database(output_dir, threads=threads, ident_min=ident_min)
+    # annotate_configs(input_dir, output_dir)
+    # make_database(output_dir, threads=threads, ident_min=ident_min)
 
 
 if __name__ == "__main__":
