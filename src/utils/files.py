@@ -40,7 +40,9 @@ def to_gz(target, filename):
 
 def decompress_gz(target, path):
     with tarfile.open(target, "r:gz") as tar:
+        name = tar.getnames()[0]
         tar.extractall(path)
+    return name
 
 
 def recursive_chown(dir, user):

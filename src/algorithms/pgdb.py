@@ -284,8 +284,8 @@ def main():
     threads = args.threads
     ident_min = args.identity
 
-    # annotate_configs(input_dir, output_dir)
-    # make_database(output_dir, threads=threads, ident_min=ident_min)
+    annotate_configs(input_dir, output_dir)
+    make_database(output_dir, threads=threads, ident_min=ident_min)
 
 
 if __name__ == "__main__":
