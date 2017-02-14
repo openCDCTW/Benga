@@ -1,6 +1,20 @@
 import logging
 
 
+def console_logger(name):
+    logger = logging.getLogger(name)
+    logger.setLevel(logging.INFO)
+
+    ch = logging.StreamHandler()
+    ch.setLevel(logging.INFO)
+
+    formatter = logging.Formatter(fmt="(PID:%(process)d)%(asctime)-20s[%(levelname)s] %(message)s",
+                                  datefmt="%Y-%m-%d %H:%M:%S")
+    ch.setFormatter(formatter)
+    logger.addHandler(ch)
+    return logger
+
+
 class ConsoleLogHandler(logging.Handler):
     def __init__(self, widget):
         super(ConsoleLogHandler, self).__init__()

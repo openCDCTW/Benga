@@ -8,6 +8,7 @@ def docker_prokka_cmd(newname, outpath, inpath):
     name, ext = newname.split(".")
 
     args = list()
+    args.append(("--cpus", "2"))
     args.append(("--outdir", "/data/" + name))
     args.append(("--prefix", name))
     prokka_ = operations.format_cmd("prokka", args, "/input/" + newname)
@@ -27,10 +28,10 @@ def prokka(newnames, outpath, inpath):
         executor.map(os.system, cmds)
 
 
-def docker_roary_cmd(outpath, threads, ident_min):
+def docker_roary_cmd(outpath, threads, identity):
     args = list()
     args.append(("-p", threads))
-    args.append(("-i", ident_min))
+    args.append(("-i", identity))
     args.append(("-f", "/data/roary"))
     roary_ = operations.format_cmd("roary", args, "/data/GFF/*.gff")
 
@@ -38,7 +39,7 @@ def docker_roary_cmd(outpath, threads, ident_min):
     args2.append(("--rm", ""))
     args2.append(("-v", outpath + ":/data"))
     args2.append(("a504082002/roary", ""))
-    docker_roary = operations.format_cmd("docker run", args2, "python /program/cmd.py " + roary_)
+    docker_roary = operations.format_cmd("docker run", args2, "python /program/cmds.py " + roary_)
     return docker_roary
 
 

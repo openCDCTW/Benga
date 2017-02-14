@@ -1,22 +1,21 @@
-import argparse
 import json
 import os
 import heapq
 import shutil
 from collections import defaultdict
-import functional
 import pandas as pd
 from Bio import SeqIO
 from concurrent.futures import ProcessPoolExecutor
 
-from src.utils import files, seq, docker, cmd
+from src.utils import files, seq, docker, cmds
+from src.models import logs
 
 
 def parse_filenames(path, ext=".fna"):
     return [name for name in os.listdir(path) if name.endswith(ext)]
 
 
-def format_contgis(filenames, input_dir, working_dir):
+def format_contigs(filenames, input_dir, working_dir):
     namemap = {}
     for i, oldname in enumerate(filenames, 1):
         newname = "Assembly_" + str(i) + ".fa"
@@ -116,130 +115,73 @@ def create_new_locusfiles(database_dir):
 
 
 def annotate_configs(input_dir, output_dir, logger=None, use_docker=True):
-    if logger:
-        logger.info("Formating contigs...")
+    if not logger:
+        logger = logs.console_logger(__name__)
+
+    logger.info("Formating contigs...")
     filenames = parse_filenames(input_dir)
 
     assembly_dir = files.joinpath(output_dir, "Assembly")
     files.create_if_not_exist(assembly_dir)
-    namemap = format_contgis(filenames, input_dir, assembly_dir)
+    namemap = format_contigs(filenames, input_dir, assembly_dir)
 
-    if logger:
-        logger.info("Annotating...")
+    logger.info("Annotating...")
     annotate_dir = files.joinpath(output_dir, "Annotated")
     files.create_if_not_exist(annotate_dir)
     if use_docker:
         docker.prokka(namemap.values(), annotate_dir, assembly_dir)
     else:
-        c = [cmd.prokka(x, annotate_dir, assembly_dir) for x in namemap.values()]
+        c = [cmds.prokka(x, annotate_dir, assembly_dir) for x in namemap.values()]
         with ProcessPoolExecutor() as executor:
             executor.map(os.system, c)
 
-    # protein CDS file
-    if logger:
-        logger.info("Moving ffn files...")
+    logger.info("Moving protein CDS (.ffn) files...")
     ffn_dir = files.joinpath(output_dir, "FFN")
     files.create_if_not_exist(ffn_dir)
     move_file(annotate_dir, ffn_dir, ".ffn")
 
-    # annotation file
-    if logger:
-        logger.info("Moving gff files...")
+    logger.info("Moving annotation (.gff) files...")
     gff_dir = files.joinpath(output_dir, "GFF")
     files.create_if_not_exist(gff_dir)
     move_file(annotate_dir, gff_dir, ".gff")
 
-    if logger:
-        logger.info("Creating nonCDS.json...")
+    logger.info("Creating nonCDS.json...")
     create_noncds(output_dir, gff_dir)
 
 
-def make_database(output_dir, logger=None, threads=2, ident_min=95, use_docker=True):
+def make_database(output_dir, logger=None, threads=2, min_identity=95, use_docker=True):
+    if not logger:
+        logger = logs.console_logger(__name__)
+
     database_dir = files.joinpath(output_dir, "DB")
     files.create_if_not_exist(database_dir)
     ffn_dir = files.joinpath(output_dir, "FFN")
 
-    if logger:
-        logger.info("Calculating the pan genome")
+    logger.info("Calculating the pan genome...")
     if use_docker:
-        docker.roary(output_dir, threads=threads, ident_min=ident_min)
+        docker.roary(output_dir, threads=threads, ident_min=min_identity)
     else:
-        c = cmd.roary(output_dir, files.joinpath(output_dir, "GFF"), threads, ident_min)
+        c = cmds.roary(output_dir, files.joinpath(output_dir, "GFF"), threads, min_identity)
         os.system(c)
 
-    if logger:
-        logger.info("Parsing csv and finding longest allele as RefSeq...")
+    logger.info("Parsing csv and finding longest allele as RefSeq...")
     locus_dir = files.joinpath(output_dir, "locusfiles")
     files.create_if_not_exist(locus_dir)
     refseqs, total_isolates = parse_csv(output_dir, ffn_dir, locus_dir)
 
-    if logger:
-        logger.info("Saving pan RefSeq...")
+    logger.info("Saving pan RefSeq...")
     records = [seq.new_record(key, str(value)) for key, value in refseqs.items()]
     SeqIO.write(records, files.joinpath(database_dir, "panRefSeq.fa"), "fasta")
 
-    if logger:
-        logger.info("Making dynamic schemes...")
+    logger.info("Making dynamic schemes...")
     mapping_file = files.joinpath(output_dir, "locusmapping.txt")
     make_schemes(mapping_file, refseqs, total_isolates, database_dir)
 
-    if logger:
-        logger.info("Collecting outputs...")
+    logger.info("Collecting outputs...")
     shutil.copy(files.joinpath(output_dir, "roary", "summary_statistics.txt"), database_dir)
     shutil.copy(files.joinpath(output_dir, "locusmapping.txt"), database_dir)
     shutil.move(locus_dir, database_dir)
 
     create_new_locusfiles(database_dir)
+    logger.info("Done!!")
 
-    if logger:
-        logger.info("Done!!")
-
-
-def parse_args():
-    arg_parser = argparse.ArgumentParser()
-
-    arg_parser.add_argument(
-        "-o", "--output",
-        required=True,
-        help="Output data directory. (necessary)"
-    )
-
-    arg_parser.add_argument(
-        "-i", "--input",
-        required=True,
-        help="Input data directory. (necessary)"
-    )
-
-    arg_parser.add_argument(
-        "-t", "--threads",
-        type=int,
-        default=2,
-        help="Number of threads for computation. [Default: 2]",
-        metavar="FULL_FILE_PATH"
-    )
-
-    arg_parser.add_argument(
-        "--identity",
-        help="The minimum percentage identity for blastp. [Default: 95]",
-        type=int,
-        default=95,
-        metavar='THRESHOLD'
-    )
-
-    return arg_parser.parse_args()
-
-
-def main():
-    args = parse_args()
-
-    input_dir = args.input
-    output_dir = args.output
-    threads = args.threads
-    ident_min = args.identity
-
-    annotate_configs(input_dir, output_dir)
-    make_database(output_dir, threads=threads, ident_min=ident_min)
-
-
-if __name__ == "__main__":
-    main()
