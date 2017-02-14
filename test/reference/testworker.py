@@ -13,8 +13,8 @@ sender.connect("tcp://localhost:5558")
 while True:
     s = receiver.recv()
 
-    sys.stdout.write('.')
+    sys.stdout.write("Work on " + s.decode("ascii") + "\n")
     sys.stdout.flush()
     time.sleep(int(s)*0.001)
 
-    sender.send(b'')
+    sender.send(s)

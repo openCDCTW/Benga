@@ -1,6 +1,7 @@
 import argparse
 import json
 import os
+import heapq
 import shutil
 from collections import defaultdict
 import functional
@@ -58,77 +59,52 @@ def create_noncds(database_dir, gff_dir):
 
 
 def save_locus_map(matrix, output_dir):
-    mapping = matrix[matrix["No. isolates"] == matrix["No. sequences"]]
-    mapping.to_csv(files.joinpath(output_dir, "locusmapping.txt"), sep="\t")
+    mapping_file = files.joinpath(output_dir, "locusmapping.txt")
+    matrix[matrix["No. isolates"] == matrix["No. sequences"]].to_csv(mapping_file, sep="\t")
 
-    paralog = matrix[matrix["No. isolates"] != matrix["No. sequences"]]
-    paralog.to_csv(files.joinpath(output_dir, "paralog.txt"), sep="\t", index=False)
+    paralog_file = files.joinpath(output_dir, "paralog.txt")
+    matrix[matrix["No. isolates"] != matrix["No. sequences"]].to_csv(paralog_file, sep="\t")
 
 
-def parse_csv(output_dir, ffn_dir, locus_dir):
+def dump_alleles(row, filename):
+    records = [seq.new_record(str(i), a) for i, a in enumerate(row, 1)]
+    seq.save_records(records, filename)
+
+
+def longest_alleles(row):
+    alleles = list(map(lambda x: (len(x), x), row))
+    return heapq.nlargest(1, alleles)[0][1]
+
+
+def parse_csv(output_dir, ffn_dir, locus_dir, metadata_colnumber=14):
     roary_result = pd.read_csv(files.joinpath(output_dir, "roary", "gene_presence_absence.csv"))
     roary_result.index = pd.Index(map(lambda x: "SAL{0:07d}".format(x + 1), roary_result.index), name="locus")
+    total_isolates = len(roary_result.columns) - metadata_colnumber
 
     matrix = roary_result[["Gene", "No. isolates", "No. sequences", "Annotation"]]
     save_locus_map(matrix, output_dir)
 
-    for colname, col in roary_result.iloc[:, 14:].iteritems():
-        handle = SeqIO.parse(files.joinpath(ffn_dir, colname + ".ffn"), "fasta")
-        cds = {record.id: record.seq for record in handle}
-        for rowname, loci in col.iteritems():
-            if isinstance(loci, str):
-                with open(files.joinpath(locus_dir, rowname + ".tmp"), "a") as file:
-                    # write single-line FASTA for fastx_collapser, which doesn't accept multi-line
-                    prokkaID = loci.split("___")[0]
-                    file.write(">" + prokkaID + "\n" + str(cds[prokkaID]) + "\n")
+    matrix = roary_result[roary_result["No. isolates"] == roary_result["No. sequences"]]
+    allele_map = defaultdict(set)
+    for colname, col in matrix.iloc[:, metadata_colnumber:].iteritems():
+        ffn_file = files.joinpath(ffn_dir, colname + ".ffn")
+        cds = {record.id: record.seq for record in SeqIO.parse(ffn_file, "fasta")}
+        for locus, allele in col.iteritems():
+            if type(allele) == str:
+                allele_map[locus].add(str(cds[allele]))
+
+    longests = []
+    for locus, alleles in allele_map.items():
+        dump_alleles(alleles, files.joinpath(locus_dir, locus + ".fa"))
+        longests[locus] = longest_alleles(alleles)
+    return longests, total_isolates
 
 
-def find_longest_seq(filename):
-    return (functional.seq(SeqIO.parse(filename, "fasta"))
-            .map(lambda record: str(record.seq))
-            .max_by(lambda s: len(s)))
-
-
-def pan_refseq(database_dir, locus_files, locus_dir):
-    """find longest sequence in a locus file as the pan RefSeq"""
-    refseqs = (functional.seq(locus_files)
-               .map(lambda file: os.path.splitext(file)[0])
-               .map(lambda locus: (locus, files.joinpath(locus_dir, locus + ".fa")))
-               .map(lambda file: (file[0], find_longest_seq(file[1])))
-               .to_dict())
-
-    records = [seq.new_record(key, value) for key, value in refseqs.items()]
-    SeqIO.write(records, files.joinpath(database_dir, "panRefSeq.fa"), "fasta")
-
-    with open(files.joinpath(database_dir, "panRefSeq.json"), "w") as file:
-        file.write(json.dumps(refseqs))
-    return refseqs
-
-
-def dispatch_loci(mapping_file, total_isolates):
-    dispatcher = defaultdict(list)
+def make_schemes(mapping_file, refseqs, total_isolates, scheme_dir):
     mapping = pd.read_csv(mapping_file, sep="\t")
-    for index, row in mapping.iterrows():
-        locus = row["locus"]
-        occ = row["No. isolates"]
-        occrate = occ / total_isolates
-
-        dispatcher["pan"].append(locus)
-        if 0.95 <= occrate <= 1:
-            dispatcher["core"].append(locus)
-    return dispatcher
-
-
-def save_schemes(dispatcher, refseqs, scheme_dir):
-    schemes = []
-    for scheme, loci in dispatcher.items():
-        if len(loci) != 0:
-            records = [seq.new_record(l, refseqs[l]) for l in loci]
-            SeqIO.write(records, files.joinpath(scheme_dir, scheme + ".txt"), "fasta")
-            content = "\t".join(loci)
-            schemes.append(scheme + "\t" + content)
-    with open(files.joinpath(scheme_dir, "scheme.txt"), "w") as file:
-        file.write("\n".join(schemes))
+    mapping["occurence"] = list(map(lambda x: round(x/total_isolates * 100, 2), mapping["No. isolates"]))
+    mapping["sequence"] = list(map(lambda x: refseqs[x], mapping["locus"]))
+    mapping[["locus", "occurence", "sequence"]].to_csv(files.joinpath(scheme_dir, "scheme.csv"), index=False)
 
 
 def create_new_locusfiles(database_dir):
@@ -188,52 +164,29 @@ def make_database(output_dir, logger=None, threads=2, ident_min=95, use_docker=T
     if use_docker:
         docker.roary(output_dir, threads=threads, ident_min=ident_min)
     else:
-        cmd.roary(output_dir, output_dir, threads, ident_min)
+        c = cmd.roary(output_dir, files.joinpath(output_dir, "GFF"), threads, ident_min)
+        os.system(c)
 
     if logger:
-        logger.info("Parsing csv...")
+        logger.info("Parsing csv and finding longest allele as RefSeq...")
     locus_dir = files.joinpath(output_dir, "locusfiles")
     files.create_if_not_exist(locus_dir)
-    parse_csv(output_dir, ffn_dir, locus_dir)
+    refseqs, total_isolates = parse_csv(output_dir, ffn_dir, locus_dir)
 
     if logger:
-        logger.info("Reducing identical sequences in a FASTA file...")
-    locus_files = [file for file in os.listdir(locus_dir) if file.endswith(".tmp")]
-    if use_docker:
-        docker.fastx(locus_files, output_dir)  # TODO: bug -- docker never stops
-    else:
-        c = (functional.seq(locus_files)
-             .map(lambda f: (f, os.path.splitext(f)[0]))
-             .map(lambda x: cmd.fastx(files.joinpath(locus_dir, x[0]),
-                                      files.joinpath(locus_dir, x[1] + ".fa")))
-             .to_list())
-        with ProcessPoolExecutor() as executor:
-            executor.map(os.system, c)
-        for file in locus_files:
-            os.remove(files.joinpath(locus_dir, file))
+        logger.info("Saving pan RefSeq...")
+    records = [seq.new_record(key, str(value)) for key, value in refseqs.items()]
+    SeqIO.write(records, files.joinpath(database_dir, "panRefSeq.fa"), "fasta")
 
     if logger:
-        logger.info("Find longest sequence as pan RefSeq...")
-    refseqs = pan_refseq(database_dir, locus_files, locus_dir)
-
-    if logger:
-        logger.info("Making schemes...")
-    scheme_dir = files.joinpath(output_dir, "scheme")
-    files.create_if_not_exist(scheme_dir)
-
-    total_isolates = len(os.listdir(ffn_dir))
+        logger.info("Making dynamic schemes...")
     mapping_file = files.joinpath(output_dir, "locusmapping.txt")
-    dispatcher = dispatch_loci(mapping_file, total_isolates)
-    save_schemes(dispatcher, refseqs, scheme_dir)
+    make_schemes(mapping_file, refseqs, total_isolates, database_dir)
 
     if logger:
         logger.info("Collecting outputs...")
     shutil.copy(files.joinpath(output_dir, "roary", "summary_statistics.txt"), database_dir)
     shutil.copy(files.joinpath(output_dir, "locusmapping.txt"), database_dir)
-    shutil.move(scheme_dir, database_dir)
-    for file in locus_files:
-        if file.endswith(".tmp"):
-            os.remove(files.joinpath(locus_dir, file))
     shutil.move(locus_dir, database_dir)
 
     create_new_locusfiles(database_dir)

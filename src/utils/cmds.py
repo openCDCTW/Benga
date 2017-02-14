@@ -15,12 +15,12 @@ def roary(outpath, inpath, threads, ident_min):
     args = list()
     args.append(("-p", threads))
     args.append(("-i", ident_min))
-    args.append(("-f", files.joinpath(outpath, "*")))
-    return operations.format_cmd("roary", args, files.joinpath(inpath, "*"))
+    args.append(("-f", files.joinpath(outpath, "roary")))
+    return operations.format_cmd("roary", args, files.joinpath(inpath, "*.gff"))
 
 
 def fastx(outfile, infile):
     args = list()
     args.append(("-i", infile))
     args.append(("-o", outfile))
-    return operations.format_cmd("fastx_collapser", args, "")
+    return operations.format_cmd("fastx_collapser", args, "").replace("=", " ")
