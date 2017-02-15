@@ -1,6 +1,6 @@
 import json
 import os
-import heapq
+from collections import Counter
 import shutil
 from collections import defaultdict
 import pandas as pd
@@ -70,12 +70,12 @@ def dump_alleles(row, filename):
     seq.save_records(records, filename)
 
 
-def longest_alleles(row):
-    alleles = list(map(lambda x: (len(x), x), row))
-    return heapq.nlargest(1, alleles)[0][1]
+def most_frequent_allele(row):
+    counter = Counter(row)
+    return counter.most_common(1)[0][0]
 
 
-def parse_csv(output_dir, ffn_dir, locus_dir, metadata_colnumber=14):
+def identify_pan_refseq(output_dir, ffn_dir, locus_dir, metadata_colnumber=14):
     roary_result = pd.read_csv(files.joinpath(output_dir, "roary", "gene_presence_absence.csv"))
     roary_result.index = pd.Index(map(lambda x: "SAL{0:07d}".format(x + 1), roary_result.index), name="locus")
     total_isolates = len(roary_result.columns) - metadata_colnumber
@@ -92,11 +92,11 @@ def parse_csv(output_dir, ffn_dir, locus_dir, metadata_colnumber=14):
             if type(allele) == str:
                 allele_map[locus].add(str(cds[allele]))
 
-    longests = []
+    frequent = []
     for locus, alleles in allele_map.items():
         dump_alleles(alleles, files.joinpath(locus_dir, locus + ".fa"))
-        longests[locus] = longest_alleles(alleles)
-    return longests, total_isolates
+        frequent[locus] = most_frequent_allele(alleles)
+    return frequent, total_isolates
 
 
 def make_schemes(mapping_file, refseqs, total_isolates, scheme_dir):
@@ -164,10 +164,10 @@ def make_database(output_dir, logger=None, threads=2, min_identity=95, use_docke
         c = cmds.roary(output_dir, files.joinpath(output_dir, "GFF"), threads, min_identity)
         os.system(c)
 
-    logger.info("Parsing csv and finding longest allele as RefSeq...")
+    logger.info("Finding most frequent allele as RefSeq...")
     locus_dir = files.joinpath(output_dir, "locusfiles")
     files.create_if_not_exist(locus_dir)
-    refseqs, total_isolates = parse_csv(output_dir, ffn_dir, locus_dir)
+    refseqs, total_isolates = identify_pan_refseq(output_dir, ffn_dir, locus_dir)
 
     logger.info("Saving pan RefSeq...")
     records = [seq.new_record(key, str(value)) for key, value in refseqs.items()]
