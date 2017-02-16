@@ -117,6 +117,8 @@ def annotate_configs(input_dir, output_dir, logger=None, use_docker=True):
     assembly_dir = files.joinpath(output_dir, "Assembly")
     files.create_if_not_exist(assembly_dir)
     namemap = format_contigs(filenames, input_dir, assembly_dir)
+    with open(files.joinpath(output_dir, "namemap.json"), "w") as f:
+        f.write(json.dumps(namemap))
 
     logger.info("Annotating...")
     annotate_dir = files.joinpath(output_dir, "Annotated")
