@@ -1,6 +1,7 @@
 import json
 import os
 from collections import Counter
+import hashlib
 import shutil
 from collections import defaultdict
 import pandas as pd
@@ -66,7 +67,7 @@ def save_locus_map(matrix, output_dir):
 
 
 def dump_alleles(row, filename):
-    records = [seq.new_record(str(i), a) for i, a in enumerate(row, 1)]
+    records = [seq.new_record(hashlib.sha256(str(x).encode("ascii")).hexdigest(), x) for x in row]
     seq.save_records(records, filename)
 
 
@@ -104,14 +105,6 @@ def make_schemes(mapping_file, refseqs, total_isolates, scheme_dir):
     mapping["occurence"] = list(map(lambda x: round(x/total_isolates * 100, 2), mapping["No. isolates"]))
     mapping["sequence"] = list(map(lambda x: refseqs[x], mapping["locus"]))
     mapping[["locus", "occurence", "sequence"]].to_csv(files.joinpath(scheme_dir, "scheme.csv"), index=False)
-
-
-def create_new_locusfiles(database_dir):
-    locusfiles_dir = files.joinpath(database_dir, "locusfiles")
-    for filename in os.listdir(locusfiles_dir):
-        filepath = files.joinpath(locusfiles_dir, filename)
-        records = [seq.new_record(filename + "::" + rec.id, str(rec.seq)) for rec in SeqIO.parse(filepath, "fasta")]
-        SeqIO.write(records, files.joinpath(locusfiles_dir, filename + ".new"), "fasta")
 
 
 def annotate_configs(input_dir, output_dir, logger=None, use_docker=True):
@@ -181,7 +174,5 @@ def make_database(output_dir, logger=None, threads=2, min_identity=95, use_docke
     shutil.copy(files.joinpath(output_dir, "roary", "summary_statistics.txt"), database_dir)
     shutil.copy(files.joinpath(output_dir, "locusmapping.txt"), database_dir)
     shutil.move(locus_dir, database_dir)
-
-    create_new_locusfiles(database_dir)
     logger.info("Done!!")
 
