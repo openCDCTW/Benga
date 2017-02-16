@@ -1,4 +1,3 @@
-
 from src.utils import operations, files
 
 
@@ -6,6 +5,7 @@ def prokka(newname, outpath, inpath):
     name, ext = newname.split(".")
 
     args = list()
+    args.append(("--cpus", "2"))
     args.append(("--outdir", files.joinpath(outpath, name)))
     args.append(("--prefix", name))
     return operations.format_cmd("prokka", args, files.joinpath(inpath, newname))
