@@ -29,9 +29,8 @@ def profile_loci(blastquery, assemble_dir, output_dir, sel_db, cols):
     seqlen = (functional.seq(SeqIO.parse(blastquery, "fasta"))
               .map(lambda rec: (rec.id, len(rec.seq)))
               .to_dict())  # pan refseq
-    seqlen = pd.Series(seqlen, name="length")
 
-    collect = [seqlen]
+    collect = []
     for filename in os.listdir(assemble_dir):
         blast_out = make_db_query(blastquery, files.joinpath(assemble_dir, filename), output_dir, cols)
         result = sel_db(blast_out, seqlen)
@@ -41,7 +40,7 @@ def profile_loci(blastquery, assemble_dir, output_dir, sel_db, cols):
         result[name] = 1.0
         collect.append(result[name])
 
-    table = pd.concat(collect, axis=1).drop("length", axis=1).fillna(0).sort_index()
+    table = pd.concat(collect, axis=1).fillna(0).sort_index()
     table.to_csv(files.joinpath(output_dir, "locusAP.tsv"), sep="\t")
 
 
@@ -137,28 +136,18 @@ def make_db_query(query, dbsource, dest_dir, cols, threads=2):
     locidb = files.joinpath(dest_dir, "lociDB")
     blast_out = files.joinpath(dest_dir, "blast.out")
     os.system(makeblastdb(dbsource, "nucl", locidb))
-    NcbiblastnCommandline(query=query, db=locidb, out=blast_out, num_threads=threads,
-                          outfmt="'6 {}'".format(" ".join(cols)))
+    cmd = NcbiblastnCommandline(query=query, db=locidb, out=blast_out, num_threads=threads,
+                                outfmt="'6 {}'".format(" ".join(cols)))
+    cmd()
     return blast_out
 
 
 def select_blast_output(blast_out, seqlen, aligcov_cut, identity, cols):
-    result = pd.read_csv(blast_out, sep="\t", header=None, names=cols)
-    result["qlen"] = [seqlen[x] for x in result["qseqid"]]
+    result = pd.read_csv(blast_out, sep="\t", header=None, names=cols, index_col=0)
+    result["qlen"] = [seqlen[x] for x in result.index]
     result["aligcov"] = (result["length"] - result["gapopen"]) / result["qlen"]
-    return result[(result["aligcov"] >= aligcov_cut) & (result["pident"] >= identity)]
-
-
-def query_blast(m, dest_dir, dbsource, query, seqlen, aligcov_cut, pident_cut, threads, cols):
-    blast_out = make_db_query(query, dbsource, dest_dir, cols, threads)
-    result = select_blast_output(blast_out, seqlen, aligcov_cut, pident_cut, cols)
-
-    for index, row in result.iterrows():
-        row_elements = [row["aligcov"], row["length"], row["qlen"], row["pident"], row["sseqid"], row["sstart"],
-                        row["send"]]
-        m[row["qseqid"]] = "\t".join(map(str, row_elements))
-    os.remove(blast_out)
-    return m
+    result = result[(result["aligcov"] >= aligcov_cut) & (result["pident"] >= identity)]
+    return result
 
 
 def profiling(output_dir, input_dir, db_dir, logger=None, threads=2, aligcov_cut=0.5, identity=90):
