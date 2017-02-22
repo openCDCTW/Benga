@@ -93,7 +93,7 @@ def identify_pan_refseq(output_dir, ffn_dir, locus_dir, metadata_colnumber=14):
             if type(allele) == str:
                 allele_map[locus].add(str(cds[allele]))
 
-    frequent = []
+    frequent = {}
     for locus, alleles in allele_map.items():
         dump_alleles(alleles, files.joinpath(locus_dir, locus + ".fa"))
         frequent[locus] = most_frequent_allele(alleles)
