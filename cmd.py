@@ -70,7 +70,7 @@ def main():
         pgdb.make_database(output_dir, threads=threads, min_identity=identity, use_docker=docker)
     if args.algorithm == "profiling":
         wgmlst.profiling(output_dir, input_dir, db_dir,
-                         threads=threads, aligcov_cut=0.5, identity=identity, use_docker=docker)
+                         threads=threads, aligcov_cut=0.5, identity=identity)
 
 
 if __name__ == "__main__":
