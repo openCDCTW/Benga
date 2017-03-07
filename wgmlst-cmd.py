@@ -26,7 +26,7 @@ def parse_args():
 
     arg_parser.add_argument(
         "-d", "--database",
-        help="Pan genome allele database for query. (necessary for make_db)"
+        help="Pan genome allele database for query. (necessary for profiling)"
     )
 
     arg_parser.add_argument(
