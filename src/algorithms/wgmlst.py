@@ -25,23 +25,49 @@ def rename(assemble_dir, query_dir):
     return namemap
 
 
-def profile_loci(blastquery, assemble_dir, output_dir, sel_db, cols):
-    seqlen = (functional.seq(SeqIO.parse(blastquery, "fasta"))
-              .map(lambda rec: (rec.id, len(rec.seq)))
-              .to_dict())  # pan refseq
+def profile_loci(refseq_fna, assemble_dir, output_dir, refseqdb_dir, id_locus, blast_cols):
+    refseqlen = (functional.seq(SeqIO.parse(refseq_fna, "fasta"))
+                 .map(lambda rec: (rec.id, len(rec.seq)))
+                 .to_dict())
 
-    collect = []
+    collect = {}
+    compile_blastdb(refseq_fna, refseqdb_dir)
     for filename in os.listdir(assemble_dir):
-        blast_out = make_db_query(blastquery, files.joinpath(assemble_dir, filename), output_dir, cols)
-        result = sel_db(blast_out, seqlen)
-        os.remove(blast_out)
+        contig_file = files.joinpath(assemble_dir, filename)
+        contig_id = filename.split(".")[0]
+        blastn_out = files.joinpath(output_dir, contig_id + ".out")
 
-        name = filename.split(".")[0]
-        result[name] = 1.0
-        collect.append(result[name])
+        query_db(contig_file, refseqdb_dir, blastn_out, blast_cols)
+        collect[contig_id] = id_locus(blastn_out, refseqlen)
 
-    table = pd.concat(collect, axis=1).fillna(0).sort_index()
+        os.remove(blastn_out)
+
+    refseqs = list(refseqlen.keys())
+    series = []
+    for cid, loci in collect.items():
+        xs = [s in loci for s in refseqs]
+        ser = pd.Series(xs, name=cid, index=refseqs)
+        series.append(ser)
+    table = pd.concat(series, axis=1).sort_index(axis=0)
     table.to_csv(files.joinpath(output_dir, "locusAP.tsv"), sep="\t")
+
+
+def compile_blastdb(input_file, output_dir):
+    cmd = "makeblastdb -in {} -dbtype nucl -out {}".format(input_file, output_dir)
+    os.system(cmd)
+
+
+def query_db(query, db_dir, output_file, cols, threads=2):
+    NcbiblastnCommandline(query=query, db=db_dir, out=output_file,
+                          outfmt="'6 {}'".format(" ".join(cols)), num_threads=threads)()
+
+
+def identify_locus(blast_out, seqlen, aligcov_cut, identity, cols):
+    result = pd.read_csv(blast_out, sep="\t", header=None, names=cols)
+    result["slen"] = [seqlen[x] for x in result["sseqid"]]
+    result["aligcov"] = (result["length"] - result["gapopen"]) / result["slen"]
+    result = result[(result["aligcov"] >= aligcov_cut) & (result["pident"] >= identity)]
+    return set(result["sseqid"])
 
 
 def maxlen_locus(locus, pair):
@@ -58,7 +84,7 @@ def allocate_alleles(assemble_dir, db_dir, output_dir, bn, blast_cols):
         os.mkdir(files.joinpath(output_dir, qfn))
 
         blastnfile = files.joinpath(assemble_dir, filename)
-        os.system(makeblastdb(blastnfile, "nucl", files.joinpath(output_dir, "AssemblyDB_" + qfn)))
+        compile_blastdb(blastnfile, files.joinpath(output_dir, "AssemblyDB_" + qfn))
 
         allprofile = defaultdict(list)
         newloc = []
@@ -128,28 +154,6 @@ def make_scheme_profile(assemble_dir, output_dir, scheme_dir):
         table.loc[loci, :].to_csv(sink, sep="\t")
 
 
-def makeblastdb(input, dbtype, output):
-    return "makeblastdb -in {} -dbtype {} -out {}".format(input, dbtype, output)
-
-
-def make_db_query(query, dbsource, dest_dir, cols, threads=2):
-    locidb = files.joinpath(dest_dir, "lociDB")
-    blast_out = files.joinpath(dest_dir, "blast.out")
-    os.system(makeblastdb(dbsource, "nucl", locidb))
-    cmd = NcbiblastnCommandline(query=query, db=locidb, out=blast_out, num_threads=threads,
-                                outfmt="'6 {}'".format(" ".join(cols)))
-    cmd()
-    return blast_out
-
-
-def select_blast_output(blast_out, seqlen, aligcov_cut, identity, cols):
-    result = pd.read_csv(blast_out, sep="\t", header=None, names=cols, index_col=0)
-    result["qlen"] = [seqlen[x] for x in result.index]
-    result["aligcov"] = (result["length"] - result["gapopen"]) / result["qlen"]
-    result = result[(result["aligcov"] >= aligcov_cut) & (result["pident"] >= identity)]
-    return result
-
-
 def profiling(output_dir, input_dir, db_dir, logger=None, threads=2, aligcov_cut=0.5, identity=90):
     if not logger:
         logger = logs.console_logger(__name__)
@@ -163,11 +167,12 @@ def profiling(output_dir, input_dir, db_dir, logger=None, threads=2, aligcov_cut
 
     logger.info("Profiling loci...")
     scheme_file = files.joinpath(db_dir, "scheme.csv")
-    blastquery = files.joinpath(db_dir, "panRefSeq.fa")
+    refseq_fna = files.joinpath(db_dir, "panRefSeq.fa")
+    refseqdb_dir = files.joinpath(db_dir, "panRefSeq")
     blast_cols = ["qseqid", "sseqid", "pident", "length", "mismatch", "gapopen", "qstart", "qend",
                   "sstart", "send", "evalue", "bitscore"]
-    sel_db = lambda x, y: select_blast_output(x, y, aligcov_cut, identity, blast_cols)
-    profile_loci(blastquery, assemble_dir, output_dir, sel_db, blast_cols)
+    id_locus = lambda x, y: identify_locus(x, y, aligcov_cut, identity, blast_cols)
+    profile_loci(refseq_fna, assemble_dir, output_dir, refseqdb_dir, id_locus, blast_cols)
 
     logger.info("Allocating alleles...")
     # blast_cols_str = "'6 {}'".format(" ".join(blast_cols))
