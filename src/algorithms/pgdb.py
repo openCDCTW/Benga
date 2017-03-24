@@ -1,15 +1,14 @@
 import json
 import os
-from collections import Counter
-import hashlib
 import shutil
-from collections import defaultdict
+from collections import Counter, defaultdict
+from concurrent.futures import ProcessPoolExecutor
 import pandas as pd
 from Bio import SeqIO
-from concurrent.futures import ProcessPoolExecutor
 
-from src.utils import files, seq, docker, cmds
 from src.models import logs
+from src.utils import files, seq, docker, cmds
+from src.utils import operations
 
 
 def parse_filenames(path, ext=".fna"):
@@ -19,11 +18,11 @@ def parse_filenames(path, ext=".fna"):
 def format_contigs(filenames, input_dir, working_dir):
     namemap = {}
     for i, oldname in enumerate(filenames, 1):
-        newname = "Assembly_" + str(i) + ".fa"
+        newname = "Assembly_{}.fa".format(i)
         namemap[oldname] = newname
         with open(files.joinpath(working_dir, newname), "w") as file:
             for j, contig in enumerate(SeqIO.parse(files.joinpath(input_dir, oldname), "fasta"), 1):
-                seqid = "A_{i}::C_{j}".format(**locals())
+                seqid = "A_{}::C_{}".format(i, j)
                 SeqIO.write(seq.replace_id(contig, seqid), file, "fasta")
     return namemap
 
@@ -67,7 +66,7 @@ def save_locus_map(matrix, output_dir):
 
 
 def dump_alleles(row, filename):
-    records = [seq.new_record(hashlib.sha256(str(x).encode("ascii")).hexdigest(), x) for x in row]
+    records = [seq.new_record(operations.make_seqid(x), x) for x in row]
     seq.save_records(records, filename)
 
 

@@ -1,3 +1,4 @@
+import hashlib
 from functools import reduce
 import functional
 import uuid
@@ -28,3 +29,6 @@ def format_cmd(prog, flags, arg):
             .reduce(lambda x, y: x + " " + y))
     return prog + " " + flag + " " + arg
 
+
+def make_seqid(x):
+    return hashlib.sha256(str(x).encode("ascii")).hexdigest()
