@@ -34,9 +34,17 @@ def profile_loci(refseq_fna, assemble_dir, output_dir, refseqdb_dir, id_locus, b
     refseqlen = (functional.seq(SeqIO.parse(refseq_fna, "fasta"))
                  .map(lambda rec: (rec.id, len(rec.seq)))
                  .to_dict())
+    
     # TODO: needs refactor
-    args = [(assemble_dir, output_dir, refseqdb_dir, blast_cols, id_locus, refseqlen, x)
-            for x in os.listdir(assemble_dir)]
+    def extract_locus(filename):
+        contig_file = files.joinpath(assemble_dir, filename)
+        contig_id = filename.split(".")[0]
+        blastn_out_file = files.joinpath(output_dir, "{}.out".format(contig_id))
+        query_db(contig_file, refseqdb_dir, blastn_out_file, blast_cols)
+        matched_loci = id_locus(blastn_out_file, refseqlen)
+        os.remove(blastn_out_file)
+        return contig_id, matched_loci
+    args = [x for x in os.listdir(assemble_dir)]
 
     collect = {}
     compile_blastdb(refseq_fna, refseqdb_dir)
@@ -52,16 +60,6 @@ def profile_loci(refseq_fna, assemble_dir, output_dir, refseqdb_dir, id_locus, b
         series.append(ser)
     table = pd.concat(series, axis=1).sort_index(axis=0)
     table.to_csv(files.joinpath(output_dir, "locusAP.tsv"), sep="\t")
-
-
-def extract_locus(assemble_dir, output_dir, refseqdb_dir, blast_cols, id_locus, refseqlen, filename):
-    contig_file = files.joinpath(assemble_dir, filename)
-    contig_id = filename.split(".")[0]
-    blastn_out_file = files.joinpath(output_dir, "{}.out".format(contig_id))
-    query_db(contig_file, refseqdb_dir, blastn_out_file, blast_cols)
-    matched_loci = id_locus(blastn_out_file, refseqlen)
-    os.remove(blastn_out_file)
-    return contig_id, matched_loci
 
 
 def compile_blastdb(input_file, output_dir):
@@ -184,7 +182,9 @@ def profiling(output_dir, input_dir, db_dir, threads, logger=None, aligcov_cut=0
     logger.info("Profiling loci...")
     refseq_fna = files.joinpath(db_dir, "panRefSeq.fa")
     refseqdb_dir = files.joinpath(db_dir, "panRefSeq")
-    id_locus = lambda x, y: identify_locus(x, y, aligcov_cut, identity, BLAST_COLUMNS)
+
+    def id_locus(x, y):
+        return identify_locus(x, y, aligcov_cut, identity, BLAST_COLUMNS)
     profile_loci(refseq_fna, assemble_dir, output_dir, refseqdb_dir, id_locus, BLAST_COLUMNS, threads)
 
     logger.info("Allocating alleles...")
