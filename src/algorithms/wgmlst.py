@@ -30,13 +30,13 @@ def rename(assemble_dir, query_dir):
     return namemap
 
 
-def profile_loci(refseq_fna, assemble_dir, output_dir, refseqdb_dir, id_locus, blast_cols, threads):
+def profile_loci(refseq_fna, assemble_dir, output_dir, refseqdb_dir, aligcov_cut, identity, blast_cols, threads):
     refseqlen = (functional.seq(SeqIO.parse(refseq_fna, "fasta"))
                  .map(lambda rec: (rec.id, len(rec.seq)))
                  .to_dict())
 
     # TODO: needs refactor
-    args = [(assemble_dir, output_dir, refseqdb_dir, blast_cols, id_locus, refseqlen, x)
+    args = [(assemble_dir, output_dir, refseqdb_dir, blast_cols, aligcov_cut, identity, refseqlen, x)
             for x in os.listdir(assemble_dir)]
 
     collect = {}
@@ -56,12 +56,12 @@ def profile_loci(refseq_fna, assemble_dir, output_dir, refseqdb_dir, id_locus, b
 
 
 def extract_locus(args):
-    assemble_dir, output_dir, refseqdb_dir, blast_cols, id_locus, refseqlen, filename = args
+    assemble_dir, output_dir, refseqdb_dir, blast_cols, aligcov_cut, identity, refseqlen, filename = args
     contig_file = files.joinpath(assemble_dir, filename)
     contig_id = filename.split(".")[0]
     blastn_out_file = files.joinpath(output_dir, "{}.out".format(contig_id))
     query_db(contig_file, refseqdb_dir, blastn_out_file, blast_cols)
-    matched_loci = id_locus(blastn_out_file, refseqlen)
+    matched_loci = identify_locus(blastn_out_file, refseqlen, aligcov_cut, identity, BLAST_COLUMNS)
     os.remove(blastn_out_file)
     return contig_id, matched_loci
 
@@ -86,10 +86,6 @@ def identify_locus(blast_out, seqlen, aligcov_cut, identity, cols):
     result["aligcov"] = (result["length"] - result["gapopen"]) / result["slen"]
     result = result[(result["aligcov"] >= aligcov_cut) & (result["pident"] >= identity)]
     return set(result["sseqid"])
-
-
-def id_locus(aligcov_cut, identity):
-    return lambda x, y: identify_locus(x, y, aligcov_cut, identity, BLAST_COLUMNS)
 
 
 def maxlen_locus(locus, pair):
@@ -191,7 +187,7 @@ def profiling(output_dir, input_dir, db_dir, threads, logger=None, aligcov_cut=0
     refseq_fna = files.joinpath(db_dir, "panRefSeq.fa")
     refseqdb_dir = files.joinpath(db_dir, "panRefSeq")
     profile_loci(refseq_fna, assemble_dir, output_dir, refseqdb_dir,
-                 id_locus(aligcov_cut, identity), BLAST_COLUMNS, threads)
+                 aligcov_cut, identity, BLAST_COLUMNS, threads)
 
     logger.info("Allocating alleles...")
     # bn = lambda x, y, z: query_db_cmd(query=x, db_dir=y, output_file=z, cols=BLAST_COLUMNS)
