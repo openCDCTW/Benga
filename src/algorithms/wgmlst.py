@@ -35,12 +35,13 @@ def profile_loci(refseq_fna, assemble_dir, output_dir, refseqdb_dir, id_locus, b
                  .map(lambda rec: (rec.id, len(rec.seq)))
                  .to_dict())
     # TODO: needs refactor
-    extract = lambda x: extract_locus(assemble_dir, output_dir, refseqdb_dir, blast_cols, id_locus, refseqlen, x)
+    args = [(assemble_dir, output_dir, refseqdb_dir, blast_cols, id_locus, refseqlen, x)
+            for x in os.listdir(assemble_dir)]
 
     collect = {}
     compile_blastdb(refseq_fna, refseqdb_dir)
     with ProcessPoolExecutor(threads) as executor:
-        for k, v in executor.map(extract, os.listdir(assemble_dir)):
+        for k, v in executor.map(extract_locus, args):
             collect[k] = v
 
     refseqs = list(refseqlen.keys())
