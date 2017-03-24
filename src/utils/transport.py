@@ -19,7 +19,7 @@ class Sender:
         self._socket = self._context.socket(zmq.PUB)
 
         print("Connecting to server...")
-        self._socket.bind("tcp://" + self._ip + ":" + str(self._port))
+        self._socket.bind("tcp://{}:{}".format(self._ip, self._port))
         time.sleep(1)
 
         print("Compressing files...")
@@ -53,7 +53,7 @@ class Receiver:
         print("Establishing socket...")
         self._context = zmq.Context()
         self._socket = self._context.socket(zmq.SUB)
-        self._socket.connect("tcp://" + self._ip + ":" + str(self._port))
+        self._socket.connect("tcp://{}:{}".format(self._ip, self._port))
 
         print("Connected!")
         self._socket.setsockopt_string(zmq.SUBSCRIBE, "")
