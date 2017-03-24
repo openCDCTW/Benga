@@ -34,20 +34,13 @@ def profile_loci(refseq_fna, assemble_dir, output_dir, refseqdb_dir, id_locus, b
     refseqlen = (functional.seq(SeqIO.parse(refseq_fna, "fasta"))
                  .map(lambda rec: (rec.id, len(rec.seq)))
                  .to_dict())
-
-    def run(filename):
-        contig_file = files.joinpath(assemble_dir, filename)
-        contig_id = filename.split(".")[0]
-        blastn_out_file = files.joinpath(output_dir, "{}.out".format(contig_id))
-        query_db(contig_file, refseqdb_dir, blastn_out_file, blast_cols)
-        matched_loci = id_locus(blastn_out_file, refseqlen)
-        os.remove(blastn_out_file)
-        return contig_id, matched_loci
+    # TODO: needs refactor
+    extract = lambda x: extract_locus(assemble_dir, output_dir, refseqdb_dir, blast_cols, id_locus, refseqlen, x)
 
     collect = {}
     compile_blastdb(refseq_fna, refseqdb_dir)
     with ProcessPoolExecutor(threads) as executor:
-        for k, v in executor.map(run, os.listdir(assemble_dir)):
+        for k, v in executor.map(extract, os.listdir(assemble_dir)):
             collect[k] = v
 
     refseqs = list(refseqlen.keys())
@@ -58,6 +51,16 @@ def profile_loci(refseq_fna, assemble_dir, output_dir, refseqdb_dir, id_locus, b
         series.append(ser)
     table = pd.concat(series, axis=1).sort_index(axis=0)
     table.to_csv(files.joinpath(output_dir, "locusAP.tsv"), sep="\t")
+
+
+def extract_locus(assemble_dir, output_dir, refseqdb_dir, blast_cols, id_locus, refseqlen, filename):
+    contig_file = files.joinpath(assemble_dir, filename)
+    contig_id = filename.split(".")[0]
+    blastn_out_file = files.joinpath(output_dir, "{}.out".format(contig_id))
+    query_db(contig_file, refseqdb_dir, blastn_out_file, blast_cols)
+    matched_loci = id_locus(blastn_out_file, refseqlen)
+    os.remove(blastn_out_file)
+    return contig_id, matched_loci
 
 
 def compile_blastdb(input_file, output_dir):
