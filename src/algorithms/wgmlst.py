@@ -145,6 +145,13 @@ def run(args):
 
 
 def allocate_alleles(assemble_dir, db_dir, output_dir):
+    profile_file = files.joinpath(output_dir, "locusAP.tsv")
+    profiles = pd.read_csv(profile_file, sep="\t", index_col=0)
+
+    for qfn, profile in profiles.iteritems():
+
+
+
     for filename in os.listdir(assemble_dir):
         qfn = filename.split(".")[0]
         os.mkdir(files.joinpath(output_dir, qfn))
@@ -156,36 +163,49 @@ def allocate_alleles(assemble_dir, db_dir, output_dir):
         newloc = []
         aldic = {}
         # TODO: parallelize
+        # parse each contig profile
         for line in open(files.joinpath(output_dir, "locusAP.{}.list".format(qfn)), "r").read().splitlines():
             locus, hits = line.split("\t")
             if hits == "0":
-                allprofile[locus] = [0]
-                newloc.append(locus)
+                allprofile[locus] = [0]  # set locus hit to 0
+                newloc.append(locus)  # potential new locus
             else:
+                # parse refseq locus for dict from allele id to allele length
                 qfile = files.joinpath(db_dir, "locusfiles", "{}.fa.new".format(locus))
                 for record in SeqIO.parse(qfile, "fasta"):
                     alleleno = record.id.split("::")[1]
                     aldic[(locus, alleleno)] = len(record.seq)
+                # append refseq locus for query
                 os.system("cat {} >> {}/qfile.fa".format(qfile, output_dir))
 
+        # query contig blastdb using collected refseq locus
         query_db(query=files.joinpath(output_dir, "qfile.fa"),
                  db_dir=files.joinpath(output_dir, "AssemblyDB_{}".format(qfn)),
                  output_file=files.joinpath(output_dir, "blast.{}.out".format(qfn)),
                  cols=BLAST_COLUMNS)
         os.remove(files.joinpath(output_dir, "qfile.fa"))
-        blast = pd.read_csv(files.joinpath(output_dir, "blast.{}.out".format(qfn)), sep="\t", header=None, names=BLAST_COLUMNS)
+
+        # parse blast output
+        blast_out = files.joinpath(output_dir, "blast.{}.out".format(qfn))
+        blast = pd.read_csv(blast_out, sep="\t", header=None, names=BLAST_COLUMNS)
         blast["loc"] = blast["qseqid"].str.split("::").str[0]
         blast["loc"] = blast["loc"].str.split(".").str[0]
         blast["allno"] = blast["qseqid"].str.split("::").str[1]
 
-        for _, row in blast[(blast["pident"] == 100) & (blast["mismatch"] == 0) & (blast["gapopen"] == 0)].iterrows():
-            if row["length"] == aldic[(row["loc"], row["allno"])]:
-                allprofile[row["loc"]].append((row["allno"], row["length"]))
+        # set criteria
+        blast = blast[(blast["pident"] == 100) & (blast["mismatch"] == 0) & (blast["gapopen"] == 0)]
+        blast = blast[blast["length"] == aldic[(blast["loc"], blast["allno"])]]
+        blast = blast[["loc", "allno", "length"]]
+        for locus, df in blast.groupby("loc"):
+            allprofile[locus].append(list(df.to_records(index=False)))
 
-        candidate_loci = [maxlen_locus(locus, pair) for locus, pair in allprofile.items()]
-        (functional.seq(sorted(candidate_loci, key=lambda x: x[0]))
+        # output profile
+        output_file = files.joinpath(output_dir, "allele.{}.profile".format(qfn))
+        (functional.seq(allprofile.items())
+         .map(lambda locus, pair: maxlen_locus(locus, pair))
+         .sorted(key=lambda x: x[0])
          .map(lambda x: x[0] + "\t" + str(x[1]))
-         .to_file(files.joinpath(output_dir, "allele.{}.profile".format(qfn)), delimiter="\n"))
+         .to_file(output_file, delimiter="\n"))
 
 
 def make_scheme_profile(db_dir, output_dir, occr_level=90):
