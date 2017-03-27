@@ -1,11 +1,11 @@
 import json
 import os
-from collections import defaultdict
 import functional
 import pandas as pd
 from Bio import SeqIO
 from Bio.Blast.Applications import NcbiblastnCommandline
 from concurrent.futures import ProcessPoolExecutor
+import time
 
 from src.utils import files, seq
 from src.models import logs
@@ -66,8 +66,8 @@ def extract_locus(args):
     return contig_id, matched_loci
 
 
-def compile_blastdb(input_file, output_dir):
-    cmd = "makeblastdb -in {} -dbtype nucl -out {}".format(input_file, output_dir)
+def compile_blastdb(input_file, output_file):
+    cmd = "makeblastdb -in {} -dbtype nucl -out {}".format(input_file, output_file)
     os.system(cmd)
 
 
@@ -82,14 +82,6 @@ def identify_locus(blast_out, seqlen, aligcov_cut, identity, cols):
     result["aligcov"] = (result["length"] - result["gapopen"]) / result["slen"]
     result = result[(result["aligcov"] >= aligcov_cut) & (result["pident"] >= identity)]
     return set(result["sseqid"])
-
-
-def maxlen_locus(locus, pair):
-    if all(map(lambda x: x == 0, pair)):
-        return locus, 0
-    else:
-        # only access the last of max length allele number in values
-        return locus, max(reversed(pair), key=lambda x: x[1])[0]
 
 
 def exactly_match_in(records1, records2):
@@ -124,17 +116,19 @@ def profile_alleles(assemble_dir, db_dir, output_dir, threads, occr_level=90, se
             matched = profile[profile]
 
             args = [(locus, locusfiles, records) for locus in matched.index]
+            t = time.time()  # insert
             series = pd.Series(name=contig)
-            for x in executor.map(run, args):
+            for x in executor.map(match_allele, args):
                 if x:
                     locus, allele = x
                     series = series.set_value(locus, allele)
             collect.append(series)
+            print(time.time() - t, "sec")  # insert
     result = pd.concat(collect, axis=1)
     result.to_csv(files.joinpath(output_dir, "wgmlst.tsv"), sep="\t", index=False)
 
 
-def run(args):
+def match_allele(args):
     locus, locusfiles, records = args
     alleles_file = files.joinpath(locusfiles, "{}.fa".format(locus))
     alleles = list(SeqIO.parse(alleles_file, "fasta"))
@@ -142,82 +136,6 @@ def run(args):
     if matched_allele:
         return locus, matched_allele
     return None
-
-
-def allocate_alleles(assemble_dir, db_dir, output_dir):
-    profile_file = files.joinpath(output_dir, "locusAP.tsv")
-    profiles = pd.read_csv(profile_file, sep="\t", index_col=0)
-
-    for qfn, profile in profiles.iteritems():
-
-
-
-    for filename in os.listdir(assemble_dir):
-        qfn = filename.split(".")[0]
-        os.mkdir(files.joinpath(output_dir, qfn))
-
-        blastnfile = files.joinpath(assemble_dir, filename)
-        compile_blastdb(blastnfile, files.joinpath(output_dir, "AssemblyDB_{}".format(qfn)))
-
-        allprofile = defaultdict(list)
-        newloc = []
-        aldic = {}
-        # TODO: parallelize
-        # parse each contig profile
-        for line in open(files.joinpath(output_dir, "locusAP.{}.list".format(qfn)), "r").read().splitlines():
-            locus, hits = line.split("\t")
-            if hits == "0":
-                allprofile[locus] = [0]  # set locus hit to 0
-                newloc.append(locus)  # potential new locus
-            else:
-                # parse refseq locus for dict from allele id to allele length
-                qfile = files.joinpath(db_dir, "locusfiles", "{}.fa.new".format(locus))
-                for record in SeqIO.parse(qfile, "fasta"):
-                    alleleno = record.id.split("::")[1]
-                    aldic[(locus, alleleno)] = len(record.seq)
-                # append refseq locus for query
-                os.system("cat {} >> {}/qfile.fa".format(qfile, output_dir))
-
-        # query contig blastdb using collected refseq locus
-        query_db(query=files.joinpath(output_dir, "qfile.fa"),
-                 db_dir=files.joinpath(output_dir, "AssemblyDB_{}".format(qfn)),
-                 output_file=files.joinpath(output_dir, "blast.{}.out".format(qfn)),
-                 cols=BLAST_COLUMNS)
-        os.remove(files.joinpath(output_dir, "qfile.fa"))
-
-        # parse blast output
-        blast_out = files.joinpath(output_dir, "blast.{}.out".format(qfn))
-        blast = pd.read_csv(blast_out, sep="\t", header=None, names=BLAST_COLUMNS)
-        blast["loc"] = blast["qseqid"].str.split("::").str[0]
-        blast["loc"] = blast["loc"].str.split(".").str[0]
-        blast["allno"] = blast["qseqid"].str.split("::").str[1]
-
-        # set criteria
-        blast = blast[(blast["pident"] == 100) & (blast["mismatch"] == 0) & (blast["gapopen"] == 0)]
-        blast = blast[blast["length"] == aldic[(blast["loc"], blast["allno"])]]
-        blast = blast[["loc", "allno", "length"]]
-        for locus, df in blast.groupby("loc"):
-            allprofile[locus].append(list(df.to_records(index=False)))
-
-        # output profile
-        output_file = files.joinpath(output_dir, "allele.{}.profile".format(qfn))
-        (functional.seq(allprofile.items())
-         .map(lambda locus, pair: maxlen_locus(locus, pair))
-         .sorted(key=lambda x: x[0])
-         .map(lambda x: x[0] + "\t" + str(x[1]))
-         .to_file(output_file, delimiter="\n"))
-
-
-def make_scheme_profile(db_dir, output_dir, occr_level=90):
-    scheme = pd.read_csv(files.joinpath(db_dir, "scheme.csv"), usecols=[0, 1])
-    selected_loci = scheme[scheme["occurence"] >= occr_level]["locus"]
-
-    # select loci in profiles
-    # output profiles
-
-    for sch, loci in scheme.items():
-        sink = files.joinpath(output_dir, "wgMLST_{}.tsv".format(sch))
-        # table.loc[loci, :].to_csv(sink, sep="\t")
 
 
 def profiling(output_dir, input_dir, db_dir, threads, logger=None, aligcov_cut=0.5, identity=90):
@@ -238,13 +156,3 @@ def profiling(output_dir, input_dir, db_dir, threads, logger=None, aligcov_cut=0
 
     logger.info("Allocating alleles...")
     profile_alleles(assemble_dir, db_dir, output_dir, threads)
-
-    logger.info("Collecting profiles by scheme...")
-    # make_scheme_profile(assemble_dir, db_dir, output_dir)
-
-    logger.info("Output...")
-    # wgmlst_dir = files.joinpath(scheme_dir, "wgMLST")
-    # files.clear_folder(wgmlst_dir)
-    # os.system("mv {}/wgMLST_* {}".format(output_dir, wgmlst_dir))
-    # os.system("rm -rf Assembly*")
-
