@@ -5,7 +5,6 @@ import pandas as pd
 from Bio import SeqIO
 from Bio.Blast.Applications import NcbiblastnCommandline
 from concurrent.futures import ProcessPoolExecutor
-import time
 
 from src.utils import files, seq
 from src.models import logs
@@ -116,14 +115,12 @@ def profile_alleles(assemble_dir, db_dir, output_dir, threads, occr_level=90, se
             matched = profile[profile]
 
             args = [(locus, locusfiles, records) for locus in matched.index]
-            t = time.time()  # insert
             series = pd.Series(name=contig)
             for x in executor.map(match_allele, args):
                 if x:
                     locus, allele = x
                     series = series.set_value(locus, allele)
             collect.append(series)
-            print(time.time() - t, "sec")  # insert
     result = pd.concat(collect, axis=1)
     result.to_csv(files.joinpath(output_dir, "wgmlst.tsv"), sep="\t", index=False)
 
