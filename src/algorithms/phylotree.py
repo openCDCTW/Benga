@@ -1,9 +1,8 @@
 import fastcluster
 import pandas as pd
+import numpy as np
 from ete3 import Tree
 from scipy.cluster.hierarchy import to_tree
-
-from src.utils import files
 
 
 def linkage2newick(node, newick, parentdist, leaf_names):
@@ -21,13 +20,16 @@ def linkage2newick(node, newick, parentdist, leaf_names):
 
 
 def hamming(xs, ys):
-    return sum(x != y for x, y in zip(xs, ys))
+    result = 0
+    for x, y in zip(xs, ys):
+        if type(x) == float and type(y) == float and np.isnan(x) and np.isnan(y):
+            pass
+        elif x != y:
+            result += 1
+    return result
 
 
-def make_tree(input_dir, scheme_selection):
-    schemes = ["wgMLST_core", "wgMLST_pan"]
-    scheme_path = {s: files.joinpath("scheme", s.split("_")[0], s) for s in schemes}
-    target_file = files.joinpath(input_dir, scheme_path[scheme_selection] + ".tsv")
+def make_tree(target_file):
     profiles = pd.read_csv(target_file, sep="\t", index_col=0)
 
     ## build phylogenetic tree
