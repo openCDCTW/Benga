@@ -122,7 +122,7 @@ def profile_alleles(assemble_dir, db_dir, output_dir, threads, occr_level=90, se
                     series = series.set_value(locus, allele)
             collect.append(series)
     result = pd.concat(collect, axis=1)
-    result.to_csv(files.joinpath(output_dir, "wgmlst.tsv"), sep="\t", index=False)
+    result.to_csv(files.joinpath(output_dir, "wgmlst.tsv"), sep="\t")
 
 
 def match_allele(args):
