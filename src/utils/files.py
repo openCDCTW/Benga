@@ -1,6 +1,5 @@
 import os
 import shutil
-import tarfile
 
 
 def joinpath(a, *args):
@@ -30,19 +29,6 @@ def clear_folder(path):
     if os.path.exists(path):
         shutil.rmtree(path)
     os.mkdir(path)
-
-
-def to_gz(target, filename):
-    tar = tarfile.open(filename + ".tar.gz", "w:gz")
-    tar.add(target, arcname=filename)
-    tar.close()
-
-
-def decompress_gz(target, path):
-    with tarfile.open(target, "r:gz") as tar:
-        name = tar.getnames()[0]
-        tar.extractall(path)
-    return name
 
 
 def recursive_chown(dir, user):
