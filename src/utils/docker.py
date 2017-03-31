@@ -1,73 +1,55 @@
 import os
-from concurrent.futures import ProcessPoolExecutor
-
-from src.utils import operations, files
+import time
 
 
-def docker_prokka_cmd(newname, outpath, inpath):
-    name, ext = newname.split(".")
-
-    args = list()
-    args.append(("--cpus", "2"))
-    args.append(("--outdir", "/data/" + name))
-    args.append(("--prefix", name))
-    prokka_ = operations.format_cmd("prokka", args, "/input/" + newname)
-
-    args2 = list()
-    args2.append(("--rm", ""))
-    args2.append(("-v", outpath + ":/data"))
-    args2.append(("-v", inpath + ":/input"))
-    args2.append(("a504082002/prokka", ""))
-    docker_prokka = operations.format_cmd("docker run", args2, prokka_)
-    return docker_prokka
+def check_ready(async_results, outpath):
+    deleted = []
+    for r in async_results:
+        if r.ready():
+            for filename, file in r.get():
+                print(filename)
+                with open(os.path.join(outpath, filename), "w") as f:
+                    f.write(file)
+            deleted.append(r)
+    for d in deleted:
+        async_results.remove(d)
 
 
-def prokka(newnames, outpath, inpath):
-    cmds = [docker_prokka_cmd(n, outpath, inpath) for n in newnames]
-    with ProcessPoolExecutor() as executor:
-        executor.map(os.system, cmds)
+def prokka(inpath, outpath):
+    print("sleep for 10 sec")
+    time.sleep(10)
+    results = []
+    for name in os.listdir(inpath):
+        filename = os.path.join(inpath, name)
+        with open(filename, "r") as f:
+            result = prokka.s(name, f.read()).apply_async()
+        results.append(result)
+
+    time.sleep(60)
+
+    while results:
+        time.sleep(10)
+        check_ready(results, outpath)
 
 
-def docker_roary_cmd(outpath, threads, identity):
-    args = list()
-    args.append(("-p", threads))
-    args.append(("-i", identity))
-    args.append(("-f", "/data/roary"))
-    roary_ = operations.format_cmd("roary", args, "/data/GFF/*.gff")
+def roary(inpath, outpath, ident_min, threads):
+    print("sleep for 10 sec")
+    time.sleep(10)
+    # prepare uploads
+    uploads = []
+    for name in os.listdir(inpath):
+        filename = os.path.join(inpath, name)
+        with open(filename, "r") as f:
+            uploads.append((name, f.read()))
 
-    args2 = list()
-    args2.append(("--rm", ""))
-    args2.append(("-v", outpath + ":/data"))
-    args2.append(("a504082002/roary", ""))
-    docker_roary = operations.format_cmd("docker run", args2, "python /program/cmds.py " + roary_)
-    return docker_roary
+    # run and wait for return
+    result = roary.s(uploads, ident_min, threads).apply_async()
+    while not result.ready():
+        time.sleep(10)
 
-
-def roary(outpath, threads=4, ident_min=95):
-    cmd = docker_roary_cmd(outpath, threads, ident_min)
-    os.system(cmd)
-
-
-def docker_fastx_cmd(locus_file, outpath):
-    locus = os.path.splitext(locus_file)[0]
-
-    args = list()
-    args.append(("-i", files.joinpath("/data/locusfiles", locus_file)))
-    args.append(("-o", files.joinpath("/data/locusfiles", locus + ".fa")))
-    f = operations.format_cmd("fastx_collapser", args, "")
-
-    args2 = list()
-    args2.append(("--rm", ""))
-    args2.append(("-v", outpath + ":/data"))
-    args2.append(("a504082002/fastx-toolkit", ""))
-    docker_fastx = operations.format_cmd("docker run", args2, f)
-    return docker_fastx
-
-
-def fastx(locus_files, outpath):
-    cmds = [docker_fastx_cmd(file, outpath) for file in locus_files]
-    with ProcessPoolExecutor() as executor:
-        executor.map(os.system, cmds)
-    for file in locus_files:
-        os.remove(files.joinpath(outpath, "locusfiles", file))
+    # receive and write result
+    filename, file = result.get()
+    print(filename)
+    with open(os.path.join(outpath, filename), "w") as f:
+        f.write(file)
 

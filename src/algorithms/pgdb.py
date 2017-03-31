@@ -123,9 +123,9 @@ def annotate_configs(input_dir, output_dir, logger=None, use_docker=True):
     annotate_dir = files.joinpath(output_dir, "Annotated")
     files.create_if_not_exist(annotate_dir)
     if use_docker:
-        docker.prokka(namemap.values(), annotate_dir, assembly_dir)
+        docker.prokka(assembly_dir, annotate_dir)
     else:
-        c = [cmds.prokka(x, annotate_dir, assembly_dir) for x in namemap.values()]
+        c = [cmds.form_prokka_cmd(x, assembly_dir, annotate_dir) for x in namemap.values()]
         with ProcessPoolExecutor() as executor:
             executor.map(os.system, c)
 
@@ -149,16 +149,16 @@ def make_database(output_dir, logger=None, threads=2, min_identity=95, use_docke
 
     database_dir = files.joinpath(output_dir, "DB")
     files.create_if_not_exist(database_dir)
-    ffn_dir = files.joinpath(output_dir, "FFN")
 
     logger.info("Calculating the pan genome...")
     if use_docker:
-        docker.roary(output_dir, threads=threads, ident_min=min_identity)
+        docker.roary(files.joinpath(output_dir, "GFF"), output_dir, min_identity, threads)
     else:
-        c = cmds.roary(output_dir, files.joinpath(output_dir, "GFF"), threads, min_identity)
+        c = cmds.form_roary_cmd(files.joinpath(output_dir, "GFF"), output_dir, min_identity, threads)
         os.system(c)
 
     logger.info("Finding most frequent allele as RefSeq...")
+    ffn_dir = files.joinpath(output_dir, "FFN")
     locus_dir = files.joinpath(output_dir, "locusfiles")
     files.create_if_not_exist(locus_dir)
     refseqs, total_isolates = identify_pan_refseq(output_dir, ffn_dir, locus_dir)
