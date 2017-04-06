@@ -66,8 +66,8 @@ def main():
     docker = not args.local
 
     if args.algorithm == "make_db":
-        pgdb.annotate_configs(input_dir, output_dir, use_docker=False)
-        pgdb.make_database(output_dir, threads=threads, min_identity=identity, use_docker=docker)
+        pgdb.annotate_configs(input_dir, output_dir, use_docker=docker)
+        pgdb.make_database(output_dir, threads=threads, use_docker=docker)
     if args.algorithm == "profiling":
         wgmlst.profiling(output_dir, input_dir, db_dir,
                          threads=threads, aligcov_cut=0.5, identity=identity)

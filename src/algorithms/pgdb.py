@@ -143,7 +143,7 @@ def annotate_configs(input_dir, output_dir, logger=None, use_docker=True):
     create_noncds(output_dir, gff_dir)
 
 
-def make_database(output_dir, logger=None, threads=2, min_identity=95, use_docker=True):
+def make_database(output_dir, logger=None, threads=2, use_docker=True):
     if not logger:
         logger = logs.console_logger(__name__)
 
@@ -151,6 +151,7 @@ def make_database(output_dir, logger=None, threads=2, min_identity=95, use_docke
     files.create_if_not_exist(database_dir)
 
     logger.info("Calculating the pan genome...")
+    min_identity = 95
     if use_docker:
         docker.roary(files.joinpath(output_dir, "GFF"), output_dir, min_identity, threads)
     else:
