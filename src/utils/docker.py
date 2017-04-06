@@ -1,5 +1,7 @@
 import os
 import time
+from prokkaapp.tasks import async_prokka
+from roaryapp.tasks import async_roary
 
 
 def check_ready(async_results, outpath):
@@ -22,7 +24,7 @@ def prokka(inpath, outpath):
     for name in os.listdir(inpath):
         filename = os.path.join(inpath, name)
         with open(filename, "r") as f:
-            result = prokka.s(name, f.read()).apply_async()
+            result = async_prokka.s(name, f.read()).apply_async()
         results.append(result)
 
     time.sleep(60)
@@ -43,7 +45,7 @@ def roary(inpath, outpath, ident_min, threads):
             uploads.append((name, f.read()))
 
     # run and wait for return
-    result = roary.s(uploads, ident_min, threads).apply_async()
+    result = async_roary.s(uploads, ident_min, threads).apply_async()
     while not result.ready():
         time.sleep(10)
 
