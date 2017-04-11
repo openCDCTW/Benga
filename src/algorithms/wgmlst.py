@@ -91,7 +91,7 @@ def exactly_match_in(records1, records2):
     return None
 
 
-def profile_alleles(assemble_dir, db_dir, output_dir, threads, occr_level=90, selector=None):
+def profile_alleles(assemble_dir, db_dir, output_dir, threads, occr_level=95, selector=None):
     locusfiles = files.joinpath(db_dir, "locusfiles")
     profile_file = files.joinpath(output_dir, "locusAP.tsv")
 
