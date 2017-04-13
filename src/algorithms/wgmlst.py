@@ -35,14 +35,11 @@ def profile_loci(refseq_fna, assemble_dir, output_dir, refseqdb_dir, aligcov_cut
                  .to_dict())
 
     # TODO: needs refactor
-    args = [(assemble_dir, output_dir, refseqdb_dir, aligcov_cut, identity, refseqlen, x)
+    args = [(assemble_dir, output_dir, refseq_fna, refseqdb_dir, aligcov_cut, identity, refseqlen, x)
             for x in os.listdir(assemble_dir)]
 
-    collect = {}
-    compile_blastdb(refseq_fna, refseqdb_dir)
     with ProcessPoolExecutor(threads) as executor:
-        for k, v in executor.map(extract_locus, args):
-            collect[k] = v
+        collect = {k: v for k, v in executor.map(extract_locus, args)}
 
     refseqs = list(refseqlen.keys())
     series = []
@@ -55,11 +52,14 @@ def profile_loci(refseq_fna, assemble_dir, output_dir, refseqdb_dir, aligcov_cut
 
 
 def extract_locus(args):
-    assemble_dir, output_dir, refseqdb_dir, aligcov_cut, identity, refseqlen, filename = args
+    assemble_dir, output_dir,refseq_fna, refseqdb_dir, aligcov_cut, identity, refseqlen, filename = args
     contig_file = files.joinpath(assemble_dir, filename)
     contig_id = filename.split(".")[0]
     blastn_out_file = files.joinpath(output_dir, "{}.out".format(contig_id))
-    query_db(contig_file, refseqdb_dir, blastn_out_file, BLAST_COLUMNS)
+    db_dir = os.path.abspath(os.path.join(refseqdb_dir, os.pardir, "contig_id"))
+
+    compile_blastdb(contig_file, db_dir)
+    query_db(refseq_fna, db_dir, blastn_out_file, BLAST_COLUMNS)
     matched_loci = identify_locus(blastn_out_file, refseqlen, aligcov_cut, identity, BLAST_COLUMNS)
     os.remove(blastn_out_file)
     return contig_id, matched_loci
@@ -77,10 +77,10 @@ def query_db(query, db_dir, output_file, cols, threads=2):
 
 def identify_locus(blast_out, seqlen, aligcov_cut, identity, cols):
     result = pd.read_csv(blast_out, sep="\t", header=None, names=cols)
-    result["slen"] = [seqlen[x] for x in result["sseqid"]]
-    result["aligcov"] = (result["length"] - result["gapopen"]) / result["slen"]
+    result["qlen"] = [seqlen[x] for x in result["qseqid"]]
+    result["aligcov"] = (result["length"] - result["gapopen"]) / result["qlen"]
     result = result[(result["aligcov"] >= aligcov_cut) & (result["pident"] >= identity)]
-    return set(result["sseqid"])
+    return set(result["qseqid"])
 
 
 def exactly_match_in(records1, records2):
