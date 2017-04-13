@@ -52,11 +52,11 @@ def profile_loci(refseq_fna, assemble_dir, output_dir, refseqdb_dir, aligcov_cut
 
 
 def extract_locus(args):
-    assemble_dir, output_dir,refseq_fna, refseqdb_dir, aligcov_cut, identity, refseqlen, filename = args
+    assemble_dir, output_dir, refseq_fna, refseqdb_dir, aligcov_cut, identity, refseqlen, filename = args
     contig_file = files.joinpath(assemble_dir, filename)
     contig_id = filename.split(".")[0]
     blastn_out_file = files.joinpath(output_dir, "{}.out".format(contig_id))
-    db_dir = os.path.abspath(os.path.join(refseqdb_dir, os.pardir, "contig_id"))
+    db_dir = os.path.abspath(os.path.join(refseqdb_dir, os.pardir, contig_id))
 
     compile_blastdb(contig_file, db_dir)
     query_db(refseq_fna, db_dir, blastn_out_file, BLAST_COLUMNS)
