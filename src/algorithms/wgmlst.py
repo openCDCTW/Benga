@@ -88,8 +88,11 @@ def identify_locus(blast_out, seqlen, aligcov_cut, identity, cols):
 
 def exactly_match_in(records1, records2):
     for r1 in records1:
+        r1_rev = r1.seq.reverse_complement()
         for r2 in records2:
             if r1.seq in r2.seq:
+                return r1.id
+            if r1_rev in r2.seq:
                 return r1.id
     return None
 
