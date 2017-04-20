@@ -1,4 +1,6 @@
 import argparse
+import os.path
+import datetime
 from src.algorithms import pgdb, wgmlst, phylotree
 
 
@@ -8,7 +10,7 @@ def parse_args():
     arg_parser.add_argument(
         "-a", "--algorithm",
         required=True,
-        choices=["make_db", "profiling"],
+        choices=["make_db", "profiling", "tree"],
         help="Execute specified algorithm. (necessary)"
     )
 
@@ -61,6 +63,15 @@ def main():
         pgdb.make_database(output_dir, threads=threads, use_docker=docker)
     if args.algorithm == "profiling":
         wgmlst.profiling(output_dir, input_dir, db_dir, threads=threads)
+    if args.algorithm == "tree":
+        dendro = phylotree.Dendrogram()
+        dendro.make_tree(input_dir)
+        date = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M")
+        filename = date + "_tree"
+        dendro.to_newick(os.path.join(output_dir, "{}.newick".format(filename)))
+        dendro.render_on(os.path.join(output_dir, "{}.pdf".format(filename)))
+        dendro.render_on(os.path.join(output_dir, "{}.svg".format(filename)))
+        dendro.render_on(os.path.join(output_dir, "{}.png".format(filename)))
 
 
 if __name__ == "__main__":
