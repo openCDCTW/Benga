@@ -106,7 +106,7 @@ def make_schemes(mapping_file, refseqs, total_isolates, scheme_dir):
     mapping[["locus", "occurence", "sequence"]].to_csv(files.joinpath(scheme_dir, "scheme.csv"), index=False)
 
 
-def annotate_configs(input_dir, output_dir, logger=None, use_docker=True):
+def annotate_configs(input_dir, output_dir, logger=None, threads=8, use_docker=True):
     if not logger:
         logger = logs.console_logger(__name__)
 
@@ -126,7 +126,7 @@ def annotate_configs(input_dir, output_dir, logger=None, use_docker=True):
         docker.prokka(assembly_dir, annotate_dir)
     else:
         c = [cmds.form_prokka_cmd(x, assembly_dir, annotate_dir) for x in namemap.values()]
-        with ProcessPoolExecutor() as executor:
+        with ProcessPoolExecutor(int(threads/2)) as executor:
             executor.map(os.system, c)
 
     logger.info("Moving protein CDS (.ffn) files...")
