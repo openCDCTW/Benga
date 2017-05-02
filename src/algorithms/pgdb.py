@@ -57,14 +57,6 @@ def create_noncds(database_dir, gff_dir):
         file.write(json.dumps(noncds))
 
 
-def save_locus_map(matrix, output_dir):
-    mapping_file = files.joinpath(output_dir, "locusmapping.txt")
-    matrix[matrix["No. isolates"] == matrix["No. sequences"]].to_csv(mapping_file, sep="\t")
-
-    paralog_file = files.joinpath(output_dir, "paralog.txt")
-    matrix[matrix["No. isolates"] != matrix["No. sequences"]].to_csv(paralog_file, sep="\t")
-
-
 def dump_alleles(row, filename):
     records = [seq.new_record(operations.make_seqid(x), x) for x in row]
     seq.save_records(records, filename)
@@ -75,28 +67,49 @@ def most_frequent_allele(row):
     return counter.most_common(1)[0][0]
 
 
-def identify_pan_refseq(output_dir, ffn_dir, locus_dir, metadata_colnumber=14):
-    roary_result = pd.read_csv(files.joinpath(output_dir, "roary", "gene_presence_absence.csv"))
-    roary_result.index = pd.Index(map(lambda x: "SAL{0:07d}".format(x + 1), roary_result.index), name="locus")
-    total_isolates = len(roary_result.columns) - metadata_colnumber
-
-    matrix = roary_result[["Gene", "No. isolates", "No. sequences", "Annotation"]]
-    save_locus_map(matrix, output_dir)
-
-    matrix = roary_result[roary_result["No. isolates"] == roary_result["No. sequences"]]
+def identify_pan_refseq(output_dir, ffn_dir, locus_dir):
+    profiles, isolates = extract_profiles(output_dir)
+    new_profiles = pd.DataFrame(columns=profiles.columns, index=profiles.index)
     allele_map = defaultdict(set)
-    for colname, col in matrix.iloc[:, metadata_colnumber:].iteritems():
+    for colname, col in profiles.iteritems():
         ffn_file = files.joinpath(ffn_dir, colname + ".ffn")
         cds = {record.id: record.seq for record in SeqIO.parse(ffn_file, "fasta")}
         for locus, allele in col.iteritems():
             if type(allele) == str:
-                allele_map[locus].add(str(cds[allele]))
+                s = str(cds[allele])
+                allele_map[locus].add(s)
+                new_profiles.loc[locus, colname] = operations.make_seqid(s)
+    new_profiles.to_csv(files.joinpath(output_dir, "allele_profiles.tsv"), sep="\t")
 
     frequent = {}
     for locus, alleles in allele_map.items():
         dump_alleles(alleles, files.joinpath(locus_dir, locus + ".fa"))
         frequent[locus] = most_frequent_allele(alleles)
-    return frequent, total_isolates
+    return frequent, isolates
+
+
+def extract_profiles(output_dir, metadata_colnumber=14):
+    profile_matrix = pd.read_csv(files.joinpath(output_dir, "roary", "gene_presence_absence.csv"))
+    profile_matrix.index = pd.Index(map(lambda x: "SAL{0:07d}".format(x + 1), profile_matrix.index), name="locus")
+    isolates = len(profile_matrix.columns) - metadata_colnumber
+    appear_once_locus = divide_matrix(profile_matrix, output_dir)
+    profiles = appear_once_locus.iloc[:, metadata_colnumber:]
+    return profiles, isolates
+
+
+def divide_matrix(mat, output_dir):
+    appear_once_locus = mat[mat["No. isolates"] == mat["No. sequences"]]
+    not_appear_once_locus = mat[mat["No. isolates"] != mat["No. sequences"]]
+    save_metadata(appear_once_locus, not_appear_once_locus, output_dir)
+    return appear_once_locus
+
+
+def save_metadata(appear_once_locus, not_appear_once_locus, output_dir):
+    select_col = ["Gene", "No. isolates", "No. sequences", "Annotation"]
+    metadata = appear_once_locus[select_col]
+    paralog = not_appear_once_locus[select_col]
+    metadata.to_csv(files.joinpath(output_dir, "locus_metadata.tsv"), sep="\t")
+    paralog.to_csv(files.joinpath(output_dir, "paralog_metadata.tsv"), sep="\t")
 
 
 def make_schemes(mapping_file, refseqs, total_isolates, scheme_dir):
@@ -169,12 +182,12 @@ def make_database(output_dir, logger=None, threads=2, use_docker=True):
     SeqIO.write(records, files.joinpath(database_dir, "panRefSeq.fa"), "fasta")
 
     logger.info("Making dynamic schemes...")
-    mapping_file = files.joinpath(output_dir, "locusmapping.txt")
+    mapping_file = files.joinpath(output_dir, "locus_metadata.tsv")
     make_schemes(mapping_file, refseqs, total_isolates, database_dir)
 
     logger.info("Collecting outputs...")
     shutil.copy(files.joinpath(output_dir, "roary", "summary_statistics.txt"), database_dir)
-    shutil.copy(files.joinpath(output_dir, "locusmapping.txt"), database_dir)
+    shutil.copy(files.joinpath(output_dir, "locus_metadata.tsv"), database_dir)
     shutil.move(locus_dir, database_dir)
     logger.info("Done!!")
 
