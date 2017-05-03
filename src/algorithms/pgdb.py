@@ -67,8 +67,27 @@ def most_frequent_allele(row):
     return counter.most_common(1)[0][0]
 
 
-def identify_pan_refseq(output_dir, ffn_dir, locus_dir, locusmeta_file, paralogmeta_file, profile_file):
-    profiles, isolates = extract_profiles(output_dir, locusmeta_file, paralogmeta_file)
+def extract_profiles(roary_matrix_file, locusmeta_file, paralogmeta_file, metadata_cols=14):
+    matrix = pd.read_csv(roary_matrix_file)
+    matrix.index = pd.Index(map(lambda x: "SAL{0:07d}".format(x + 1), matrix.index), name="locus")
+
+    appear_once_locus = matrix[matrix["No. isolates"] == matrix["No. sequences"]]
+    not_appear_once_locus = matrix[matrix["No. isolates"] != matrix["No. sequences"]]
+    save_metadata(appear_once_locus, locusmeta_file)
+    save_metadata(not_appear_once_locus, paralogmeta_file)
+
+    profiles = appear_once_locus.iloc[:, metadata_cols:]
+    isolates = len(matrix.columns) - metadata_cols
+    return profiles, isolates
+
+
+def save_metadata(loci, meta_file, select_col=None):
+    if not select_col:
+        select_col = ["Gene", "No. isolates", "No. sequences", "Annotation"]
+    loci[select_col].to_csv(meta_file, sep="\t")
+
+
+def identify_pan_refseq(profiles, ffn_dir, locus_dir, profile_file):
     new_profiles = pd.DataFrame(columns=profiles.columns, index=profiles.index)
     allele_map = defaultdict(set)
     for colname, col in profiles.iteritems():
@@ -85,31 +104,7 @@ def identify_pan_refseq(output_dir, ffn_dir, locus_dir, locusmeta_file, paralogm
     for locus, alleles in allele_map.items():
         dump_alleles(alleles, files.joinpath(locus_dir, locus + ".fa"))
         frequent[locus] = most_frequent_allele(alleles)
-    return frequent, isolates
-
-
-def extract_profiles(output_dir, locusmeta_file, paralogmeta_file, metadata_colnumber=14):
-    profile_matrix = pd.read_csv(files.joinpath(output_dir, "roary", "gene_presence_absence.csv"))
-    profile_matrix.index = pd.Index(map(lambda x: "SAL{0:07d}".format(x + 1), profile_matrix.index), name="locus")
-    isolates = len(profile_matrix.columns) - metadata_colnumber
-    appear_once_locus = divide_matrix(profile_matrix, locusmeta_file, paralogmeta_file)
-    profiles = appear_once_locus.iloc[:, metadata_colnumber:]
-    return profiles, isolates
-
-
-def divide_matrix(mat, locusmeta_file, paralogmeta_file):
-    appear_once_locus = mat[mat["No. isolates"] == mat["No. sequences"]]
-    not_appear_once_locus = mat[mat["No. isolates"] != mat["No. sequences"]]
-    save_metadata(appear_once_locus, not_appear_once_locus, locusmeta_file, paralogmeta_file)
-    return appear_once_locus
-
-
-def save_metadata(appear_once_locus, not_appear_once_locus, locusmeta_file, paralogmeta_file):
-    select_col = ["Gene", "No. isolates", "No. sequences", "Annotation"]
-    metadata = appear_once_locus[select_col]
-    paralog = not_appear_once_locus[select_col]
-    metadata.to_csv(locusmeta_file, sep="\t")
-    paralog.to_csv(paralogmeta_file, sep="\t")
+    return frequent
 
 
 def make_schemes(locusmeta_file, scheme_file, refseqs, total_isolates):
@@ -171,15 +166,18 @@ def make_database(output_dir, logger=None, threads=2, use_docker=True):
         c = cmds.form_roary_cmd(files.joinpath(output_dir, "GFF"), output_dir, min_identity, threads)
         os.system(c)
 
+    logger.info("Extract profiles from roary result matrix...")
+    matrix_file = files.joinpath(output_dir, "roary", "gene_presence_absence.csv")
+    locusmeta_file = files.joinpath(database_dir, "locus_metadata.tsv")
+    paralogmeta_file = files.joinpath(database_dir, "paralog_metadata.tsv")
+    profiles, total_isolates = extract_profiles(matrix_file, locusmeta_file, paralogmeta_file)
+
     logger.info("Finding most frequent allele as RefSeq...")
     ffn_dir = files.joinpath(output_dir, "FFN")
     locus_dir = files.joinpath(database_dir, "locusfiles")
     files.create_if_not_exist(locus_dir)
-    locusmeta_file = files.joinpath(database_dir, "locus_metadata.tsv")
-    paralogmeta_file = files.joinpath(database_dir, "paralog_metadata.tsv")
     profile_file = files.joinpath(database_dir, "allele_profiles.tsv")
-    refseqs, total_isolates = identify_pan_refseq(output_dir, ffn_dir, locus_dir,
-                                                  locusmeta_file, paralogmeta_file, profile_file)
+    refseqs = identify_pan_refseq(profiles, ffn_dir, locus_dir, profile_file)
 
     logger.info("Saving pan RefSeq...")
     records = [seq.new_record(key, str(value)) for key, value in refseqs.items()]
