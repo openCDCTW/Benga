@@ -186,8 +186,9 @@ def make_database(output_dir, logger=None, threads=2, use_docker=True):
     make_schemes(mapping_file, refseqs, total_isolates, database_dir)
 
     logger.info("Collecting outputs...")
-    shutil.copy(files.joinpath(output_dir, "roary", "summary_statistics.txt"), database_dir)
-    shutil.copy(files.joinpath(output_dir, "locus_metadata.tsv"), database_dir)
+    shutil.move(files.joinpath(output_dir, "locus_metadata.tsv"), database_dir)
+    shutil.move(files.joinpath(output_dir, "paralog_metadata.tsv"), database_dir)
+    shutil.move(files.joinpath(output_dir, "allele_profiles.tsv"), database_dir)
     shutil.move(locus_dir, database_dir)
     logger.info("Done!!")
 
