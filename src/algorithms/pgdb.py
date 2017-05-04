@@ -112,6 +112,10 @@ def make_schemes(locusmeta_file, scheme_file, refseqs, total_isolates):
     mapping[["locus", "occurence", "sequence"]].to_csv(scheme_file, index=False, sep="\t")
 
 
+def seq2id(d):
+    return {operations.make_seqid(k): v for k, v in d.items()}
+
+
 def annotate_configs(input_dir, output_dir, logger=None, use_docker=True):
     if not logger:
         logger = logs.console_logger(__name__)
@@ -175,13 +179,14 @@ def make_database(output_dir, logger=None, threads=2, use_docker=True):
     locus_dir = files.joinpath(database_dir, "locusfiles")
     files.create_if_not_exist(locus_dir)
     profile_file = files.joinpath(database_dir, "allele_profiles.tsv")
-    allele_map = generate_allele_seqs(profiles, ffn_dir, profile_file)
-    frequency = count_frequency(allele_map, locus_dir)
+    allele_seqs = generate_allele_seqs(profiles, ffn_dir, profile_file)
+    allele_seq_freq = count_frequency(allele_seqs, locus_dir)
+    allele_freq = {locus: seq2id(seqs) for locus, seqs in allele_seq_freq.items()}
     with open(files.joinpath(database_dir, "allele_frequency.json"), "w") as file:
-        file.write(json.dumps(frequency))
+        file.write(json.dumps(allele_freq))
 
     logger.info("Identifying most frequent allele as reference sequence...")
-    refseqs = {locus: max(allele_freq.items(), key=lambda x: x[1])[0] for locus, allele_freq in frequency.items()}
+    refseqs = {locus: max(allele_freq.items(), key=lambda x: x[1])[0] for locus, allele_freq in allele_seq_freq.items()}
     records = [seq.new_record(key, str(value)) for key, value in refseqs.items()]
     SeqIO.write(records, files.joinpath(database_dir, "panRefSeq.fa"), "fasta")
 
