@@ -57,11 +57,6 @@ def create_noncds(database_dir, gff_dir):
         file.write(json.dumps(noncds))
 
 
-def save_alleles(row, filename):
-    records = [seq.new_record(operations.make_seqid(x), x) for x in row]
-    seq.save_records(records, filename)
-
-
 def extract_profiles(roary_matrix_file, locusmeta_file, paralogmeta_file, metadata_cols=14):
     matrix = pd.read_csv(roary_matrix_file)
     matrix.index = pd.Index(map(lambda x: "SAL{0:07d}".format(x + 1), matrix.index), name="locus")
@@ -82,27 +77,53 @@ def save_metadata(loci, meta_file, select_col=None):
     loci[select_col].to_csv(meta_file, sep="\t")
 
 
-def generate_allele_seqs(profiles, ffn_dir, profile_file):
-    new_profiles = pd.DataFrame(columns=profiles.columns, index=profiles.index)
-    allele_seqs = defaultdict(set)
-    for subject, profile in profiles.iteritems():
-        ffn_file = files.joinpath(ffn_dir, subject + ".ffn")
-        seqs = {record.id: record.seq for record in SeqIO.parse(ffn_file, "fasta")}
-        for locus, allele in profile.iteritems():
-            if type(allele) == str:
-                s = str(seqs[allele])
-                allele_seqs[locus].add(s)
-                new_profiles.loc[locus, subject] = operations.make_seqid(s)
-    new_profiles.to_csv(profile_file, sep="\t")
-    return allele_seqs
+def collect_record_profile(args):
+    subject, profile, ffn_dir = args
+    ffn_file = files.joinpath(ffn_dir, "{}.ffn".format(subject))
+    seqs = {record.id: record.seq for record in SeqIO.parse(ffn_file, "fasta")}
+    new_profile = pd.Series(name=subject)
+    for locus, allele in profile.dropna().iteritems():
+        s = str(seqs[allele])
+        rec = seq.new_record(operations.make_seqid(s), s)
+        new_profile.set_value(locus, rec)
+    return new_profile
 
 
-def count_frequency(allele_seqs, locus_dir):
+def generate_record_profiles(profiles, ffn_dir, threads):
+    args = [(subject, profile, ffn_dir) for subject, profile in profiles.iteritems()]
+    with ProcessPoolExecutor(threads) as executor:
+        new_profiles = list(executor.map(collect_record_profile, args))
+    return pd.concat(new_profiles, axis=1).sort_index().sort_index(axis=1)
+
+
+def save_allele_sequence(locus, alleles, locus_dir):
+    records = list(set(alleles.dropna().items()))
+    seq.save_records(records, files.joinpath(locus_dir, locus + ".fa"))
+
+
+def allele_infomation(args):
+    locus, alleles, locus_dir = args
+    save_allele_sequence(locus, alleles, locus_dir)
+    freq = Counter(alleles.values)
+    ref_rec = freq.most_common(1)
+    return locus, dict(freq), ref_rec
+
+
+def generate_allele_infos(record_profiles, allele_freq_file, locus_dir, refseq_file, threads):
     frequency = {}
-    for locus, alleles in allele_seqs.items():
-        save_alleles(alleles, files.joinpath(locus_dir, locus + ".fa"))
-        frequency[locus] = dict(Counter(alleles))
-    return frequency
+    refseqs = {}
+    args = [(locus, alleles, locus_dir) for locus, alleles in record_profiles.iterrows()]
+    with ProcessPoolExecutor(threads) as executor:
+        for locus, freq, ref_rec in executor.map(allele_infomation, args):
+            frequency[locus] = freq
+            refseqs[locus] = ref_rec.seq
+
+    with open(allele_freq_file, "w") as file:
+        file.write(json.dumps(frequency))
+
+    records = [seq.new_record(key, str(value)) for key, value in refseqs.items()]
+    SeqIO.write(records, refseq_file, "fasta")
+    return refseqs
 
 
 def make_schemes(locusmeta_file, scheme_file, refseqs, total_isolates):
@@ -110,10 +131,6 @@ def make_schemes(locusmeta_file, scheme_file, refseqs, total_isolates):
     mapping["occurence"] = list(map(lambda x: round(x/total_isolates * 100, 2), mapping["No. isolates"]))
     mapping["sequence"] = list(map(lambda x: refseqs[x], mapping["locus"]))
     mapping[["locus", "occurence", "sequence"]].to_csv(scheme_file, index=False, sep="\t")
-
-
-def seq2id(d):
-    return {operations.make_seqid(k): v for k, v in d.items()}
 
 
 def annotate_configs(input_dir, output_dir, logger=None, use_docker=True):
@@ -174,21 +191,18 @@ def make_database(output_dir, logger=None, threads=2, use_docker=True):
     paralogmeta_file = files.joinpath(database_dir, "paralog_metadata.tsv")
     profiles, total_isolates = extract_profiles(matrix_file, locusmeta_file, paralogmeta_file)
 
-    logger.info("Calculating allele frequencies...")
+    logger.info("Generating allele profiles...")
     ffn_dir = files.joinpath(output_dir, "FFN")
+    profile_file = files.joinpath(database_dir, "allele_profiles.tsv")
+    record_profiles = generate_record_profiles(profiles, ffn_dir, threads)
+    record_profiles.applymap(lambda x: x.id).to_csv(profile_file, sep="\t")
+
+    logger.info("Generating allele sequences, allele frequencies and reference sequence...")
+    refseq_file = files.joinpath(database_dir, "panRefSeq.fa")
+    allele_freq_file = files.joinpath(database_dir, "allele_frequency.json")
     locus_dir = files.joinpath(database_dir, "locusfiles")
     files.create_if_not_exist(locus_dir)
-    profile_file = files.joinpath(database_dir, "allele_profiles.tsv")
-    allele_seqs = generate_allele_seqs(profiles, ffn_dir, profile_file)
-    allele_seq_freq = count_frequency(allele_seqs, locus_dir)
-    allele_freq = {locus: seq2id(seqs) for locus, seqs in allele_seq_freq.items()}
-    with open(files.joinpath(database_dir, "allele_frequency.json"), "w") as file:
-        file.write(json.dumps(allele_freq))
-
-    logger.info("Identifying most frequent allele as reference sequence...")
-    refseqs = {locus: max(allele_freq.items(), key=lambda x: x[1])[0] for locus, allele_freq in allele_seq_freq.items()}
-    records = [seq.new_record(key, str(value)) for key, value in refseqs.items()]
-    SeqIO.write(records, files.joinpath(database_dir, "panRefSeq.fa"), "fasta")
+    refseqs = generate_allele_infos(record_profiles, allele_freq_file, locus_dir, refseq_file, threads)
 
     logger.info("Making dynamic schemes...")
     scheme_file = files.joinpath(database_dir, "scheme.tsv")
