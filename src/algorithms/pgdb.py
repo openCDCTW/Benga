@@ -100,8 +100,7 @@ def allele_infomation(args):
     locus, alleles, locus_dir = args
     alleles = [(rec.id, str(rec.seq)) for rec in alleles.dropna().values]
     freq = Counter(alleles)
-    refseq = freq.most_common(1)[0][1]
-    
+    refseq = freq.most_common(1)[0][0][1]
     frequency = {allele[0]: count for allele, count in freq.items()}
     records = [seq.new_record(allele[0], allele[1]) for allele in freq.keys()]
     seq.save_records(records, files.joinpath(locus_dir, locus + ".fa"))
