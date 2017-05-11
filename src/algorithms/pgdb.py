@@ -96,17 +96,15 @@ def generate_record_profiles(profiles, ffn_dir, threads):
     return pd.concat(new_profiles, axis=1).sort_index().sort_index(axis=1)
 
 
-def save_allele_sequence(locus, alleles, locus_dir):
-    records = list(set(alleles.dropna().items()))
-    seq.save_records(records, files.joinpath(locus_dir, locus + ".fa"))
-
-
 def allele_infomation(args):
     locus, alleles, locus_dir = args
-    save_allele_sequence(locus, alleles, locus_dir)
-    freq = Counter(alleles.values)
-    ref_rec = freq.most_common(1)
-    return locus, dict(freq), ref_rec
+    alleles = [(rec.id, str(rec.seq)) for rec in alleles.dropna().values]
+    freq = Counter(alleles)
+    refseq = freq.most_common(1)[0][0][1]
+    frequency = {allele[0]: count for allele, count in freq.items()}
+    records = [seq.new_record(allele[0], allele[1]) for allele in freq.keys()]
+    seq.save_records(records, files.joinpath(locus_dir, locus + ".fa"))
+    return locus, frequency, refseq
 
 
 def generate_allele_infos(record_profiles, allele_freq_file, locus_dir, refseq_file, threads):
@@ -114,9 +112,9 @@ def generate_allele_infos(record_profiles, allele_freq_file, locus_dir, refseq_f
     refseqs = {}
     args = [(locus, alleles, locus_dir) for locus, alleles in record_profiles.iterrows()]
     with ProcessPoolExecutor(threads) as executor:
-        for locus, freq, ref_rec in executor.map(allele_infomation, args):
+        for locus, freq, refseq in executor.map(allele_infomation, args):
             frequency[locus] = freq
-            refseqs[locus] = ref_rec.seq
+            refseqs[locus] = refseq
 
     with open(allele_freq_file, "w") as file:
         file.write(json.dumps(frequency))
@@ -195,7 +193,7 @@ def make_database(output_dir, logger=None, threads=2, use_docker=True):
     ffn_dir = files.joinpath(output_dir, "FFN")
     profile_file = files.joinpath(database_dir, "allele_profiles.tsv")
     record_profiles = generate_record_profiles(profiles, ffn_dir, threads)
-    record_profiles.applymap(lambda x: x.id).to_csv(profile_file, sep="\t")
+    record_profiles.applymap(lambda x: x.id if type(x) != float else x).to_csv(profile_file, sep="\t")
 
     logger.info("Generating allele sequences, allele frequencies and reference sequence...")
     refseq_file = files.joinpath(database_dir, "panRefSeq.fa")
