@@ -65,7 +65,7 @@ def main():
         wgmlst.profiling(output_dir, input_dir, db_dir, threads=threads)
     if args.algorithm == "tree":
         dendro = phylotree.Dendrogram()
-        dendro.make_tree(input_dir)
+        dendro.make_tree(os.path.join(input_dir, "wgmlst.tsv"))
         date = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M")
         filename = date + "_tree"
         dendro.to_newick(os.path.join(output_dir, "{}.newick".format(filename)))
