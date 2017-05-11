@@ -1,6 +1,7 @@
 import argparse
 import os.path
 import datetime
+import json
 from src.algorithms import pgdb, wgmlst, phylotree
 
 
@@ -64,8 +65,10 @@ def main():
     if args.algorithm == "profiling":
         wgmlst.profiling(output_dir, input_dir, db_dir, threads=threads)
     if args.algorithm == "tree":
+        with open(os.path.join(input_dir, "namemap.json"), "r") as file:
+            names = json.loads(file.read())
         dendro = phylotree.Dendrogram()
-        dendro.make_tree(os.path.join(input_dir, "wgmlst.tsv"))
+        dendro.make_tree(os.path.join(input_dir, "wgmlst.tsv"), names)
         date = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M")
         filename = date + "_tree"
         dendro.to_newick(os.path.join(output_dir, "{}.newick".format(filename)))
