@@ -33,6 +33,14 @@ def parse_args():
     )
 
     arg_parser.add_argument(
+        "--occr",
+        type=int,
+        default=95,
+        help="Level of occurrence for scheme selection. [Default: 95]",
+        metavar="OCCR"
+    )
+
+    arg_parser.add_argument(
         "-t", "--threads",
         type=int,
         default=2,
@@ -56,6 +64,7 @@ def main():
     input_dir = args.input
     output_dir = args.output
     db_dir = args.database
+    occr_level = args.occr
     threads = args.threads
     docker = not args.local
 
@@ -63,7 +72,7 @@ def main():
         pgdb.annotate_configs(input_dir, output_dir, use_docker=docker)
         pgdb.make_database(output_dir, threads=threads, use_docker=docker)
     if args.algorithm == "profiling":
-        wgmlst.profiling(output_dir, input_dir, db_dir, threads=threads)
+        wgmlst.profiling(output_dir, input_dir, db_dir, occr_level, threads=threads)
     if args.algorithm == "tree":
         with open(os.path.join(input_dir, "namemap.json"), "r") as file:
             names = json.loads(file.read())

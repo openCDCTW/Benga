@@ -97,7 +97,7 @@ def exactly_match_in(records1, records2):
     return None
 
 
-def profile_alleles(query_dir, db_dir, output_dir, threads, occr_level=95, selector=None):
+def profile_alleles(query_dir, db_dir, output_dir, threads, occr_level, selector=None):
     locusfiles = files.joinpath(db_dir, "locusfiles")
     profile_file = files.joinpath(output_dir, "locus_profiles.tsv")
 
@@ -141,7 +141,7 @@ def match_allele(args):
     return None
 
 
-def profiling(output_dir, input_dir, db_dir, threads, logger=None, aligcov_cut=0.5, identity=90):
+def profiling(output_dir, input_dir, db_dir, occr_level, threads, logger=None, aligcov_cut=0.5, identity=90):
     if not logger:
         logger = logs.console_logger(__name__)
 
@@ -157,4 +157,4 @@ def profiling(output_dir, input_dir, db_dir, threads, logger=None, aligcov_cut=0
     profile_loci(refseq_fna, query_dir, output_dir, aligcov_cut, identity, threads)
 
     logger.info("Allocating alleles...")
-    profile_alleles(query_dir, db_dir, output_dir, threads)
+    profile_alleles(query_dir, db_dir, output_dir, threads, occr_level)
