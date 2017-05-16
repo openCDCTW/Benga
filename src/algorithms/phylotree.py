@@ -24,8 +24,10 @@ class Dendrogram:
             self._ete_tree = Tree(self.newick)
         return self._ete_tree
 
-    def make_tree(self, profile_file):
+    def make_tree(self, profile_file, names=None):
         profiles = pd.read_csv(profile_file, sep="\t", index_col=0)
+        if names:
+            profiles.columns = list(map(lambda x: names[x], profiles.columns))
         self._nodes = list(profiles.columns)
         distances = distance_matrix(profiles)
         self._tree = construct_tree(distances)
@@ -34,7 +36,7 @@ class Dendrogram:
         with open(file, "w") as file:
             file.write(self.newick)
 
-    def render_on(self, file, w=800, h=600, units="px", dpi=300, *args):
+    def render_on(self, file, w=900, h=1200, units="px", dpi=300, *args):
         self.ete_tree.render(file, w=w, h=h, units=units, dpi=dpi, *args)
 
 

@@ -14,28 +14,28 @@ BLAST_COLUMNS = ["qseqid", "sseqid", "pident", "length", "mismatch", "gapopen", 
                  "sstart", "send", "evalue", "bitscore"]
 
 
-def rename(assemble_dir, query_dir):
+def rename(query_dir, input_dir):
     namemap = {}
-    for i, filename in enumerate(sorted(os.listdir(query_dir)), 1):
-        file = SeqIO.parse(files.joinpath(query_dir, filename), "fasta")
+    for i, filename in enumerate(sorted(os.listdir(input_dir)), 1):
+        file = SeqIO.parse(files.joinpath(input_dir, filename), "fasta")
         records = []
         for j, record in enumerate(file, 1):
-            newid = "Assembly_{i}::Contig_{j}".format(**locals())
+            newid = "Genome_{i}::Contig_{j}".format(**locals())
             records.append(seq.new_record(newid, str(record.seq)))
 
-        newname = "Assembly_{i}.fa".format(**locals())
-        SeqIO.write(records, files.joinpath(assemble_dir, newname), "fasta")
+        newname = "Genome_{i}.fa".format(**locals())
+        SeqIO.write(records, files.joinpath(query_dir, newname), "fasta")
         namemap[newname.split(".")[0]] = filename.split(".")[0]
     return namemap
 
 
-def profile_loci(refseq_fna, assemble_dir, output_dir, aligcov_cut, identity, threads):
+def profile_loci(refseq_fna, query_dir, output_dir, aligcov_cut, identity, threads):
     refseqlen = (functional.seq(SeqIO.parse(refseq_fna, "fasta"))
                  .map(lambda rec: (rec.id, len(rec.seq)))
                  .to_dict())
 
-    args = [(x, assemble_dir, refseq_fna, refseqlen, aligcov_cut, identity)
-            for x in os.listdir(assemble_dir)]
+    args = [(x, query_dir, refseq_fna, refseqlen, aligcov_cut, identity)
+            for x in os.listdir(query_dir)]
     with ProcessPoolExecutor(threads) as executor:
         collect = {k: v for k, v in executor.map(extract_locus, args)}
 
@@ -46,16 +46,16 @@ def profile_loci(refseq_fna, assemble_dir, output_dir, aligcov_cut, identity, th
         ser = pd.Series(xs, name=cid, index=refseqs)
         series.append(ser)
     table = pd.concat(series, axis=1).sort_index(axis=0).sort_index(axis=1)
-    table.to_csv(files.joinpath(output_dir, "locusAP.tsv"), sep="\t")
+    table.to_csv(files.joinpath(output_dir, "locus_profiles.tsv"), sep="\t")
 
 
 def extract_locus(args):
-    filename, assemble_dir, refseq_fna, refseqlen, aligcov_cut, identity = args
-    contig_file = files.joinpath(assemble_dir, filename)
+    filename, query_dir, refseq_fna, refseqlen, aligcov_cut, identity = args
+    contig_file = files.joinpath(query_dir, filename)
     contig_id = filename.split(".")[0]
 
-    db_dir = os.path.join(assemble_dir, contig_id)
-    blastn_out_file = files.joinpath(assemble_dir, "{}.out".format(contig_id))
+    db_dir = os.path.join(query_dir, contig_id)
+    blastn_out_file = files.joinpath(query_dir, "{}.out".format(contig_id))
 
     compile_blastdb(contig_file, db_dir)
     query_db(refseq_fna, db_dir, blastn_out_file, BLAST_COLUMNS)
@@ -97,12 +97,12 @@ def exactly_match_in(records1, records2):
     return None
 
 
-def profile_alleles(assemble_dir, db_dir, output_dir, threads, occr_level=95, selector=None):
+def profile_alleles(query_dir, db_dir, output_dir, threads, occr_level, selector=None):
     locusfiles = files.joinpath(db_dir, "locusfiles")
-    profile_file = files.joinpath(output_dir, "locusAP.tsv")
+    profile_file = files.joinpath(output_dir, "locus_profiles.tsv")
 
     # select loci to profile depends on scheme
-    scheme = pd.read_csv(files.joinpath(db_dir, "scheme.csv"), usecols=[0, 1])
+    scheme = pd.read_csv(files.joinpath(db_dir, "scheme.tsv"), usecols=[0, 1], sep="\t")
     profiles = pd.read_csv(profile_file, sep="\t", index_col=0)
     if not selector:
         selected_loci = scheme[scheme["occurence"] >= occr_level]["locus"]
@@ -116,7 +116,7 @@ def profile_alleles(assemble_dir, db_dir, output_dir, threads, occr_level=95, se
     collect = []
     with ProcessPoolExecutor(threads) as executor:
         for contig, profile in profiles.iteritems():
-            contig_file = files.joinpath(assemble_dir, "{}.fa".format(contig))
+            contig_file = files.joinpath(query_dir, "{}.fa".format(contig))
             records = list(SeqIO.parse(contig_file, "fasta"))
             matched = profile[profile]
 
@@ -141,20 +141,20 @@ def match_allele(args):
     return None
 
 
-def profiling(output_dir, input_dir, db_dir, threads, logger=None, aligcov_cut=0.5, identity=90):
+def profiling(output_dir, input_dir, db_dir, occr_level, threads, logger=None, aligcov_cut=0.5, identity=90):
     if not logger:
         logger = logs.console_logger(__name__)
 
     logger.info("Renaming contigs...")
-    assemble_dir = files.joinpath(output_dir, "query_assembly")
-    files.create_if_not_exist(assemble_dir)
-    namemap = rename(assemble_dir, input_dir)
+    query_dir = files.joinpath(output_dir, "query")
+    files.create_if_not_exist(query_dir)
+    namemap = rename(query_dir, input_dir)
     with open(files.joinpath(output_dir, "namemap.json"), "w") as f:
         f.write(json.dumps(namemap))
 
     logger.info("Profiling loci...")
     refseq_fna = files.joinpath(db_dir, "panRefSeq.fa")
-    profile_loci(refseq_fna, assemble_dir, output_dir, aligcov_cut, identity, threads)
+    profile_loci(refseq_fna, query_dir, output_dir, aligcov_cut, identity, threads)
 
     logger.info("Allocating alleles...")
-    profile_alleles(assemble_dir, db_dir, output_dir, threads)
+    profile_alleles(query_dir, db_dir, output_dir, threads, occr_level)
