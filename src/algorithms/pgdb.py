@@ -90,7 +90,7 @@ def collect_record_profile(args):
 
 
 def generate_record_profiles(profiles, ffn_dir, threads):
-    args = [(subject, profile, ffn_dir) for subject, profile in profiles.iteritems()]
+    args = ((subject, profile, ffn_dir) for subject, profile in profiles.iteritems())
     with ProcessPoolExecutor(threads) as executor:
         new_profiles = list(executor.map(collect_record_profile, args))
     return pd.concat(new_profiles, axis=1).sort_index().sort_index(axis=1)
