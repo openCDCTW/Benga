@@ -5,7 +5,12 @@ from Bio.SeqIO import write
 
 
 def new_record(seqid, seq, desc=""):
-    return SeqRecord(Seq(seq, generic_dna), id=seqid, description=desc)
+    if type(seq) == str:
+        return SeqRecord(Seq(seq, generic_dna), id=seqid, description=desc)
+    elif type(seq) == Seq:
+        return SeqRecord(seq, id=seqid, description=desc)
+    else:
+        print("None supported type: {}".format(type(seq)))
 
 
 def replace_id(record, newid):
