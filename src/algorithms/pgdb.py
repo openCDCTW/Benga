@@ -60,21 +60,27 @@ def create_noncds(database_dir, gff_dir):
 def extract_profiles(roary_matrix_file, locusmeta_file, paralogmeta_file, metadata_cols=14):
     matrix = pd.read_csv(roary_matrix_file)
     matrix.index = pd.Index(map(lambda x: "SAL{0:07d}".format(x + 1), matrix.index), name="locus")
-
-    appear_once_locus = matrix[matrix["No. isolates"] == matrix["No. sequences"]]
-    not_appear_once_locus = matrix[matrix["No. isolates"] != matrix["No. sequences"]]
-    save_metadata(appear_once_locus, locusmeta_file)
-    save_metadata(not_appear_once_locus, paralogmeta_file)
-
-    profiles = appear_once_locus.iloc[:, metadata_cols:]
     isolates = len(matrix.columns) - metadata_cols
+
+    save_not_appear_once_locus_metadata(matrix, paralogmeta_file)
+    matrix = save_appear_once_locus_metadata(matrix, locusmeta_file)
+    profiles = matrix.iloc[:, metadata_cols:]
     return profiles, isolates
 
 
-def save_metadata(loci, meta_file, select_col=None):
+def save_appear_once_locus_metadata(matrix, meta_file, select_col=None):
     if not select_col:
         select_col = ["Gene", "No. isolates", "No. sequences", "Annotation"]
-    loci[select_col].to_csv(meta_file, sep="\t")
+    appear_once_locus = matrix[matrix["No. isolates"] == matrix["No. sequences"]]
+    appear_once_locus[select_col].to_csv(meta_file, sep="\t")
+    return appear_once_locus
+
+
+def save_not_appear_once_locus_metadata(matrix, meta_file, select_col=None):
+    if not select_col:
+        select_col = ["Gene", "No. isolates", "No. sequences", "Annotation"]
+    not_appear_once_locus = matrix[matrix["No. isolates"] != matrix["No. sequences"]]
+    not_appear_once_locus[select_col].to_csv(meta_file, sep="\t")
 
 
 def collect_record_profile(args):
