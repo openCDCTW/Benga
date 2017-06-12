@@ -83,52 +83,42 @@ def save_not_appear_once_locus_metadata(matrix, meta_file, select_col=None):
     not_appear_once_locus[select_col].to_csv(meta_file, sep="\t")
 
 
-def collect_record_profile(args):
-    subject, profile, ffn_dir = args
-    ffn_file = files.joinpath(ffn_dir, "{}.ffn".format(subject))
-    seqs = {record.id: record.seq for record in SeqIO.parse(ffn_file, "fasta")}
-    new_profile = pd.Series(name=subject)
-    for locus, allele in profile.dropna().iteritems():
-        s = seqs[allele]
-        # rec = seq.new_record(operations.make_seqid(s), s)
-        new_profile.set_value(locus, s)
-    return new_profile
+def collect_allele_infos(profiles, ffn_dir):
+    freq = {row["Gene"]: Counter for i, row in profiles.iterrows()}
+    new_profiles = []
+    for subject, profile in profiles.iteritems():
+        ffn_file = files.joinpath(ffn_dir, "{}.ffn".format(subject))
+        seqs = {record.id: record.seq for record in SeqIO.parse(ffn_file, "fasta")}
+
+        new_profile = pd.Series(name=subject)
+        for locus, allele in profile.dropna().iteritems():
+            freq[locus].update([seqs[allele]])
+            s = seqs[allele]
+            new_profile.set_value(locus, operations.make_seqid(s))
+        new_profiles.append(new_profile)
+    new_profiles = pd.concat(new_profiles, axis=1).sort_index().sort_index(axis=1)
+    return new_profiles, freq
 
 
-def generate_record_profiles(profiles, ffn_dir, threads):
-    # args = ((subject, profile, ffn_dir) for subject, profile in profiles.iteritems())
-    # with ProcessPoolExecutor(threads) as executor:
-    #     new_profiles = list(executor.map(collect_record_profile, args))
-    new_profiles = [collect_record_profile((subject, profile, ffn_dir)) for subject, profile in profiles.iteritems()]
-    return pd.concat(new_profiles, axis=1).sort_index().sort_index(axis=1)
-
-
-def allele_infomation(args):
-    locus, alleles, locus_dir = args
-    alleles = ((operations.make_seqid(s), s) for s in alleles.dropna().values)
-    freq = Counter(alleles)
-    refseq = freq.most_common(1)[0][0][1]
-    frequency = {allele[0]: count for allele, count in freq.items()}
-    records = [seq.new_record(allele[0], allele[1]) for allele in freq.keys()]
-    seq.save_records(records, files.joinpath(locus_dir, locus + ".fa"))
-    return locus, frequency, refseq
-
-
-def generate_allele_infos(seq_profiles, allele_freq_file, locus_dir, refseq_file, threads):
-    frequency = {}
-    refseqs = {}
-    args = ((locus, allele_seqs, locus_dir) for locus, allele_seqs in seq_profiles.iterrows())
-    with ProcessPoolExecutor(threads) as executor:
-        for locus, freq, refseq in executor.map(allele_infomation, args):
-            frequency[locus] = freq
-            refseqs[locus] = refseq
-
-    with open(allele_freq_file, "w") as file:
-        file.write(json.dumps(frequency))
-
-    records = [seq.new_record(key, str(value)) for key, value in refseqs.items()]
+def save_refseq(freq, refseq_file):
+    refseqs = {(locus, counter.most_common(1)[0][0]) for locus, counter in freq.items()}
+    records = [seq.new_record(locus, sequence) for locus, sequence in refseqs.items()]
     SeqIO.write(records, refseq_file, "fasta")
     return refseqs
+
+
+def save_locusfiles(freq, locus_dir):
+    for locus, counter in freq.items():
+        records = [seq.new_record(operations.make_seqid(allele), allele) for allele in counter.keys()]
+        seq.save_records(records, files.joinpath(locus_dir, locus + ".fa"))
+
+
+def save_allele_freq(freq, allele_freq_file):
+    allele_freq = {}
+    for locus, counter in freq.items():
+        allele_freq[locus] = {operations.make_seqid(allele): count for allele, count in counter.items()}
+    with open(allele_freq_file, "w") as file:
+        file.write(json.dumps(allele_freq))
 
 
 def make_schemes(locusmeta_file, scheme_file, refseqs, total_isolates):
@@ -196,18 +186,21 @@ def make_database(output_dir, logger=None, threads=2, use_docker=True):
     paralogmeta_file = files.joinpath(database_dir, "paralog_metadata.tsv")
     profiles, total_isolates = extract_profiles(matrix_file, locusmeta_file, paralogmeta_file)
 
-    logger.info("Generating allele profiles...")
+    logger.info("Collecting allele profiles and making allele frequencies and reference sequence...")
     ffn_dir = files.joinpath(output_dir, "FFN")
     profile_file = files.joinpath(database_dir, "allele_profiles.tsv")
-    record_profiles = generate_record_profiles(profiles, ffn_dir, threads)
-    record_profiles.applymap(lambda x: operations.make_seqid(x) if type(x) != float else x).to_csv(profile_file, sep="\t")
+    profiles, freq = collect_allele_infos(profiles, ffn_dir)
+    profiles.to_csv(profile_file, sep="\t")
 
-    logger.info("Generating allele sequences, allele frequencies and reference sequence...")
     refseq_file = files.joinpath(database_dir, "panRefSeq.fa")
-    allele_freq_file = files.joinpath(database_dir, "allele_frequency.json")
+    refseqs = save_refseq(freq, refseq_file)
+
     locus_dir = files.joinpath(database_dir, "locusfiles")
     files.create_if_not_exist(locus_dir)
-    refseqs = generate_allele_infos(record_profiles, allele_freq_file, locus_dir, refseq_file, threads)
+    save_locusfiles(freq, locus_dir)
+
+    allele_freq_file = files.joinpath(database_dir, "allele_frequency.json")
+    save_allele_freq(freq, allele_freq_file)
 
     logger.info("Making dynamic schemes...")
     scheme_file = files.joinpath(database_dir, "scheme.tsv")
