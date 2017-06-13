@@ -83,7 +83,7 @@ def save_not_appear_once_locus_metadata(matrix, meta_file, select_col=None):
 
 
 def collect_allele_infos(profiles, ffn_dir):
-    freq = {i: Counter() for i, row in profiles.iterrows()}
+    freq = {locus: Counter() for locus, row in profiles.iterrows()}
     new_profiles = []
     for subject, profile in profiles.iteritems():
         ffn_file = files.joinpath(ffn_dir, "{}.ffn".format(subject))
@@ -100,7 +100,7 @@ def collect_allele_infos(profiles, ffn_dir):
 
 
 def save_refseq(freq, refseq_file):
-    refseqs = {(locus, counter.most_common(1)[0][0]) for locus, counter in freq.items()}
+    refseqs = {locus: counter.most_common(1)[0][0] for locus, counter in freq.items()}
     records = [seq.new_record(locus, sequence) for locus, sequence in refseqs.items()]
     SeqIO.write(records, refseq_file, "fasta")
     return refseqs
@@ -108,14 +108,14 @@ def save_refseq(freq, refseq_file):
 
 def save_locusfiles(freq, locus_dir):
     for locus, counter in freq.items():
-        records = [seq.new_record(operations.make_seqid(allele), allele) for allele in counter.keys()]
+        records = [seq.new_record(operations.make_seqid(str(allele)), allele) for allele in counter.keys()]
         seq.save_records(records, files.joinpath(locus_dir, locus + ".fa"))
 
 
 def save_allele_freq(freq, allele_freq_file):
     allele_freq = {}
     for locus, counter in freq.items():
-        allele_freq[locus] = {operations.make_seqid(allele): count for allele, count in counter.items()}
+        allele_freq[locus] = {operations.make_seqid(str(allele)): count for allele, count in counter.items()}
     with open(allele_freq_file, "w") as file:
         file.write(json.dumps(allele_freq))
 
