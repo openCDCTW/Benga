@@ -83,7 +83,7 @@ def save_not_appear_once_locus_metadata(matrix, meta_file, select_col=None):
 
 
 def collect_allele_infos(profiles, ffn_dir):
-    freq = {row["Gene"]: Counter for i, row in profiles.iterrows()}
+    freq = {i: Counter() for i, row in profiles.iterrows()}
     new_profiles = []
     for subject, profile in profiles.iteritems():
         ffn_file = files.joinpath(ffn_dir, "{}.ffn".format(subject))
