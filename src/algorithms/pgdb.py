@@ -101,7 +101,7 @@ def collect_allele_infos(profiles, ffn_dir):
 
 def save_refseq(freq, refseq_file):
     refseqs = {locus: counter.most_common(1)[0][0] for locus, counter in freq.items()}
-    records = [seq.new_record(locus, sequence) for locus, sequence in refseqs.items()]
+    records = [seq.new_record(str(locus), sequence) for locus, sequence in refseqs.items()]
     SeqIO.write(records, refseq_file, "fasta")
     return refseqs
 
