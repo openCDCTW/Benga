@@ -57,8 +57,9 @@ def create_noncds(database_dir, gff_dir):
         file.write(json.dumps(noncds))
 
 
-def extract_profiles(roary_matrix_file, locusmeta_file, paralogmeta_file, metadata_cols=14):
+def extract_profiles(roary_matrix_file, locusmeta_file, paralogmeta_file, metadata_cols=13):
     matrix = pd.read_csv(roary_matrix_file)
+    matrix.set_index("Gene", inplace=True)
     isolates = len(matrix.columns) - metadata_cols
 
     save_not_appear_once_locus_metadata(matrix, paralogmeta_file)
@@ -69,21 +70,20 @@ def extract_profiles(roary_matrix_file, locusmeta_file, paralogmeta_file, metada
 
 def save_appear_once_locus_metadata(matrix, meta_file, select_col=None):
     if not select_col:
-        select_col = ["Gene", "No. isolates", "No. sequences", "Annotation"]
+        select_col = ["No. isolates", "No. sequences", "Annotation"]
     appear_once_locus = matrix[matrix["No. isolates"] == matrix["No. sequences"]]
-    appear_once_locus[select_col].to_csv(meta_file, sep="\t", index=False)
+    appear_once_locus[select_col].to_csv(meta_file, sep="\t")
     return appear_once_locus
 
 
 def save_not_appear_once_locus_metadata(matrix, meta_file, select_col=None):
     if not select_col:
-        select_col = ["Gene", "No. isolates", "No. sequences", "Annotation"]
+        select_col = ["No. isolates", "No. sequences", "Annotation"]
     not_appear_once_locus = matrix[matrix["No. isolates"] != matrix["No. sequences"]]
-    not_appear_once_locus[select_col].to_csv(meta_file, sep="\t", index=False)
+    not_appear_once_locus[select_col].to_csv(meta_file, sep="\t")
 
 
 def collect_allele_infos(profiles, ffn_dir):
-    profiles.set_index("Gene", inplace=True)
     freq = {locus: Counter() for locus, row in profiles.iterrows()}
     new_profiles = []
     for subject, profile in profiles.iteritems():
