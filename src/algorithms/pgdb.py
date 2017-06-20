@@ -58,6 +58,7 @@ def create_noncds(database_dir, gff_dir):
 
 def extract_profiles(roary_matrix_file, locusmeta_file, paralogmeta_file, metadata_cols=13):
     matrix = pd.read_csv(roary_matrix_file)
+    matrix["Gene"] = matrix["Gene"].str.replace("/", "_")
     matrix.set_index("Gene", inplace=True)
     isolates = len(matrix.columns) - metadata_cols
 
