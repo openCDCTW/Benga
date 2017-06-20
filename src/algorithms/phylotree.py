@@ -1,7 +1,8 @@
 import fastcluster
 import pandas as pd
 from ete3 import Tree
-from scipy.cluster.hierarchy import to_tree
+from scipy.cluster import hierarchy
+import matplotlib.pyplot as plt
 
 
 class Dendrogram:
@@ -11,6 +12,7 @@ class Dendrogram:
         self._tree = tree
         self._newick = None
         self._ete_tree = None
+        self._linkage = None
 
     @property
     def newick(self):
@@ -24,20 +26,28 @@ class Dendrogram:
             self._ete_tree = Tree(self.newick)
         return self._ete_tree
 
+    def render_on(self, file, w=900, h=1200, units="px", dpi=300, *args):
+        self.ete_tree.render(file, w=w, h=h, units=units, dpi=dpi, *args)
+
+    def scipy_tree(self, file, w=8, h=12, dpi=300):
+        plt.style.use("ggplot")
+        fig = plt.figure(figsize=(w, h))
+        hierarchy.dendrogram(self._linkage, labels=self._nodes, orientation="left",
+                             leaf_font_size=10, above_threshold_color="#808080")
+        fig.savefig(file, dpi=dpi)
+
     def make_tree(self, profile_file, names=None):
         profiles = pd.read_csv(profile_file, sep="\t", index_col=0)
         if names:
             profiles.columns = list(map(lambda x: names[x], profiles.columns))
         self._nodes = list(profiles.columns)
         distances = distance_matrix(profiles)
-        self._tree = construct_tree(distances)
+        self._linkage = linkage(distances)
+        self._tree = hierarchy.to_tree(self._linkage, False)
 
     def to_newick(self, file):
         with open(file, "w") as file:
             file.write(self.newick)
-
-    def render_on(self, file, w=900, h=1200, units="px", dpi=300, *args):
-        self.ete_tree.render(file, w=w, h=h, units=units, dpi=dpi, *args)
 
 
 def distance_matrix(profiles):
@@ -60,10 +70,8 @@ def hamming(xs, ys):
     return results
 
 
-def construct_tree(distances):
-    linkage = fastcluster.average(distances)
-    tree = to_tree(linkage, False)
-    return tree
+def linkage(distances):
+    return fastcluster.average(distances)
 
 
 def make_newick(node, newick, parentdist, leaf_names):

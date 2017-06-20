@@ -81,9 +81,9 @@ def main():
         date = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M")
         filename = date + "_tree"
         dendro.to_newick(os.path.join(output_dir, "{}.newick".format(filename)))
-        dendro.render_on(os.path.join(output_dir, "{}.pdf".format(filename)))
-        dendro.render_on(os.path.join(output_dir, "{}.svg".format(filename)))
-        dendro.render_on(os.path.join(output_dir, "{}.png".format(filename)))
+        dendro.scipy_tree(os.path.join(output_dir, "{}.pdf".format(filename)))
+        dendro.scipy_tree(os.path.join(output_dir, "{}.svg".format(filename)))
+        dendro.scipy_tree(os.path.join(output_dir, "{}.png".format(filename)))
 
 
 if __name__ == "__main__":
