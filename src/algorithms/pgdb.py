@@ -190,7 +190,7 @@ def make_database(output_dir, logger=None, threads=2, use_docker=True):
     ffn_dir = files.joinpath(output_dir, "FFN")
     profile_file = files.joinpath(database_dir, "allele_profiles.tsv")
     profiles, freq = collect_allele_infos(profiles, ffn_dir)
-    profiles.to_csv(profile_file, sep="\t", index=False)
+    profiles.to_csv(profile_file, sep="\t")
 
     refseq_file = files.joinpath(database_dir, "panRefSeq.fa")
     refseqs = save_refseq(freq, refseq_file)
