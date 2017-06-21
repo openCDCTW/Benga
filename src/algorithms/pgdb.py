@@ -59,7 +59,8 @@ def create_noncds(database_dir, gff_dir):
 def extract_profiles(roary_matrix_file, locusmeta_file, paralogmeta_file, metadata_cols=13):
     matrix = pd.read_csv(roary_matrix_file)
     matrix["Gene"] = matrix["Gene"].str.replace("/", "_")
-    matrix.set_index("Gene", inplace=True)
+    matrix.rename(columns={"Gene": "locus"}, inplace=True)
+    matrix.set_index("locus", inplace=True)
     isolates = len(matrix.columns) - metadata_cols
 
     save_not_appear_once_locus_metadata(matrix, paralogmeta_file)
@@ -124,7 +125,7 @@ def save_allele_freq(freq, allele_freq_file):
 def make_schemes(locusmeta_file, scheme_file, refseqs, total_isolates):
     mapping = pd.read_csv(locusmeta_file, sep="\t")
     mapping["occurence"] = list(map(lambda x: round(x/total_isolates * 100, 2), mapping["No. isolates"]))
-    mapping["sequence"] = list(map(lambda x: refseqs[x], mapping["locus"]))
+    mapping["sequence"] = list(map(lambda x: str(refseqs[x]), mapping["locus"]))
     mapping[["locus", "occurence", "sequence"]].to_csv(scheme_file, index=False, sep="\t")
 
 
