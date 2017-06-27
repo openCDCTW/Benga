@@ -38,3 +38,10 @@ def recursive_chown(dir, user):
         for f in files:
             shutil.chown(joinpath(root, f), user)
 
+
+def replace_ext(x, extensions=[".fna", ".fa"]):
+    y = x.copy()
+    for ext in extensions:
+        y = y.replace(ext, "")
+    return y
+

@@ -25,7 +25,7 @@ def rename(query_dir, input_dir):
 
         newname = "Genome_{i}.fa".format(**locals())
         SeqIO.write(records, files.joinpath(query_dir, newname), "fasta")
-        namemap[newname.split(".")[0]] = filename.split(".")[0]
+        namemap[files.replace_ext(newname)] = files.replace_ext(filename)
     return namemap
 
 
