@@ -34,12 +34,15 @@ class Dendrogram:
         fig = plt.figure(figsize=(w, h))
         hierarchy.dendrogram(self._linkage, labels=self._nodes, orientation="left",
                              leaf_font_size=10, above_threshold_color="#808080")
-        fig.savefig(file, dpi=dpi)
+        fig.savefig(file, dpi=dpi, bbox_inches='tight', pad_inches=1)
 
     def make_tree(self, profile_file, names=None):
         profiles = pd.read_csv(profile_file, sep="\t", index_col=0)
+        new_names = {}        
         if names:
-            profiles.columns = list(map(lambda x: names[x], profiles.columns))
+            for i in names:
+                new_names[i] = names[i].split('_')[0] + '_' + names[i].split('_')[1]
+        profiles.columns = list(map(lambda x: new_names[x], profiles.columns))
         self._nodes = list(profiles.columns)
         distances = distance_matrix(profiles)
         self._linkage = linkage(distances)
