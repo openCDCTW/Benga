@@ -29,9 +29,9 @@ class Dendrogram:
     def render_on(self, file, w=900, h=1200, units="px", dpi=300, *args):
         self.ete_tree.render(file, w=w, h=h, units=units, dpi=dpi, *args)
 
-    def scipy_tree(self, file, w=8, h=12, dpi=300):
+    def scipy_tree(self, file, w=8, dpi=300):
         plt.style.use("ggplot")
-        fig = plt.figure(figsize=(w, h))
+        fig = plt.figure(figsize=(w, int(len(self._nodes)*0.3)))
         hierarchy.dendrogram(self._linkage, labels=self._nodes, orientation="left",
                              leaf_font_size=10, above_threshold_color="#808080")
         fig.savefig(file, dpi=dpi, bbox_inches='tight', pad_inches=1)
