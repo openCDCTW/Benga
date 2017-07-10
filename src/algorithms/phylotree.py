@@ -2,7 +2,7 @@ import fastcluster
 import pandas as pd
 from ete3 import Tree
 from scipy.cluster import hierarchy
-from scipy.spatial.distance import pdist
+from scipy.spatial.distance import squareform
 import matplotlib.pyplot as plt
 
 
@@ -45,8 +45,8 @@ class Dendrogram:
                 new_names[i] = names[i].split('_')[0] + '_' + names[i].split('_')[1]
         profiles.columns = list(map(lambda x: new_names[x], profiles.columns))
         self._nodes = list(profiles.columns)
-        distances = pdist(profiles.T.as_matrix(), hamming)
-        self._linkage = fastcluster.average(distances)
+        distances = distance_matrix(profiles)
+        self._linkage = fastcluster.average(squareform(distances))
         self._tree = hierarchy.to_tree(self._linkage, False)
 
     def to_newick(self, file):
@@ -64,6 +64,14 @@ def hamming(xs, ys):
         else:
             results += 1
     return results
+
+
+def distance_matrix(profiles):
+    distances = pd.DataFrame(index=profiles.columns, columns=profiles.columns)
+    for x in profiles.columns:
+        for y in profiles.columns:
+            distances.loc[x, y] = hamming(profiles[x], profiles[y])
+    return distances
 
 
 def make_newick(node, newick, parentdist, leaf_names):
