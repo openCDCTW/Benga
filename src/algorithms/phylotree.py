@@ -43,7 +43,7 @@ class Dendrogram:
         new_names = {}        
         if names:
             for i in names:
-                new_names[i] = re.sub(r"_S\d+_L\d{3}[\d\w_-]+", "", names[i])
+                new_names[i] = re.sub(r"_S\d+_L\d{3}[\d\w_-]+", "", names[i]).replace("-", ".")
         profiles.columns = list(map(lambda x: new_names[x], profiles.columns))
         self._nodes = list(profiles.columns)
         distances = distance_matrix(profiles)
