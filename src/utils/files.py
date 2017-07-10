@@ -40,7 +40,7 @@ def recursive_chown(dir, user):
 
 
 def replace_ext(x, extensions=[".fna", ".fa"]):
-    y = x.copy()
+    y = x
     for ext in extensions:
         y = y.replace(ext, "")
     return y
