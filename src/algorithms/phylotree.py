@@ -1,5 +1,6 @@
 import fastcluster
 import pandas as pd
+import re
 from ete3 import Tree
 from scipy.cluster import hierarchy
 from scipy.spatial.distance import squareform
@@ -42,7 +43,7 @@ class Dendrogram:
         new_names = {}        
         if names:
             for i in names:
-                new_names[i] = names[i].split('_')[0] + '_' + names[i].split('_')[1]
+                new_names[i] = re.sub(r"_S\d+_L\d{3}[\d\w_-]+", "", names[i])
         profiles.columns = list(map(lambda x: new_names[x], profiles.columns))
         self._nodes = list(profiles.columns)
         distances = distance_matrix(profiles)
