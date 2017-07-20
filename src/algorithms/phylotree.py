@@ -36,6 +36,12 @@ class Dendrogram:
         fig = plt.figure(figsize=(w, int(len(self._nodes)*0.3)))
         hierarchy.dendrogram(self._linkage, labels=self._nodes, orientation="left",
                              leaf_font_size=10, above_threshold_color="#808080")
+        ax = plt.gca()
+        ax.grid(False)
+        plt.tick_params(axis = 'x', bottom = 'off', top = 'off', labelbottom = 'off')
+        ax.patch.set_facecolor('none')
+        plt.rcParams['svg.fonttype'] = 'none'
+
         fig.savefig(file, dpi=dpi, bbox_inches='tight', pad_inches=1)
 
     def make_tree(self, profile_file, names=None):
