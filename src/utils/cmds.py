@@ -15,6 +15,7 @@ def form_roary_cmd(inpath, outpath, ident_min, threads):
     args = list()
     args.append(("-p", threads))
     args.append(("-e", ""))  # generate pan_genome_reference.fa for reference sequence of gene/cluster
+    args.append(("--dont_delete_files", ""))  # multifasta files of each gene
     args.append(("-i", ident_min))
     args.append(("-f", files.joinpath(outpath, "roary")))
     return operations.format_cmd("roary", args, files.joinpath(inpath, "*.gff"))
