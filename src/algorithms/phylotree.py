@@ -64,15 +64,7 @@ class Dendrogram:
 
 
 def hamming(xs, ys):
-    results = 0
-    for x, y in zip(xs, ys):
-        if type(x) == str and type(y) == str and x == y:
-            pass
-        elif type(x) == float and type(y) == float:
-            pass
-        else:
-            results += 1
-    return results
+    return sum(xs.eq(ys)) + sum(xs.isnull() ^ ys.isnull())
 
 
 def distance_matrix(profiles):
