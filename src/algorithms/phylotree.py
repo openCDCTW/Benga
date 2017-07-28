@@ -64,7 +64,7 @@ class Dendrogram:
 
 
 def hamming(xs, ys):
-    return sum(xs.eq(ys)) + sum(xs.isnull() ^ ys.isnull())
+    return sum(xs.ne(ys) & ~(xs.isnull() & ys.isnull()))
 
 
 def distance_matrix(profiles):
