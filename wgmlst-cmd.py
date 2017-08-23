@@ -49,8 +49,8 @@ def parse_args():
     )
 
     arg_parser.add_argument(
-        "--local",
-        help="Use locally installed prokka and roary, instead of the docker version.",
+        "--docker",
+        help="Use docker version of prokka and roary, instead of the locally installed one.",
         action='store_true',
         default=False
     )
@@ -66,7 +66,7 @@ def main():
     db_dir = args.database
     occr_level = args.occr
     threads = args.threads
-    docker = not args.local
+    docker = args.docker
 
     if args.algorithm == "make_db":
         pgdb.annotate_configs(input_dir, output_dir, threads=threads, use_docker=docker)
