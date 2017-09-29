@@ -1,3 +1,4 @@
+import os.path
 from src.utils import operations, files
 
 
@@ -19,3 +20,16 @@ def form_roary_cmd(inpath, outpath, ident_min, threads):
     args.append(("-i", ident_min))
     args.append(("-f", files.joinpath(outpath, "roary")))
     return operations.format_cmd("roary", args, files.joinpath(inpath, "*.gff"))
+
+
+def form_prodigal_cmd(infile, outpath):
+    args = list()
+    filename = os.path.basename(infile).replace(".fa", "").replace(".fna", "")
+    args.append(("-i", infile))
+    args.append(("-c", ""))
+    args.append(("-m", ""))
+    args.append(("-q", ""))
+    args.append(("-g", "11"))
+    args.append(("-d", os.path.join(outpath, filename + ".locus.fna")))
+    args.append(("-o", os.path.join(outpath, filename + ".gbk")))
+    return operations.format_cmd("prodigal", args, "")
