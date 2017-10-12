@@ -24,7 +24,7 @@ def form_roary_cmd(inpath, outpath, ident_min, threads):
 
 def form_prodigal_cmd(infile, outpath):
     args = list()
-    filename = os.path.basename(infile).replace(".fa", "").replace(".fna", "")
+    filename = files.fasta_filename(infile)
     args.append(("-i", infile))
     args.append(("-c", ""))
     args.append(("-m", ""))
