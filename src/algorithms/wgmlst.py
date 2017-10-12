@@ -1,17 +1,42 @@
 import json
 import os
+from concurrent.futures import ProcessPoolExecutor
 import functional
 import pandas as pd
 from Bio import SeqIO
 from Bio.Blast.Applications import NcbiblastnCommandline
-from concurrent.futures import ProcessPoolExecutor
 
-from src.utils import files, seq
 from src.models import logs
-
+from src.utils import files, seq, cmds
+from src.utils.db import load_database_config, sql_query
 
 BLAST_COLUMNS = ["qseqid", "sseqid", "pident", "length", "mismatch", "gapopen", "qstart", "qend",
                  "sstart", "send", "evalue", "bitscore"]
+
+
+def identify_loci(filename, out_dir):
+    os.system(cmds.form_prodigal_cmd(filename, out_dir))
+
+
+def profile_by_query(filename, genome_id):
+    records = list(SeqIO.parse(filename, "fasta"))
+    contents = ",".join("'{}'".format(x) for x in records)
+    query = "select locus_id, allele_id from sequence where allele_id in ({});".format(contents)
+    profile = sql_query(query).drop_duplicates("allele_id") \
+        .set_index("locus_id").rename(columns={"allele_id": genome_id})
+    return profile.iloc[:, 0]
+
+
+def identify_and_profile(args):
+    filename, query_dir, selected_loci = args
+    in_file = os.path.join(query_dir, filename)
+    out_dir = os.path.join(query_dir, "temp")
+    genome_id = files.fasta_filename(filename)
+    target_file = os.path.join(out_dir, genome_id + ".locus.fna")
+    identify_loci(in_file, out_dir)
+    profile = profile_by_query(target_file, genome_id)
+    profile = profile[profile.index.isin(selected_loci)]
+    return profile
 
 
 def rename(query_dir, input_dir):
@@ -29,10 +54,19 @@ def rename(query_dir, input_dir):
     return namemap
 
 
-def profile_loci(refseq_fna, query_dir, output_dir, aligcov_cut, identity, threads):
-    refseqlen = (functional.seq(SeqIO.parse(refseq_fna, "fasta"))
-                 .map(lambda rec: (rec.id, len(rec.seq)))
-                 .to_dict())
+def profile_loci(refseq_fna, query_dir, output_dir, aligcov_cut, identity, threads, flat_file=True):
+    if flat_file:
+        refseqlen = (functional.seq(SeqIO.parse(refseq_fna, "fasta"))
+                     .map(lambda rec: (rec.id, len(rec.seq)))
+                     .to_dict())
+    else:
+        query = """SELECT locus_id, length(sequence.dna_seq) as ref_len
+                   FROM sequence
+                   INNER JOIN scheme
+                   ON sequence.locus_id=scheme.locus_id
+                   AND sequence.allele_id=scheme.ref_id;"""
+        t = sql_query(query)
+        refseqlen = {row["locus_id"]: row["ref_len"] for i, row in t.iterrows()}
 
     args = [(x, query_dir, refseq_fna, refseqlen, aligcov_cut, identity)
             for x in os.listdir(query_dir)]
@@ -99,20 +133,8 @@ def exactly_match_in(records1, records2):
 
 def profile_alleles(query_dir, db_dir, output_dir, threads, occr_level, selector=None):
     locusfiles = files.joinpath(db_dir, "locusfiles")
-    profile_file = files.joinpath(output_dir, "locus_profiles.tsv")
+    profiles = select_loci(db_dir, output_dir, occr_level, selector)
 
-    # select loci to profile depends on scheme
-    scheme = pd.read_csv(files.joinpath(db_dir, "scheme.tsv"), usecols=[0, 1], sep="\t")
-    profiles = pd.read_csv(profile_file, sep="\t", index_col=0)
-    if not selector:
-        selected_loci = scheme[scheme["occurence"] >= occr_level]["locus"]
-    elif type(selector) == list:
-        selected_loci = selector
-    else:
-        selected_loci = scheme["locus"]
-    profiles = profiles[profiles.index.isin(selected_loci)]
-
-    # profiling
     collect = []
     with ProcessPoolExecutor(threads) as executor:
         for contig, profile in profiles.iteritems():
@@ -131,6 +153,20 @@ def profile_alleles(query_dir, db_dir, output_dir, threads, occr_level, selector
     result.to_csv(files.joinpath(output_dir, "wgmlst.tsv"), sep="\t")
 
 
+def select_loci(db_dir, output_dir, occr_level, selector):
+    profile_file = files.joinpath(output_dir, "locus_profiles.tsv")
+    profiles = pd.read_csv(profile_file, sep="\t", index_col=0)
+    scheme = pd.read_csv(files.joinpath(db_dir, "scheme.tsv"), usecols=[0, 1], sep="\t")
+    if not selector:
+        selected_loci = scheme[scheme["occurence"] >= occr_level]["locus"]
+    elif type(selector) == list:
+        selected_loci = selector
+    else:
+        selected_loci = scheme["locus"]
+    profiles = profiles[profiles.index.isin(selected_loci)]
+    return profiles
+
+
 def match_allele(args):
     locus, locusfiles, records = args
     alleles_file = files.joinpath(locusfiles, "{}.fa".format(locus))
@@ -141,7 +177,9 @@ def match_allele(args):
     return None
 
 
-def profiling(output_dir, input_dir, db_dir, occr_level, threads, logger=None, aligcov_cut=0.5, identity=90):
+def profiling(output_dir, input_dir, db_dir, occr_level, threads,
+              logger=None, aligcov_cut=0.5, identity=90, flat_file=True):
+    load_database_config()
     if not logger:
         logger = logs.console_logger(__name__)
 
@@ -152,9 +190,22 @@ def profiling(output_dir, input_dir, db_dir, occr_level, threads, logger=None, a
     with open(files.joinpath(output_dir, "namemap.json"), "w") as f:
         f.write(json.dumps(namemap))
 
-    logger.info("Profiling loci...")
-    refseq_fna = files.joinpath(db_dir, "panRefSeq.fa")
-    profile_loci(refseq_fna, query_dir, output_dir, aligcov_cut, identity, threads)
+    if flat_file:
+        logger.info("Profiling loci...")
+        refseq_fna = files.joinpath(db_dir, "panRefSeq.fa")
+        profile_loci(refseq_fna, query_dir, output_dir, aligcov_cut, identity, threads)
 
-    logger.info("Allocating alleles...")
-    profile_alleles(query_dir, db_dir, output_dir, threads, occr_level)
+        logger.info("Allocating alleles...")
+        profile_alleles(query_dir, db_dir, output_dir, threads, occr_level)
+    else:
+        logger.info("Identifying loci and allocating alleles...")
+
+        # select loci by scheme
+        query = "select locus_id from scheme where occurence>={};".format(occr_level)
+        selected_loci = set(sql_query(query).iloc[:, 0])
+
+        args = [(x, query_dir, selected_loci) for x in os.listdir(query_dir)]
+        with ProcessPoolExecutor(threads) as executor:
+            collect = list(executor.map(identify_and_profile, args))
+        result = pd.concat(collect, axis=1)
+        result.to_csv(files.joinpath(output_dir, "wgmlst.tsv"), sep="\t")
