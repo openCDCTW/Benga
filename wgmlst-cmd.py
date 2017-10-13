@@ -55,6 +55,13 @@ def parse_args():
         default=False
     )
 
+    arg_parser.add_argument(
+        "--flat",
+        help="Use flat version of profiling algorithm.",
+        action='store_true',
+        default=False
+    )
+
     return arg_parser.parse_args()
 
 
@@ -67,12 +74,13 @@ def main():
     occr_level = args.occr
     threads = args.threads
     docker = args.docker
+    flat = args.flat
 
     if args.algorithm == "make_db":
         pgdb.annotate_configs(input_dir, output_dir, threads=threads, use_docker=docker)
         pgdb.make_database(output_dir, threads=threads, use_docker=docker)
     if args.algorithm == "profiling":
-        wgmlst.profiling(output_dir, input_dir, db_dir, occr_level, threads=threads)
+        wgmlst.profiling(output_dir, input_dir, db_dir, occr_level, threads=threads, flat_file=flat)
     if args.algorithm == "tree":
         with open(os.path.join(input_dir, "namemap.json"), "r") as file:
             names = json.loads(file.read())
