@@ -7,20 +7,23 @@ from Bio import SeqIO
 from Bio.Blast.Applications import NcbiblastnCommandline
 
 from src.models import logs
-from src.utils import files, seq, cmds
+from src.utils import files, seq, cmds, operations
 from src.utils.db import load_database_config, sql_query
 
 BLAST_COLUMNS = ["qseqid", "sseqid", "pident", "length", "mismatch", "gapopen", "qstart", "qend",
                  "sstart", "send", "evalue", "bitscore"]
 
 
-def identify_loci(filename, out_dir):
+def identify_loci(args):
+    filename, out_dir = args
     os.system(cmds.form_prodigal_cmd(filename, out_dir))
+    return filename
 
 
 def profile_by_query(filename, genome_id):
-    records = list(SeqIO.parse(filename, "fasta"))
-    contents = ",".join("'{}'".format(x) for x in records)
+    # TODO: collect new alleles from here
+    allele_ids = [operations.make_seqid(rec.seq) for rec in SeqIO.parse(filename, "fasta")]
+    contents = ",".join("'{}'".format(x) for x in allele_ids)
     query = "select locus_id, allele_id from sequence where allele_id in ({});".format(contents)
     profile = sql_query(query).drop_duplicates("allele_id") \
         .set_index("locus_id").rename(columns={"allele_id": genome_id})
@@ -204,8 +207,17 @@ def profiling(output_dir, input_dir, db_dir, occr_level, threads,
         query = "select locus_id from scheme where occurence>={};".format(occr_level)
         selected_loci = set(sql_query(query).iloc[:, 0])
 
-        args = [(x, query_dir, selected_loci) for x in os.listdir(query_dir)]
+        temp_dir = os.path.join(query_dir, "temp")
+        files.create_if_not_exist(temp_dir)
+
+        collect = []
+        args = [(os.path.join(query_dir, filename), temp_dir) for filename in os.listdir(query_dir) if filename.endswith(".fa")]
         with ProcessPoolExecutor(threads) as executor:
-            collect = list(executor.map(identify_and_profile, args))
+            for filename in executor.map(identify_loci, args):
+                genome_id = files.fasta_filename(filename)
+                target_file = os.path.join(temp_dir, genome_id + ".locus.fna")
+                profile = profile_by_query(target_file, genome_id)
+                profile = profile[profile.index.isin(selected_loci)]
+                collect.append(profile)
         result = pd.concat(collect, axis=1)
         result.to_csv(files.joinpath(output_dir, "wgmlst.tsv"), sep="\t")
