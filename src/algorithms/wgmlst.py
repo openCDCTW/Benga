@@ -26,9 +26,10 @@ def profile_by_query(filename, genome_id, selected_loci):
     allele_ids = ",".join("'{}'".format(x) for x in allele_ids)
     locus_ids = ",".join("'{}'".format(x) for x in selected_loci)
     query = "select locus_id, allele_id from sequence where allele_id in ({}) and locus_id in ({});".format(allele_ids, locus_ids)
-    profile = sql_query(query).drop_duplicates("allele_id") \
-        .set_index("locus_id").rename(columns={"allele_id": genome_id})
-    return profile.iloc[:, 0]
+    profile = sql_query(query).drop_duplicates("allele_id")  # ensure allele_id is mapped only once
+    profile = profile.drop_duplicates("locus_id").set_index("locus_id")  # ensure locus_id exists only once
+    profile = profile.rename(columns={"allele_id": genome_id}).iloc[:, 0]
+    return profile
 
 
 def identify_and_profile(args):
