@@ -20,11 +20,12 @@ def identify_loci(args):
     return filename
 
 
-def profile_by_query(filename, genome_id):
+def profile_by_query(filename, genome_id, selected_loci):
     # TODO: collect new alleles from here
     allele_ids = [operations.make_seqid(rec.seq) for rec in SeqIO.parse(filename, "fasta")]
-    contents = ",".join("'{}'".format(x) for x in allele_ids)
-    query = "select locus_id, allele_id from sequence where allele_id in ({});".format(contents)
+    allele_ids = ",".join("'{}'".format(x) for x in allele_ids)
+    locus_ids = ",".join("'{}'".format(x) for x in selected_loci)
+    query = "select locus_id, allele_id from sequence where allele_id in ({}) and locus_id in ({});".format(allele_ids, locus_ids)
     profile = sql_query(query).drop_duplicates("allele_id") \
         .set_index("locus_id").rename(columns={"allele_id": genome_id})
     return profile.iloc[:, 0]
@@ -216,8 +217,7 @@ def profiling(output_dir, input_dir, db_dir, occr_level, threads,
             for filename in executor.map(identify_loci, args):
                 genome_id = files.fasta_filename(filename)
                 target_file = os.path.join(temp_dir, genome_id + ".locus.fna")
-                profile = profile_by_query(target_file, genome_id)
-                profile = profile[profile.index.isin(selected_loci)]
+                profile = profile_by_query(target_file, genome_id, selected_loci)
                 collect.append(profile)
         result = pd.concat(collect, axis=1)
         result.to_csv(files.joinpath(output_dir, "wgmlst.tsv"), sep="\t")
