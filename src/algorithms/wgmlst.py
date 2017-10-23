@@ -12,6 +12,7 @@ from src.utils.db import load_database_config, sql_query
 
 BLAST_COLUMNS = ["qseqid", "sseqid", "pident", "length", "mismatch", "gapopen", "qstart", "qend",
                  "sstart", "send", "evalue", "bitscore"]
+MLST = ["aroC", "dnaN", "hemD", "hisD", "purE", "sucA", "thrA"]
 
 
 def identify_loci(args):
@@ -182,7 +183,7 @@ def match_allele(args):
     return None
 
 
-def profiling(output_dir, input_dir, db_dir, occr_level, threads,
+def profiling(output_dir, input_dir, db_dir, threads, occr_level=None, selected_loci=None,
               logger=None, aligcov_cut=0.5, identity=90, flat_file=True):
     load_database_config()
     if not logger:
@@ -206,8 +207,11 @@ def profiling(output_dir, input_dir, db_dir, occr_level, threads,
         logger.info("Identifying loci and allocating alleles...")
 
         # select loci by scheme
-        query = "select locus_id from scheme where occurence>={};".format(occr_level)
-        selected_loci = set(sql_query(query).iloc[:, 0])
+        if selected_loci:
+            selected_loci = set(selected_loci)
+        else:
+            query = "select locus_id from scheme where occurence>={};".format(occr_level)
+            selected_loci = set(sql_query(query).iloc[:, 0])
 
         temp_dir = os.path.join(query_dir, "temp")
         files.create_if_not_exist(temp_dir)
@@ -222,3 +226,9 @@ def profiling(output_dir, input_dir, db_dir, occr_level, threads,
                 collect.append(profile)
         result = pd.concat(collect, axis=1)
         result.to_csv(files.joinpath(output_dir, "wgmlst.tsv"), sep="\t")
+
+
+def mlst_profiling(output_dir, input_dir, db_dir, threads,
+                   logger=None, aligcov_cut=0.5, identity=90, flat_file=True):
+    return profiling(output_dir, input_dir, db_dir, threads, logger=logger,
+                     aligcov_cut=aligcov_cut, identity=identity, flat_file=flat_file)

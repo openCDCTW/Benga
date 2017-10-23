@@ -11,7 +11,7 @@ def parse_args():
     arg_parser.add_argument(
         "-a", "--algorithm",
         required=True,
-        choices=["make_db", "profiling", "tree"],
+        choices=["make_db", "profiling", "MLST", "tree"],
         help="Execute specified algorithm. (necessary)"
     )
 
@@ -80,7 +80,10 @@ def main():
         pgdb.annotate_configs(input_dir, output_dir, threads=threads, use_docker=docker)
         pgdb.make_database(output_dir, threads=threads, use_docker=docker)
     if args.algorithm == "profiling":
-        wgmlst.profiling(output_dir, input_dir, db_dir, occr_level, threads=threads, flat_file=flat)
+        wgmlst.profiling(output_dir, input_dir, db_dir,
+                         threads=threads, occr_level=occr_level, flat_file=flat)
+    if args.algorithm == "MLST":
+        wgmlst.mlst_profiling(output_dir, input_dir, db_dir, threads=threads, flat_file=flat)
     if args.algorithm == "tree":
         with open(os.path.join(input_dir, "namemap.json"), "r") as file:
             names = json.loads(file.read())
