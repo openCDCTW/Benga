@@ -12,7 +12,7 @@ from src.utils.db import load_database_config, sql_query
 
 BLAST_COLUMNS = ["qseqid", "sseqid", "pident", "length", "mismatch", "gapopen", "qstart", "qend",
                  "sstart", "send", "evalue", "bitscore"]
-MLST = ["aroC", "dnaN", "hemD", "hisD", "purE", "sucA", "thrA"]
+MLST = ["aroC_1", "aroC_2", "aroC_3", "dnaN", "hemD", "hisD", "purE", "sucA_1", "sucA_2", "thrA_2", "thrA_3"]
 
 
 def identify_loci(args):
@@ -228,7 +228,6 @@ def profiling(output_dir, input_dir, db_dir, threads, occr_level=None, selected_
         result.to_csv(files.joinpath(output_dir, "wgmlst.tsv"), sep="\t")
 
 
-def mlst_profiling(output_dir, input_dir, db_dir, threads,
-                   logger=None, aligcov_cut=0.5, identity=90, flat_file=True):
-    return profiling(output_dir, input_dir, db_dir, threads, logger=logger,
+def mlst_profiling(output_dir, input_dir, db_dir, threads, logger=None, aligcov_cut=0.5, identity=90, flat_file=True):
+    return profiling(output_dir, input_dir, db_dir, threads, logger=logger, selected_loci=MLST,
                      aligcov_cut=aligcov_cut, identity=identity, flat_file=flat_file)
