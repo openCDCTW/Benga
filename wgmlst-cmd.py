@@ -11,7 +11,7 @@ def parse_args():
     arg_parser.add_argument(
         "-a", "--algorithm",
         required=True,
-        choices=["make_db", "profiling", "MLST", "tree"],
+        choices=["make_db", "profiling", "MLST", "virulence", "tree"],
         help="Execute specified algorithm. (necessary)"
     )
 
@@ -84,6 +84,8 @@ def main():
                          threads=threads, occr_level=occr_level, flat_file=flat)
     if args.algorithm == "MLST":
         wgmlst.mlst_profiling(output_dir, input_dir, db_dir, threads=threads, flat_file=flat)
+    if args.algorithm == "virulence":
+        wgmlst.virulence_profiling(output_dir, input_dir, db_dir, threads=threads, flat_file=flat)
     if args.algorithm == "tree":
         with open(os.path.join(input_dir, "namemap.json"), "r") as file:
             names = json.loads(file.read())
