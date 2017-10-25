@@ -3,12 +3,16 @@ import json
 import pandas as pd
 import sqlalchemy as sa
 
+HOST = "localhost"
+PORT = 5432
 DATABASE = ""
 USER = ""
 PASSWORD = ""
 
 
 def load_database_config(filename="database.config"):
+    global HOST
+    global PORT
     global DATABASE
     global USER
     global PASSWORD
@@ -17,13 +21,17 @@ def load_database_config(filename="database.config"):
     DATABASE = config["database"]
     USER = config["user"]
     PASSWORD = config["password"]
+    HOST = config["host"] if "host" in config.keys() else HOST
+    PORT = config["port"] if "port" in config.keys() else PORT
 
 
 def sql_query(query):
+    global HOST
+    global PORT
     global DATABASE
     global USER
     global PASSWORD
-    prot = "postgresql+psycopg2://{}:{}@localhost:5432/{}".format(USER, PASSWORD, DATABASE)
+    prot = "postgresql+psycopg2://{}:{}@{}:{}/{}".format(USER, PASSWORD, HOST, PORT, DATABASE)
     engine = sa.create_engine(prot)
     conn = engine.connect()
     t = pd.read_sql_query(query, con=conn)
