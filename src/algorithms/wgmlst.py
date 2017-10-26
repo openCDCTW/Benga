@@ -1,5 +1,6 @@
 import json
 import os
+import shutil
 from concurrent.futures import ProcessPoolExecutor
 import functional
 import pandas as pd
@@ -209,6 +210,8 @@ def profiling(output_dir, input_dir, database, threads, occr_level=None, selecte
                 collect.append(profile)
         result = pd.concat(collect, axis=1)
         result.to_csv(files.joinpath(output_dir, "wgmlst.tsv"), sep="\t")
+
+    shutil.rmtree(query_dir)
 
 
 def mlst_profiling(output_dir, input_dir, database, threads, logger=None, aligcov_cut=0.5, identity=90):
