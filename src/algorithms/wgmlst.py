@@ -26,27 +26,14 @@ def identify_loci(args):
     return filename
 
 
-def profile_by_query(filename, genome_id, selected_loci):
+def profile_by_query(filename, genome_id, selected_loci, database):
     # TODO: collect new alleles from here
-    allele_ids = [operations.make_seqid(rec.seq) for rec in SeqIO.parse(filename, "fasta")]
-    allele_ids = ",".join("'{}'".format(x) for x in allele_ids)
+    allele_ids = ",".join("'{}'".format(operations.make_seqid(rec.seq)) for rec in SeqIO.parse(filename, "fasta"))
     locus_ids = ",".join("'{}'".format(x) for x in selected_loci)
     query = "select locus_id, allele_id from sequence where allele_id in ({}) and locus_id in ({});".format(allele_ids, locus_ids)
-    profile = sql_query(query).drop_duplicates("allele_id")  # ensure allele_id is mapped only once
+    profile = sql_query(query, database=database).drop_duplicates("allele_id")  # ensure allele_id is mapped only once
     profile = profile.drop_duplicates("locus_id").set_index("locus_id")  # ensure locus_id exists only once
     profile = profile.rename(columns={"allele_id": genome_id}).iloc[:, 0]
-    return profile
-
-
-def identify_and_profile(args):
-    filename, query_dir, selected_loci = args
-    in_file = os.path.join(query_dir, filename)
-    out_dir = os.path.join(query_dir, "temp")
-    genome_id = files.fasta_filename(filename)
-    target_file = os.path.join(out_dir, genome_id + ".locus.fna")
-    identify_loci(in_file, out_dir)
-    profile = profile_by_query(target_file, genome_id)
-    profile = profile[profile.index.isin(selected_loci)]
     return profile
 
 
@@ -65,19 +52,10 @@ def rename(query_dir, input_dir):
     return namemap
 
 
-def profile_loci(refseq_fna, query_dir, output_dir, aligcov_cut, identity, threads, flat_file=True):
-    if flat_file:
-        refseqlen = (functional.seq(SeqIO.parse(refseq_fna, "fasta"))
-                     .map(lambda rec: (rec.id, len(rec.seq)))
-                     .to_dict())
-    else:
-        query = """SELECT locus_id, length(sequence.dna_seq) as ref_len
-                   FROM sequence
-                   INNER JOIN scheme
-                   ON sequence.locus_id=scheme.locus_id
-                   AND sequence.allele_id=scheme.ref_id;"""
-        t = sql_query(query)
-        refseqlen = {row["locus_id"]: row["ref_len"] for i, row in t.iterrows()}
+def profile_loci(refseq_fna, query_dir, output_dir, aligcov_cut, identity, threads):
+    refseqlen = (functional.seq(SeqIO.parse(refseq_fna, "fasta"))
+                 .map(lambda rec: (rec.id, len(rec.seq)))
+                 .to_dict())
 
     args = [(x, query_dir, refseq_fna, refseqlen, aligcov_cut, identity)
             for x in os.listdir(query_dir)]
@@ -188,8 +166,8 @@ def match_allele(args):
     return None
 
 
-def profiling(output_dir, input_dir, db_dir, threads, occr_level=None, selected_loci=None,
-              logger=None, aligcov_cut=0.5, identity=90, flat_file=True):
+def profiling(output_dir, input_dir, database, threads, occr_level=None, selected_loci=None, logger=None,
+              aligcov_cut=0.5, identity=90):
     load_database_config()
     if not logger:
         logger = logs.console_logger(__name__)
@@ -201,13 +179,13 @@ def profiling(output_dir, input_dir, db_dir, threads, occr_level=None, selected_
     with open(files.joinpath(output_dir, "namemap.json"), "w") as f:
         f.write(json.dumps(namemap))
 
-    if flat_file:
+    if os.path.isdir(database):
         logger.info("Profiling loci...")
-        refseq_fna = files.joinpath(db_dir, "panRefSeq.fa")
+        refseq_fna = files.joinpath(database, "panRefSeq.fa")
         profile_loci(refseq_fna, query_dir, output_dir, aligcov_cut, identity, threads)
 
         logger.info("Allocating alleles...")
-        profile_alleles(query_dir, db_dir, output_dir, threads, occr_level)
+        profile_alleles(query_dir, database, output_dir, threads, occr_level)
     else:
         logger.info("Identifying loci and allocating alleles...")
 
@@ -216,7 +194,7 @@ def profiling(output_dir, input_dir, db_dir, threads, occr_level=None, selected_
             selected_loci = set(selected_loci)
         else:
             query = "select locus_id from scheme where occurence>={};".format(occr_level)
-            selected_loci = set(sql_query(query).iloc[:, 0])
+            selected_loci = set(sql_query(query, database=database).iloc[:, 0])
 
         temp_dir = os.path.join(query_dir, "temp")
         files.create_if_not_exist(temp_dir)
@@ -227,17 +205,17 @@ def profiling(output_dir, input_dir, db_dir, threads, occr_level=None, selected_
             for filename in executor.map(identify_loci, args):
                 genome_id = files.fasta_filename(filename)
                 target_file = os.path.join(temp_dir, genome_id + ".locus.fna")
-                profile = profile_by_query(target_file, genome_id, selected_loci)
+                profile = profile_by_query(target_file, genome_id, selected_loci, database)
                 collect.append(profile)
         result = pd.concat(collect, axis=1)
         result.to_csv(files.joinpath(output_dir, "wgmlst.tsv"), sep="\t")
 
 
-def mlst_profiling(output_dir, input_dir, db_dir, threads, logger=None, aligcov_cut=0.5, identity=90, flat_file=True):
-    return profiling(output_dir, input_dir, db_dir, threads, logger=logger, selected_loci=MLST,
-                     aligcov_cut=aligcov_cut, identity=identity, flat_file=flat_file)
+def mlst_profiling(output_dir, input_dir, database, threads, logger=None, aligcov_cut=0.5, identity=90):
+    return profiling(output_dir, input_dir, database, threads, logger=logger, selected_loci=MLST,
+                     aligcov_cut=aligcov_cut, identity=identity)
 
 
-def virulence_profiling(output_dir, input_dir, db_dir, threads, logger=None, aligcov_cut=0.5, identity=90, flat_file=True):
-    return profiling(output_dir, input_dir, db_dir, threads, logger=logger, selected_loci=virulence_genes,
-                     aligcov_cut=aligcov_cut, identity=identity, flat_file=flat_file)
+def virulence_profiling(output_dir, input_dir, database, threads, logger=None, aligcov_cut=0.5, identity=90):
+    return profiling(output_dir, input_dir, database, threads, logger=logger, selected_loci=virulence_genes,
+                     aligcov_cut=aligcov_cut, identity=identity)

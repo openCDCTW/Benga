@@ -55,13 +55,6 @@ def parse_args():
         default=False
     )
 
-    arg_parser.add_argument(
-        "--flat",
-        help="Use flat version of profiling algorithm.",
-        action='store_true',
-        default=False
-    )
-
     return arg_parser.parse_args()
 
 
@@ -70,22 +63,20 @@ def main():
 
     input_dir = args.input
     output_dir = args.output
-    db_dir = args.database
+    database = args.database
     occr_level = args.occr
     threads = args.threads
     docker = args.docker
-    flat = args.flat
 
     if args.algorithm == "make_db":
         pgdb.annotate_configs(input_dir, output_dir, threads=threads, use_docker=docker)
         pgdb.make_database(output_dir, threads=threads, use_docker=docker)
     if args.algorithm == "profiling":
-        wgmlst.profiling(output_dir, input_dir, db_dir,
-                         threads=threads, occr_level=occr_level, flat_file=flat)
+        wgmlst.profiling(output_dir, input_dir, database, threads=threads, occr_level=occr_level)
     if args.algorithm == "MLST":
-        wgmlst.mlst_profiling(output_dir, input_dir, db_dir, threads=threads, flat_file=flat)
+        wgmlst.mlst_profiling(output_dir, input_dir, database, threads=threads)
     if args.algorithm == "virulence":
-        wgmlst.virulence_profiling(output_dir, input_dir, db_dir, threads=threads, flat_file=flat)
+        wgmlst.virulence_profiling(output_dir, input_dir, database, threads=threads)
     if args.algorithm == "tree":
         with open(os.path.join(input_dir, "namemap.json"), "r") as file:
             names = json.loads(file.read())
