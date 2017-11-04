@@ -1,5 +1,5 @@
 import json
-
+import psycopg2
 import pandas as pd
 import sqlalchemy as sa
 
@@ -35,8 +35,25 @@ def sql_query(query, database=None):
         database = DATABASE
     prot = "postgresql+psycopg2://{}:{}@{}:{}/{}".format(USER, PASSWORD, HOST, PORT, database)
     engine = sa.create_engine(prot)
-    conn = engine.connect()
-    t = pd.read_sql_query(query, con=conn)
-    conn.close()
+    with engine.connect() as conn:
+        t = pd.read_sql_query(query, con=conn)
     engine.dispose()
     return t
+
+
+def to_sql(sql, args, database=None):
+    global HOST
+    global PORT
+    global DATABASE
+    global USER
+    global PASSWORD
+    if not database:
+        database = DATABASE
+    try:
+        with psycopg2.connect(dbname=database, user=USER, password=PASSWORD,
+                              host=HOST, port=PORT) as conn:
+            with conn.cursor() as cur:
+                cur.execute(sql, args)
+                conn.commit()
+    except (Exception, psycopg2.DatabaseError) as error:
+        print(error)

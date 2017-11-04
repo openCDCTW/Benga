@@ -12,11 +12,13 @@ def main():
 
     try:
         os.system("createdb {}".format(dbname))
+        os.system("createdb profiling")
     except:
         print("Failed creating database: {}".format(dbname))
 
     try:
         create_relations(dbname, user, passwd)
+        create_profiling_relations(user, passwd)
     except:
         print("Failed creating relations")
 
@@ -79,6 +81,36 @@ def create_relations(dbname, user, passwd):
                 dna_seq text NOT NULL,
                 peptide_seq text NOT NULL
             );""")
+
+
+def create_profiling_relations(user, passwd):
+    with psycopg2.connect(dbname="profiling", host='localhost', user=user, password=passwd) as conn:
+        with conn.cursor() as cur:
+            cur.execute("""CREATE TABLE upload (
+                seq_id char(64) NOT NULL PRIMARY KEY,
+                batch_id char(32) NOT NULL,
+                created timestamp with time zone NOT NULL,
+                filename text NOT NULL,
+                file bytea NOT NULL
+            );""")
+
+            cur.execute("""CREATE TABLE profile (
+                id char(32) NOT NULL PRIMARY KEY,
+                created timestamp with time zone NOT NULL,
+                file bytea NOT NULL,
+                occurrence smallint NOT NULL,
+                database text NOT NULL
+            );""")
+
+            cur.execute("""CREATE TABLE dendrogram (
+                id char(32) NOT NULL PRIMARY KEY,
+                created timestamp with time zone NOT NULL,
+                png_file bytea NOT NULL,
+                pdf_file bytea NOT NULL,
+                svg_file bytea NOT NULL,
+                newick_file bytea NOT NULL
+            );""")
+
 
 if __name__ == "__main__":
     main()
