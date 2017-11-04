@@ -5,6 +5,8 @@ import psycopg2
 import datetime
 import hashlib
 import os
+from multiprocessing import Pool
+from src.api import internals
 from src.utils import db
 
 INDIR = "input"
@@ -56,7 +58,7 @@ class UploadListAPI(Resource):
         sql = "INSERT INTO upload (seq_id,batch_id,created,filename,file) VALUES(%s,%s,%s,%s,%s);"
         args = (data['seq_id'], data['batch_id'], data["created"],
                 data['filename'], psycopg2.Binary(file.read()))
-        db.to_sql(sql, args, database="profiling")
+        db.to_sql(sql, args, database=DB)
         return data, 201
 
 
@@ -83,12 +85,37 @@ class UploadAPI(Resource):
             abort(404)
 
 
-class ProfileListAPI(Resource):
+class ProfilingAPI(Resource):
     def __init__(self):
         self.reqparse = reqparse.RequestParser()
         self.reqparse.add_argument('id', type=str, required=True, location='json')
         self.reqparse.add_argument('database', type=str, required=True, location='json')
         self.reqparse.add_argument('occurrence', type=int, required=True, location='json')
+        super(ProfilingAPI, self).__init__()
+
+    def get(self, id):
+        sql = None
+        if len(id) == 32:
+            sql = "select * from upload where batch_id='{}';".format(id)
+        else:
+            abort(404)
+
+        results = db.sql_query(sql, database=DB).to_dict(orient="records")
+        if len(results) != 0:
+            pool = Pool(processes=1)
+            args = [(id, "Salmonella_5k", 95)]
+            result = pool.apply_async(internals.profiling_api, args)
+            return {"message": "Profiling dataset {}".format(id)}, 200
+        else:
+            abort(404)
+
+
+class ProfileListAPI(Resource):
+    def __init__(self):
+        self.reqparse = reqparse.RequestParser()
+        self.reqparse.add_argument('id', type=str, required=True, location='form')
+        self.reqparse.add_argument('database', type=str, required=True, location='form')
+        self.reqparse.add_argument('occurrence', type=int, required=True, location='form')
         self.reqparse.add_argument('file', type=FileStorage, required=True, location='files')
         super(ProfileListAPI, self).__init__()
 
@@ -97,16 +124,16 @@ class ProfileListAPI(Resource):
         results = db.sql_query(sql, database=DB).to_dict(orient="records")
         return results
 
-    def post(self):
-        data = self.reqparse.parse_args()
-        data["created"] = str(datetime.datetime.now())
-        file = data.pop('file', None)
-
-        sql = "INSERT INTO profile (id,created,file,occurrence,database) VALUES(%s,%s,%s,%s,%s);"
-        data = (data['id'], data["created"], psycopg2.Binary(file.read()),
-                data["occurrence"], data["database"])
-        db.to_sql(sql, data, database="profiling")
-        return data, 201
+    # def post(self):
+    #     data = self.reqparse.parse_args()
+    #     data["created"] = str(datetime.datetime.now())
+    #     file = data.pop('file', None)
+    #
+    #     sql = "INSERT INTO profile (id,created,file,occurrence,database) VALUES(%s,%s,%s,%s,%s);"
+    #     data = (data['id'], data["created"], psycopg2.Binary(file.read()),
+    #             data["occurrence"], data["database"])
+    #     db.to_sql(sql, data, database=DB)
+    #     return data, 201
 
 
 class ProfileAPI(Resource):
@@ -135,7 +162,7 @@ class ProfileAPI(Resource):
 class DendrogramListAPI(Resource):
     def __init__(self):
         self.reqparse = reqparse.RequestParser()
-        self.reqparse.add_argument('id', type=str, required=True, location='json')
+        self.reqparse.add_argument('id', type=str, required=True, location='form')
         self.reqparse.add_argument('png_file', type=FileStorage, required=True, location='files')
         self.reqparse.add_argument('pdf_file', type=FileStorage, required=True, location='files')
         self.reqparse.add_argument('svg_file', type=FileStorage, required=True, location='files')
@@ -147,20 +174,20 @@ class DendrogramListAPI(Resource):
         results = db.sql_query(sql, database=DB).to_dict(orient="records")
         return results
 
-    def post(self):
-        data = self.reqparse.parse_args()
-        data["created"] = str(datetime.datetime.now())
-        png_file = data.pop('png_file', None)
-        pdf_file = data.pop('pdf_file', None)
-        svg_file = data.pop('svg_file', None)
-        newick_file = data.pop('newick_file', None)
-
-        sql = "INSERT INTO dendrogram (id,created,png_file,pdf_file,svg_file,newick_file) VALUES(%s,%s,%s,%s,%s);"
-        data = (data['id'], data["created"], psycopg2.Binary(png_file.read()),
-                psycopg2.Binary(pdf_file.read()), psycopg2.Binary(svg_file.read()),
-                psycopg2.Binary(newick_file.read()))
-        db.to_sql(sql, data, database="profiling")
-        return data, 201
+    # def post(self):
+    #     data = self.reqparse.parse_args()
+    #     data["created"] = str(datetime.datetime.now())
+    #     png_file = data.pop('png_file', None)
+    #     pdf_file = data.pop('pdf_file', None)
+    #     svg_file = data.pop('svg_file', None)
+    #     newick_file = data.pop('newick_file', None)
+    #
+    #     sql = "INSERT INTO dendrogram (id,created,png_file,pdf_file,svg_file,newick_file) VALUES(%s,%s,%s,%s,%s);"
+    #     data = (data['id'], data["created"], psycopg2.Binary(png_file.read()),
+    #             psycopg2.Binary(pdf_file.read()), psycopg2.Binary(svg_file.read()),
+    #             psycopg2.Binary(newick_file.read()))
+    #     db.to_sql(sql, data, database=DB)
+    #     return data, 201
 
 
 class DendrogramAPI(Resource):
