@@ -2,7 +2,7 @@ from flask import abort
 from flask_restful import Resource, reqparse
 from werkzeug.datastructures import FileStorage
 import psycopg2
-import datetime
+from datetime import datetime
 import hashlib
 import os
 from multiprocessing import Pool
@@ -12,6 +12,7 @@ from src.utils import db
 INDIR = "input"
 OUTDIR = "output"
 DB = "profiling"
+db.load_database_config()
 
 
 def create_if_not_exist(path):
@@ -21,7 +22,7 @@ def create_if_not_exist(path):
 
 def get_batch_id(t):
     m = hashlib.md5()
-    m.update(t.encode("ascii"))
+    m.update(t.strftime('%Y-%m-%d %H:%M:%S').encode("ascii"))
     return m.hexdigest()
 
 
@@ -35,6 +36,8 @@ def get_seq_id(file):
 class UploadListAPI(Resource):
     def __init__(self):
         self.reqparse = reqparse.RequestParser()
+        self.reqparse.add_argument('created', type=lambda x: datetime.strptime(x, '%Y-%m-%d %H:%M:%S'),
+                                   required=True, location='form')
         self.reqparse.add_argument('filename', type=str, required=True, location='form')
         self.reqparse.add_argument('file', type=FileStorage, required=True, location='files')
         super(UploadListAPI, self).__init__()
@@ -46,8 +49,8 @@ class UploadListAPI(Resource):
 
     def post(self):
         data = self.reqparse.parse_args()
-        data["created"] = str(datetime.datetime.now())
         data['batch_id'] = get_batch_id(data["created"])
+        data["created"] = data["created"].strftime('%Y-%m-%d %H:%M:%S')
         file = data.pop('file', None)
         data['seq_id'] = get_seq_id(file)
 
@@ -56,8 +59,8 @@ class UploadListAPI(Resource):
         file.save(os.path.join(input_dir, data['filename'] + ".fa"))
 
         sql = "INSERT INTO upload (seq_id,batch_id,created,filename,file) VALUES(%s,%s,%s,%s,%s);"
-        args = (data['seq_id'], data['batch_id'], data["created"],
-                data['filename'], psycopg2.Binary(file.read()))
+        args = (data['seq_id'], data['batch_id'], data["created"], data['filename'],
+                psycopg2.Binary(file.read()))
         db.to_sql(sql, args, database=DB)
         return data, 201
 
