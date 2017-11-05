@@ -8,3 +8,7 @@ matplotlib
 biopython
 PySide
 ete3
+flask
+flask-rest
+psycopg2
+sqlalchemy
