@@ -20,12 +20,6 @@ def create_if_not_exist(path):
         os.makedirs(path)
 
 
-def get_batch_id(t):
-    m = hashlib.md5()
-    m.update(t.strftime('%Y-%m-%d %H:%M:%S').encode("ascii"))
-    return m.hexdigest()
-
-
 def get_seq_id(file):
     file.seek(0)
     m = hashlib.sha256()
@@ -36,6 +30,7 @@ def get_seq_id(file):
 class UploadListAPI(Resource):
     def __init__(self):
         self.reqparse = reqparse.RequestParser()
+        self.reqparse.add_argument('batch_id', type=str, required=True, location='form')
         self.reqparse.add_argument('created', type=lambda x: datetime.strptime(x, '%Y-%m-%d %H:%M:%S'),
                                    required=True, location='form')
         self.reqparse.add_argument('filename', type=str, required=True, location='form')
@@ -49,7 +44,6 @@ class UploadListAPI(Resource):
 
     def post(self):
         data = self.reqparse.parse_args()
-        data['batch_id'] = get_batch_id(data["created"])
         data["created"] = data["created"].strftime('%Y-%m-%d %H:%M:%S')
         file = data.pop('file', None)
         data['seq_id'] = get_seq_id(file)
