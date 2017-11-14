@@ -2,7 +2,10 @@ import argparse
 import os.path
 import datetime
 import json
+import sys
 from src.algorithms import pgdb, wgmlst, phylotree
+
+PROJECT_HOME = os.path.dirname(sys.argv[0])
 
 
 def parse_args():

@@ -1,4 +1,3 @@
-celery
 numpy
 scipy
 pandas
@@ -6,9 +5,9 @@ pyfunctional
 fastcluster
 matplotlib
 biopython
-PySide
 ete3
 flask
-flask-rest
+flask-restful
+uWSGI
 psycopg2
 sqlalchemy

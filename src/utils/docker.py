@@ -1,7 +1,7 @@
 import os
 import time
-from prokkaapp.tasks import async_prokka
-from roaryapp.tasks import async_roary
+# from prokkaapp.tasks import async_prokka
+# from roaryapp.tasks import async_roary
 
 
 def check_ready(async_results, outpath):
@@ -17,41 +17,41 @@ def check_ready(async_results, outpath):
         async_results.remove(d)
 
 
-def prokka(inpath, outpath):
-    print("sleep for 10 sec")
-    time.sleep(10)
-    results = []
-    for name in os.listdir(inpath):
-        filename = os.path.join(inpath, name)
-        with open(filename, "r") as f:
-            result = async_prokka.s(name, f.read()).apply_async()
-        results.append(result)
-
-    time.sleep(60)
-
-    while results:
-        time.sleep(10)
-        check_ready(results, outpath)
-
-
-def roary(inpath, outpath, ident_min, threads):
-    print("sleep for 10 sec")
-    time.sleep(10)
-    # prepare uploads
-    uploads = []
-    for name in os.listdir(inpath):
-        filename = os.path.join(inpath, name)
-        with open(filename, "r") as f:
-            uploads.append((name, f.read()))
-
-    # run and wait for return
-    result = async_roary.s(uploads, ident_min, threads).apply_async()
-    while not result.ready():
-        time.sleep(10)
-
-    # receive and write result
-    filename, file = result.get()
-    print(filename)
-    with open(os.path.join(outpath, filename), "w") as f:
-        f.write(file)
+# def prokka(inpath, outpath):
+#     print("sleep for 10 sec")
+#     time.sleep(10)
+#     results = []
+#     for name in os.listdir(inpath):
+#         filename = os.path.join(inpath, name)
+#         with open(filename, "r") as f:
+#             result = async_prokka.s(name, f.read()).apply_async()
+#         results.append(result)
+#
+#     time.sleep(60)
+#
+#     while results:
+#         time.sleep(10)
+#         check_ready(results, outpath)
+#
+#
+# def roary(inpath, outpath, ident_min, threads):
+#     print("sleep for 10 sec")
+#     time.sleep(10)
+#     # prepare uploads
+#     uploads = []
+#     for name in os.listdir(inpath):
+#         filename = os.path.join(inpath, name)
+#         with open(filename, "r") as f:
+#             uploads.append((name, f.read()))
+#
+#     # run and wait for return
+#     result = async_roary.s(uploads, ident_min, threads).apply_async()
+#     while not result.ready():
+#         time.sleep(10)
+#
+#     # receive and write result
+#     filename, file = result.get()
+#     print(filename)
+#     with open(os.path.join(outpath, filename), "w") as f:
+#         f.write(file)
 

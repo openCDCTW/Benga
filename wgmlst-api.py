@@ -1,3 +1,5 @@
+# This is a RESTful API for profiling
+
 from flask import Flask
 from flask_restful import Api
 from src.api import profiling
