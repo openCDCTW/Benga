@@ -1,4 +1,4 @@
-from flask import abort
+from flask import abort, send_file
 from flask_restful import Resource, reqparse
 from werkzeug.datastructures import FileStorage
 import psycopg2
@@ -143,17 +143,13 @@ class ProfileAPI(Resource):
         super(ProfileAPI, self).__init__()
 
     def get(self, id):
-        sql = None
-        if len(id) == 32:
-            sql = "select id, created, occurrence, database from profile where id='{}';".format(id)
-        else:
+        if len(id) != 32:
             abort(404)
-
-        results = db.sql_query(sql, database=DB).to_dict(orient="records")
-        if len(results) != 0:
-            return results
-        else:
+        sql = "select file from profile where id='{}';".format(id)
+        file = db.sql_query_file(sql)
+        if not file:
             abort(404)
+        return send_file(file, mimetype="text/tab-separated-values")
 
 
 class DendrogramListAPI(Resource):
@@ -193,15 +189,11 @@ class DendrogramAPI(Resource):
         self.reqparse.add_argument('id', type=str, required=True, location='json')
         super(DendrogramAPI, self).__init__()
 
-    def get(self, id):
-        sql = None
-        if len(id) == 32:
-            sql = "select id, created from dendrogram where id='{}';".format(id)
-        else:
+    def get(self, filetype, id):
+        if len(id) != 32:
             abort(404)
-
-        results = db.sql_query(sql, database=DB).to_dict(orient="records")
-        if len(results) != 0:
-            return results
-        else:
+        sql = "select {} from dendrogram where id='{}';".format(filetype + "_file", id)
+        file = db.sql_query_file(sql)
+        if not file:
             abort(404)
+        return send_file(file)

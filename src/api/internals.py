@@ -18,17 +18,18 @@ def profiling_api(args):
 
     with open(os.path.join(output_dir, "namemap.json"), "r") as file:
         names = json.loads(file.read())
-    profile_filename = os.path.join(output_dir, "cgMLST_result_{}.tsv".format(batch_id))
+    profile_filename = os.path.join(output_dir,
+                                    "cgMLST_{}_{}_{}.tsv".format(database, occr_level, batch_id[0:8]))
     dendro = phylotree.Dendrogram()
     dendro.make_tree(profile_filename, names)
     dendro_created = datetime.datetime.now()
-    newick_filename = os.path.join(output_dir, "dendrogram.newick")
+    newick_filename = os.path.join(output_dir, "dendrogram_{}.newick".format(batch_id[0:8]))
     dendro.to_newick(newick_filename)
-    pdf_filename = os.path.join(output_dir, "dendrogram.pdf")
+    pdf_filename = os.path.join(output_dir, "dendrogram_{}.pdf".format(batch_id[0:8]))
     dendro.scipy_tree(pdf_filename)
-    svg_filename = os.path.join(output_dir, "dendrogram.svg")
+    svg_filename = os.path.join(output_dir, "dendrogram_{}.svg".format(batch_id[0:8]))
     dendro.scipy_tree(svg_filename)
-    png_filename = os.path.join(output_dir, "dendrogram.png")
+    png_filename = os.path.join(output_dir, "dendrogram_{}.png".format(batch_id[0:8]))
     dendro.scipy_tree(png_filename)
 
     with open(profile_filename, "rb") as file:

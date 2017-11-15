@@ -41,6 +41,24 @@ def sql_query(query, database=None):
     return t
 
 
+def sql_query_file(query, database=None):
+    global HOST
+    global PORT
+    global DATABASE
+    global USER
+    global PASSWORD
+    if not database:
+        database = DATABASE
+    try:
+        with psycopg2.connect(dbname=database, user=USER, password=PASSWORD,
+                              host=HOST, port=PORT) as conn:
+            with conn.cursor() as cur:
+                cur.execute(query)
+                return cur.fetchone()[0]
+    except (Exception, psycopg2.DatabaseError) as error:
+        print(error)
+
+
 def to_sql(sql, args, database=None):
     global HOST
     global PORT

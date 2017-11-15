@@ -15,7 +15,7 @@ api.add_resource(profiling.ProfilingAPI, '/api/profiling/<string:id>', endpoint=
 api.add_resource(profiling.ProfileListAPI, '/api/profiles', endpoint='profiles')
 api.add_resource(profiling.ProfileAPI, '/api/profiles/<string:id>', endpoint='profile')
 api.add_resource(profiling.DendrogramListAPI, '/api/dendrograms', endpoint='dendrograms')
-api.add_resource(profiling.DendrogramAPI, '/api/dendrograms/<string:id>', endpoint='dendrogram')
+api.add_resource(profiling.DendrogramAPI, '/api/dendrograms/<string:filetype>/<string:id>', endpoint='dendrogram')
 
 if __name__ == '__main__':
     app.run(debug=True)
