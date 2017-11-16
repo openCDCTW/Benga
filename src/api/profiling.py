@@ -44,18 +44,17 @@ class UploadListAPI(Resource):
 
     def post(self):
         data = self.reqparse.parse_args()
-        data["created"] = data["created"].strftime('%Y-%m-%d %H:%M:%S')
-        file = data.pop('file', None)
-        data['seq_id'] = get_seq_id(file)
-
         input_dir = os.path.join(INDIR, data['batch_id'])
         create_if_not_exist(input_dir)
-        file.save(os.path.join(input_dir, data['filename'] + ".fa"))
+        data['file'].save(os.path.join(input_dir, data['filename'] + ".fa"))
+        data["created"] = data["created"].strftime('%Y-%m-%d %H:%M:%S')
+        data['seq_id'] = get_seq_id(data['file'])
 
         sql = "INSERT INTO upload (seq_id,batch_id,created,filename,file) VALUES(%s,%s,%s,%s,%s);"
         args = (data['seq_id'], data['batch_id'], data["created"], data['filename'],
-                psycopg2.Binary(file.read()))
+                psycopg2.Binary(data['file'].read()))
         db.to_sql(sql, args, database=DB)
+        data.pop('file', None)
         return data, 201
 
 
