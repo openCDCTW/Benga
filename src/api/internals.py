@@ -1,18 +1,21 @@
 import datetime
-import os.path
+import os
 import json
 import psycopg2
 from src.utils import db
 from src.algorithms import wgmlst, phylotree
+from src.utils import files
 
-INDIR = "input"
-OUTDIR = "output"
+PROJECT_HOME = os.getcwd()
+INDIR = os.path.join(PROJECT_HOME, "input")
+OUTDIR = os.path.join(PROJECT_HOME, "output")
 
 
-def profiling_api(args):
-    batch_id, database, occr_level = args
+def profiling_api(batch_id, database, occr_level):
     input_dir = os.path.join(INDIR, batch_id)
+    files.create_if_not_exist(OUTDIR)
     output_dir = os.path.join(OUTDIR, batch_id)
+    files.create_if_not_exist(output_dir)
     wgmlst.profiling(output_dir, input_dir, database, occr_level=occr_level, threads=2)
     profile_created = datetime.datetime.now()
 

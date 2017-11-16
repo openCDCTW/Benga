@@ -5,7 +5,7 @@ import psycopg2
 from datetime import datetime
 import hashlib
 import os
-from multiprocessing import Pool
+from threading import Thread
 from src.api import internals
 from src.utils import db
 
@@ -99,9 +99,7 @@ class ProfilingAPI(Resource):
 
         results = db.sql_query(sql, database=DB).to_dict(orient="records")
         if len(results) != 0:
-            pool = Pool(processes=1)
-            args = [(id, "Salmonella_5k", 95)]
-            result = pool.apply_async(internals.profiling_api, args)
+            Thread(target=internals.profiling_api, args=(id, "Salmonella_5k", 95), daemon=True).start()
             return {"message": "Profiling dataset {}".format(id)}, 200
         else:
             abort(404)
