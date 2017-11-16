@@ -17,3 +17,10 @@ for f in upload_files:
     requests.post(url, data=form, files=files)
 url = "http://127.0.0.1:5000/api/profiling/{}".format(batch_id)
 requests.get(url)
+
+
+url = "http://127.0.0.1:5000/api/profiles/{}".format(batch_id)
+requests.get(url)
+
+url = "http://127.0.0.1:5000/api/dendrograms/{}/{}".format("png", batch_id)
+requests.get(url)

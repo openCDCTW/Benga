@@ -41,7 +41,7 @@ def sql_query(query, database=None):
     return t
 
 
-def sql_query_file(query, database=None):
+def sql_query_filepath(query, database=None):
     global HOST
     global PORT
     global DATABASE

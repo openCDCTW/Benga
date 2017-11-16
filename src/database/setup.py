@@ -97,7 +97,7 @@ def create_profiling_relations(user, passwd):
             cur.execute("""CREATE TABLE profile (
                 id char(32) NOT NULL PRIMARY KEY,
                 created timestamp with time zone NOT NULL,
-                file bytea NOT NULL,
+                file text NOT NULL,
                 occurrence smallint NOT NULL,
                 database text NOT NULL
             );""")
@@ -105,10 +105,10 @@ def create_profiling_relations(user, passwd):
             cur.execute("""CREATE TABLE dendrogram (
                 id char(32) NOT NULL PRIMARY KEY,
                 created timestamp with time zone NOT NULL,
-                png_file bytea NOT NULL,
-                pdf_file bytea NOT NULL,
-                svg_file bytea NOT NULL,
-                newick_file bytea NOT NULL
+                png_file text NOT NULL,
+                pdf_file text NOT NULL,
+                svg_file text NOT NULL,
+                newick_file text NOT NULL
             );""")
 
 
