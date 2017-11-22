@@ -54,7 +54,7 @@ def sql_query_filepath(query, database=None):
                               host=HOST, port=PORT) as conn:
             with conn.cursor() as cur:
                 cur.execute(query)
-                return cur.fetchone()[0]
+                return cur.fetchone()[0].tobytes().decode("utf-8")
     except (Exception, psycopg2.DatabaseError) as error:
         print(error)
 
