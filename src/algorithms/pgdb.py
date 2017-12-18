@@ -6,8 +6,7 @@ import pandas as pd
 from Bio import SeqIO
 
 from src.models import logs
-from src.utils import files, seq, docker, cmds
-from src.utils import operations
+from src.utils import files, seq, docker, cmds, operations
 
 
 def parse_filenames(path, ext=".fna"):
@@ -61,27 +60,18 @@ def extract_profiles(roary_matrix_file, locusmeta_file, paralogmeta_file, metada
     matrix["Gene"] = matrix["Gene"].str.replace("/", "_")
     matrix.rename(columns={"Gene": "locus"}, inplace=True)
     matrix.set_index("locus", inplace=True)
-    isolates = len(matrix.columns) - metadata_cols
-
-    save_not_appear_once_locus_metadata(matrix, paralogmeta_file)
-    matrix = save_appear_once_locus_metadata(matrix, locusmeta_file)
+    partition_and_save_locus_metadata(matrix, locusmeta_file, paralogmeta_file)
     profiles = matrix.iloc[:, metadata_cols:]
+    isolates = len(matrix.columns) - metadata_cols
     return profiles, isolates
 
 
-def save_appear_once_locus_metadata(matrix, meta_file, select_col=None):
+def partition_and_save_locus_metadata(matrix, locus_file, paralog_file, select_col=None, repeat_tol=1.5):
     if not select_col:
         select_col = ["No. isolates", "No. sequences", "Annotation"]
-    appear_once_locus = matrix[matrix["No. isolates"] == matrix["No. sequences"]]
-    appear_once_locus[select_col].to_csv(meta_file, sep="\t")
-    return appear_once_locus
-
-
-def save_not_appear_once_locus_metadata(matrix, meta_file, select_col=None):
-    if not select_col:
-        select_col = ["No. isolates", "No. sequences", "Annotation"]
-    not_appear_once_locus = matrix[matrix["No. isolates"] != matrix["No. sequences"]]
-    not_appear_once_locus[select_col].to_csv(meta_file, sep="\t")
+    avg = "Avg sequences per isolate"
+    matrix[matrix[avg] <= repeat_tol][select_col].to_csv(locus_file, sep="\t")
+    matrix[matrix[avg] > repeat_tol][select_col].to_csv(paralog_file, sep="\t")
 
 
 def collect_allele_infos(profiles, ffn_dir):
@@ -92,10 +82,16 @@ def collect_allele_infos(profiles, ffn_dir):
         seqs = {record.id: record.seq for record in SeqIO.parse(ffn_file, "fasta")}
 
         new_profile = pd.Series(name=subject)
-        for locus, allele in profile.dropna().iteritems():
-            freq[locus].update([seqs[allele]])
-            s = seqs[allele]
-            new_profile.set_value(locus, operations.make_seqid(s))
+        for locus, prokka_str in profile.dropna().iteritems():
+            if "\t" not in prokka_str:
+                allele = seqs[prokka_str]
+                freq[locus].update([allele])
+                new_profile.set_value(locus, operations.make_seqid(alleles))
+            else:
+                prokka_id = prokka_str.split("\t")
+                alleles = [seqs[x] for x in prokka_id]
+                freq[locus].update(alleles)
+                new_profile.set_value(locus, list(map(operations.make_seqid, alleles)))
         new_profiles.append(new_profile)
     new_profiles = pd.concat(new_profiles, axis=1).sort_index().sort_index(axis=1)
     return new_profiles, freq
@@ -126,7 +122,8 @@ def make_schemes(locusmeta_file, scheme_file, refseqs, total_isolates):
     mapping = pd.read_csv(locusmeta_file, sep="\t")
     mapping["occurence"] = list(map(lambda x: round(x/total_isolates * 100, 2), mapping["No. isolates"]))
     mapping["sequence"] = list(map(lambda x: str(refseqs[x]), mapping["locus"]))
-    mapping[["locus", "occurence", "sequence"]].to_csv(scheme_file, index=False, sep="\t")
+    mapping = mapping.loc[mapping["occurence"] >= 2, ["locus", "occurence", "sequence"]]
+    mapping.to_csv(scheme_file, index=False, sep="\t")
 
 
 def annotate_configs(input_dir, output_dir, logger=None, threads=8, use_docker=True):
