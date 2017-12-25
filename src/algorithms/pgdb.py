@@ -107,10 +107,15 @@ def save_refseq(freq, refseq_file):
     return refseqs
 
 
-def save_locusfiles(freq, locus_dir):
-    for locus, counter in freq.items():
-        records = [seq.new_record(operations.make_seqid(str(allele)), allele) for allele in counter.keys()]
-        seq.save_records(records, files.joinpath(locus_dir, locus + ".fa"))
+def save_sequences(freq, seq_file):
+    with open(seq_file, "w") as file:
+        file.write("locus_id\tallele_id\tdna_seq\tpeptide_seq")
+        for locus, counter in freq.items():
+            for allele in counter.keys():
+                dna_seq = str(allele)
+                pept_seq = str(allele.translate(table=11))
+                allele_id = operations.make_seqid(dna_seq)
+                file.write("\n{}\t{}\t{}\t{}".format(locus, allele_id, dna_seq, pept_seq))
 
 
 def save_allele_freq(freq, allele_freq_file):
@@ -195,9 +200,8 @@ def make_database(output_dir, logger=None, threads=2, use_docker=True):
     refseq_file = files.joinpath(database_dir, "panRefSeq.fa")
     refseqs = save_refseq(freq, refseq_file)
 
-    locus_dir = files.joinpath(database_dir, "locusfiles")
-    files.create_if_not_exist(locus_dir)
-    save_locusfiles(freq, locus_dir)
+    sequences_file = files.joinpath(database_dir, "sequences.tsv")
+    save_sequences(freq, sequences_file)
 
     allele_freq_file = files.joinpath(database_dir, "allele_frequency.json")
     save_allele_freq(freq, allele_freq_file)
