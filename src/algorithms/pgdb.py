@@ -55,23 +55,25 @@ def create_noncds(database_dir, gff_dir):
         file.write(json.dumps(noncds))
 
 
-def extract_profiles(roary_matrix_file, locusmeta_file, paralogmeta_file, metadata_cols=13):
+def extract_profiles(roary_matrix_file, metadata_file, metadata_cols=13):
     matrix = pd.read_csv(roary_matrix_file)
     matrix["Gene"] = matrix["Gene"].str.replace("/", "_")
-    matrix.rename(columns={"Gene": "locus"}, inplace=True)
-    matrix.set_index("locus", inplace=True)
-    partition_and_save_locus_metadata(matrix, locusmeta_file, paralogmeta_file)
+    rename_cols = {"Gene": "locus_id", "No. isolates": "isolates", "No. sequences": "sequences",
+                   "Annotation": "annotation"}
+    matrix.rename(columns=rename_cols, inplace=True)
+    matrix.set_index("locus_id", inplace=True)
+    save_locus_metadata(matrix, metadata_file)
     profiles = matrix.iloc[:, metadata_cols:]
     isolates = len(matrix.columns) - metadata_cols
     return profiles, isolates
 
 
-def partition_and_save_locus_metadata(matrix, locus_file, paralog_file, select_col=None, repeat_tol=1.5):
+def save_locus_metadata(matrix, metadata_file, select_col=None, repeat_tol=1.5):
     if not select_col:
-        select_col = ["No. isolates", "No. sequences", "Annotation"]
+        select_col = ["isolates", "sequences", "annotation", "is_paralogs"]
     avg = "Avg sequences per isolate"
-    matrix[matrix[avg] <= repeat_tol][select_col].to_csv(locus_file, sep="\t")
-    matrix[matrix[avg] > repeat_tol][select_col].to_csv(paralog_file, sep="\t")
+    matrix["is_paralogs"] = [x > repeat_tol for x in matrix[avg]]
+    matrix[select_col].to_csv(metadata_file, sep="\t")
 
 
 def collect_allele_infos(profiles, ffn_dir):
@@ -182,8 +184,7 @@ def make_database(output_dir, logger=None, threads=2, use_docker=True):
     logger.info("Extract profiles from roary result matrix...")
     matrix_file = files.joinpath(output_dir, "roary", "gene_presence_absence.csv")
     locusmeta_file = files.joinpath(database_dir, "locus_metadata.tsv")
-    paralogmeta_file = files.joinpath(database_dir, "paralog_metadata.tsv")
-    profiles, total_isolates = extract_profiles(matrix_file, locusmeta_file, paralogmeta_file)
+    profiles, total_isolates = extract_profiles(matrix_file, locusmeta_file)
 
     logger.info("Collecting allele profiles and making allele frequencies and reference sequence...")
     ffn_dir = files.joinpath(output_dir, "FFN")
