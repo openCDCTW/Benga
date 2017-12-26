@@ -109,13 +109,13 @@ def save_refseq(freq, refseq_file):
 
 def save_sequences(freq, seq_file):
     with open(seq_file, "w") as file:
-        file.write("locus_id\tallele_id\tdna_seq\tpeptide_seq")
+        file.write("locus_id\tallele_id\tdna_seq\tpeptide_seq\tcount")
         for locus, counter in freq.items():
-            for allele in counter.keys():
+            for allele, count in counter.items():
                 dna_seq = str(allele)
                 pept_seq = str(allele.translate(table=11))
                 allele_id = operations.make_seqid(dna_seq)
-                file.write("\n{}\t{}\t{}\t{}".format(locus, allele_id, dna_seq, pept_seq))
+                file.write("\n{}\t{}\t{}\t{}\t{}".format(locus, allele_id, dna_seq, pept_seq, count))
 
 
 def save_allele_freq(freq, allele_freq_file):
@@ -128,9 +128,9 @@ def save_allele_freq(freq, allele_freq_file):
 
 def make_schemes(locusmeta_file, scheme_file, refseqs, total_isolates):
     mapping = pd.read_csv(locusmeta_file, sep="\t")
-    mapping["occurence"] = list(map(lambda x: round(x/total_isolates * 100, 2), mapping["No. isolates"]))
-    mapping["sequence"] = list(map(lambda x: str(refseqs[x]), mapping["locus"]))
-    mapping = mapping.loc[mapping["occurence"] >= 2, ["locus", "occurence", "sequence"]]
+    mapping["occurrence"] = list(map(lambda x: round(x/total_isolates * 100, 2), mapping["isolates"]))
+    mapping["sequence"] = list(map(lambda x: str(refseqs[x]), mapping["locus_id"]))
+    mapping = mapping.loc[mapping["occurrence"] >= 2, ["locus_id", "occurrence", "sequence"]]
     mapping.to_csv(scheme_file, index=False, sep="\t")
 
 
