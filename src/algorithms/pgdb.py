@@ -100,13 +100,6 @@ def collect_allele_infos(profiles, ffn_dir):
     return new_profiles, freq
 
 
-def save_refseq(freq, refseq_file):
-    refseqs = {locus: counter.most_common(1)[0][0] for locus, counter in freq.items()}
-    records = [seq.new_record(str(locus), sequence) for locus, sequence in refseqs.items()]
-    SeqIO.write(records, refseq_file, "fasta")
-    return refseqs
-
-
 def save_sequences(freq, seq_file):
     with open(seq_file, "w") as file:
         file.write("locus_id\tallele_id\tdna_seq\tpeptide_seq\tcount")
@@ -118,12 +111,13 @@ def save_sequences(freq, seq_file):
                 file.write("\n{}\t{}\t{}\t{}\t{}".format(locus, allele_id, dna_seq, pept_seq, count))
 
 
-def make_schemes(locusmeta_file, scheme_file, refseqs, total_isolates):
-    mapping = pd.read_csv(locusmeta_file, sep="\t")
-    mapping["occurrence"] = list(map(lambda x: round(x/total_isolates * 100, 2), mapping["isolates"]))
-    mapping["sequence"] = list(map(lambda x: str(refseqs[x]), mapping["locus_id"]))
-    mapping = mapping.loc[mapping["occurrence"] >= 2, ["locus_id", "occurrence", "sequence"]]
-    mapping.to_csv(scheme_file, index=False, sep="\t")
+def make_schemes(locusmeta_file, scheme_file, freq, total_isolates):
+    refseqs = {locus: operations.make_seqid(counter.most_common(1)[0][0]) for locus, counter in freq.items()}
+    schemes = pd.read_csv(locusmeta_file, sep="\t")
+    schemes["occurrence"] = list(map(lambda x: round(x/total_isolates * 100, 2), schemes["isolates"]))
+    schemes["ref_id"] = list(map(lambda x: refseqs[x], schemes["locus_id"]))
+    schemes = schemes.loc[schemes["occurrence"] >= 2.0, ["locus_id", "occurrence", "ref_id"]]
+    schemes.to_csv(scheme_file, index=False, sep="\t")
 
 
 def annotate_configs(input_dir, output_dir, logger=None, threads=8, use_docker=True):
@@ -189,14 +183,11 @@ def make_database(output_dir, logger=None, threads=2, use_docker=True):
     profiles, freq = collect_allele_infos(profiles, ffn_dir)
     profiles.to_csv(profile_file, sep="\t")
 
-    refseq_file = files.joinpath(database_dir, "panRefSeq.fa")
-    refseqs = save_refseq(freq, refseq_file)
-
     sequences_file = files.joinpath(database_dir, "sequences.tsv")
     save_sequences(freq, sequences_file)
 
     logger.info("Making dynamic schemes...")
     scheme_file = files.joinpath(database_dir, "scheme.tsv")
-    make_schemes(locusmeta_file, scheme_file, refseqs, total_isolates)
+    make_schemes(locusmeta_file, scheme_file, freq, total_isolates)
     logger.info("Done!!")
 
