@@ -118,14 +118,6 @@ def save_sequences(freq, seq_file):
                 file.write("\n{}\t{}\t{}\t{}\t{}".format(locus, allele_id, dna_seq, pept_seq, count))
 
 
-def save_allele_freq(freq, allele_freq_file):
-    allele_freq = {}
-    for locus, counter in freq.items():
-        allele_freq[locus] = {operations.make_seqid(str(allele)): count for allele, count in counter.items()}
-    with open(allele_freq_file, "w") as file:
-        file.write(json.dumps(allele_freq))
-
-
 def make_schemes(locusmeta_file, scheme_file, refseqs, total_isolates):
     mapping = pd.read_csv(locusmeta_file, sep="\t")
     mapping["occurrence"] = list(map(lambda x: round(x/total_isolates * 100, 2), mapping["isolates"]))
@@ -202,9 +194,6 @@ def make_database(output_dir, logger=None, threads=2, use_docker=True):
 
     sequences_file = files.joinpath(database_dir, "sequences.tsv")
     save_sequences(freq, sequences_file)
-
-    allele_freq_file = files.joinpath(database_dir, "allele_frequency.json")
-    save_allele_freq(freq, allele_freq_file)
 
     logger.info("Making dynamic schemes...")
     scheme_file = files.joinpath(database_dir, "scheme.tsv")
