@@ -75,3 +75,19 @@ def to_sql(sql, args, database=None):
                 conn.commit()
     except (Exception, psycopg2.DatabaseError) as error:
         print(error)
+
+
+def append_to_sql(df, database=None):
+    global HOST
+    global PORT
+    global DATABASE
+    global USER
+    global PASSWORD
+    if not database:
+        database = DATABASE
+    try:
+        with psycopg2.connect(dbname=database, user=USER, password=PASSWORD,
+                              host=HOST, port=PORT) as conn:
+            df.to_sql(conn, if_exists="append")
+    except (Exception, psycopg2.DatabaseError) as error:
+        print(error)
