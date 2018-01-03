@@ -39,7 +39,7 @@ class UploadListAPI(Resource):
 
     def get(self):
         sql = "select seq_id, filename from upload;"
-        results = db.sql_query(sql, database=DB).to_dict(orient="records")
+        results = db.from_sql(sql, database=DB).to_dict(orient="records")
         return results
 
     def post(self):
@@ -74,7 +74,7 @@ class UploadAPI(Resource):
         else:
             abort(404)
 
-        results = db.sql_query(sql, database=DB).to_dict(orient="records")
+        results = db.from_sql(sql, database=DB).to_dict(orient="records")
         if len(results) != 0:
             return results
         else:
@@ -93,7 +93,7 @@ class ProfilingAPI(Resource):
         if len(id) != 32:
             abort(404)
         sql = "select * from upload where batch_id='{}';".format(id)
-        results = db.sql_query(sql, database=DB).to_dict(orient="records")
+        results = db.from_sql(sql, database=DB).to_dict(orient="records")
         if len(results) == 0:
             abort(404)
         Thread(target=internals.profiling_api, args=(id, "Salmonella_5k", 95), daemon=True).start()
@@ -111,7 +111,7 @@ class ProfileListAPI(Resource):
 
     def get(self):
         sql = "select id, occurrence, database from profile;"
-        results = db.sql_query(sql, database=DB).to_dict(orient="records")
+        results = db.from_sql(sql, database=DB).to_dict(orient="records")
         return results
 
 
@@ -146,7 +146,7 @@ class DendrogramListAPI(Resource):
 
     def get(self):
         sql = "select id from dendrogram;"
-        results = db.sql_query(sql, database=DB).to_dict(orient="records")
+        results = db.from_sql(sql, database=DB).to_dict(orient="records")
         return results
 
 

@@ -2,6 +2,8 @@ import json
 import psycopg2
 import pandas as pd
 import sqlalchemy as sa
+from sqlalchemy import create_engine, MetaData, Table, Column, ForeignKey
+from sqlalchemy.dialects import postgresql
 
 HOST = "localhost"
 PORT = 5432
@@ -25,7 +27,7 @@ def load_database_config(filename="database.config"):
     PORT = config["port"] if "port" in config.keys() else PORT
 
 
-def sql_query(query, database=None):
+def from_sql(query, database=None):
     global HOST
     global PORT
     global DATABASE
@@ -91,3 +93,36 @@ def append_to_sql(df, database=None):
             df.to_sql(conn, if_exists="append")
     except (Exception, psycopg2.DatabaseError) as error:
         print(error)
+
+
+def create_pgadb(dbname, user=None, passwd=None):
+    global HOST
+    global PORT
+    global USER
+    global PASSWORD
+    if not user:
+        user = USER
+    if not passwd:
+        passwd = PASSWORD
+    prot = "postgresql+psycopg2://{}:{}@{}:{}/{}".format(user, passwd, HOST, PORT, dbname)
+    engine = create_engine(prot)
+    metadata = MetaData()
+    loci = Table("loci", metadata,
+                 Column("locus_id", postgresql.VARCHAR(50), primary_key=True, nullable=False),
+                 Column("ref_allele", None, ForeignKey("alleles.allele_id", ondelete="CASCADE"),
+                        nullable=False),
+                 Column("occurrence", postgresql.REAL))
+    alleles = Table("alleles", metadata,
+                    Column("allele_id", postgresql.VARCHAR(16), primary_key=True, nullable=False, unique=True),
+                    Column("locus_id", None, ForeignKey("loci.locus_id", ondelete="CASCADE"),
+                           primary_key=True),
+                    Column("dna_seq", postgresql.TEXT, nullable=False),
+                    Column("peptide_seq", postgresql.TEXT, nullable=False),
+                    Column("count", postgresql.SMALLINT, nullable=False))
+    locus_meta = Table("locus_meta", metadata,
+                       Column("locus_id", None, ForeignKey("loci.locus_id", ondelete="CASCADE")),
+                       Column("num_isolates", postgresql.SMALLINT),
+                       Column("num_sequences", postgresql.SMALLINT),
+                       Column("description", postgresql.TEXT),
+                       Column("is_paralog", postgresql.BOOLEAN))
+    metadata.create_all(engine)

@@ -1,6 +1,7 @@
 import argparse
-import psycopg2
 import os
+import psycopg2
+from src.utils.db import create_pgadb
 
 
 def main():
@@ -17,7 +18,7 @@ def main():
         print("Failed creating database: {}".format(dbname))
 
     try:
-        create_relations(dbname, user, passwd)
+        create_pgadb(dbname, user, passwd)
         create_profiling_relations(user, passwd)
     except:
         print("Failed creating relations")
@@ -44,35 +45,6 @@ def parse_args():
         help="Database name to create. (necessary)"
     )
     return arg_parser.parse_args()
-
-
-def create_relations(dbname, user, passwd):
-    with psycopg2.connect(dbname=dbname, host='localhost', user=user, password=passwd) as conn:
-        with conn.cursor() as cur:
-            cur.execute("""CREATE TABLE loci (
-                locus_id varchar(50) NOT NULL PRIMARY KEY,
-                ref_allele char(16) NOT NULL,
-                occurrence real
-            );""")
-
-            cur.execute("""CREATE TABLE alleles (
-                allele_id char(16) NOT NULL,
-                locus_id varchar(50) references loci(locus_id),
-                dna_seq text NOT NULL,
-                peptide_seq text NOT NULL
-                count smallserial NOT NULL
-                CONSTRAINT allele_pk PRIMARY KEY(locus_id, allele_id)
-            );""")
-
-            cur.execute("ALTER TABLE loci ADD FOREIGN KEY (ref_allele) REFERENCES alleles(allele_id);")
-
-            cur.execute("""CREATE TABLE locus_meta (
-                locus_id varchar(50) NOT NULL references loci(locus_id),
-                num_isolates smallserial,
-                num_sequences smallserial,
-                description text,
-                is_paralog boolean
-            );""")
 
 
 def create_profiling_relations(user, passwd):

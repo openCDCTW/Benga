@@ -8,7 +8,7 @@ from Bio import SeqIO
 
 from src.models import logs
 from src.utils import files, seq, cmds, operations
-from src.utils.db import load_database_config, sql_query, append_to_sql
+from src.utils.db import load_database_config, from_sql, append_to_sql
 
 MLST = ["aroC_1", "aroC_2", "aroC_3", "dnaN", "hemD", "hisD", "purE", "sucA_1", "sucA_2", "thrA_2", "thrA_3"]
 virulence_genes = ["lpfA", "lpfA_1", "lpfA_2", "lpfA_3", "lpfA_4", "lpfB", "lpfB_1", "lpfB_2", "lpfC", "lpfC_1",
@@ -33,7 +33,7 @@ def profile_by_query(filename, genome_id, selected_loci, database, ref_db, temp_
             "where allele_id in ({}) and locus_id in ({});".format(",".join("'{}'".format(alleles.keys())),
                                                                    locus_ids)
     # ensure allele_id is mapped only once
-    profile = sql_query(query, database=database).drop_duplicates("allele_id")
+    profile = from_sql(query, database=database).drop_duplicates("allele_id")
     # collect unmapped alleles as new allele candidates
     candidates = list(filter(lambda x: x not in profile.tolist(), alleles.keys()))
     # blastp for locus with 95% identity and coverage 90%
@@ -172,7 +172,7 @@ def make_ref_blastpdb(ref_db_file, database):
             "from loci" \
             "inner join alleles" \
             "on loci.ref_allele = alleles.allele_id;"
-    refs = sql_query(query, database=database)
+    refs = from_sql(query, database=database)
 
     ref_recs = [seq.new_record(row["locus_id"], row["peptide_seq"], seqtype="protein") for _, row in refs.iterrows()]
     ref_fasta = ref_db_file + ".fasta"
@@ -241,7 +241,7 @@ def profiling(output_dir, input_dir, database, threads, occr_level=None, selecte
             selected_loci = set(selected_loci)
         else:
             query = "select locus_id from loci where occurrence>={};".format(occr_level)
-            selected_loci = set(sql_query(query, database=database).iloc[:, 0])
+            selected_loci = set(from_sql(query, database=database).iloc[:, 0])
 
         temp_dir = os.path.join(query_dir, "temp")
         files.create_if_not_exist(temp_dir)
