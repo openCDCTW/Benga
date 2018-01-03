@@ -53,7 +53,7 @@ class UploadListAPI(Resource):
         sql = "INSERT INTO upload (seq_id,batch_id,created,filename,file) VALUES(%s,%s,%s,%s,%s);"
         args = (data['seq_id'], data['batch_id'], data["created"], data['filename'],
                 psycopg2.Binary(data['file'].read()))
-        db.to_sql(sql, args, database=DB)
+        db.file_to_sql(sql, args, database=DB)
         data.pop('file', None)
         return data, 201
 

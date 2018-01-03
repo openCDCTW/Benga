@@ -1,42 +1,29 @@
 import json
 import psycopg2
 import pandas as pd
-import sqlalchemy as sa
 from sqlalchemy import create_engine, MetaData, Table, Column, ForeignKey
+from sqlalchemy.engine.url import URL
 from sqlalchemy.dialects import postgresql
 
-HOST = "localhost"
-PORT = 5432
-DATABASE = ""
-USER = ""
-PASSWORD = ""
+DBCONFIG = {}
 
 
 def load_database_config(filename="database.config"):
-    global HOST
-    global PORT
-    global DATABASE
-    global USER
-    global PASSWORD
+    global DBCONFIG
     with open(filename, "r") as file:
-        config = json.loads(file.read())
-    DATABASE = config["database"]
-    USER = config["user"]
-    PASSWORD = config["password"]
-    HOST = config["host"] if "host" in config.keys() else HOST
-    PORT = config["port"] if "port" in config.keys() else PORT
+        DBCONFIG = json.loads(file.read())
+    DBCONFIG["drivername"] = "postgresql+psycopg2"
+    if "host" not in DBCONFIG.keys():
+        DBCONFIG["host"] = "localhost"
+    if "port" not in DBCONFIG.keys():
+        DBCONFIG["port"] = 5432
 
 
 def from_sql(query, database=None):
-    global HOST
-    global PORT
-    global DATABASE
-    global USER
-    global PASSWORD
-    if not database:
-        database = DATABASE
-    prot = "postgresql+psycopg2://{}:{}@{}:{}/{}".format(USER, PASSWORD, HOST, PORT, database)
-    engine = sa.create_engine(prot)
+    global DBCONFIG
+    if database:
+        DBCONFIG["database"] = database
+    engine = create_engine(URL(DBCONFIG))
     with engine.connect() as conn:
         t = pd.read_sql_query(query, con=conn)
     engine.dispose()
@@ -44,16 +31,13 @@ def from_sql(query, database=None):
 
 
 def sql_query_filepath(query, database=None):
-    global HOST
-    global PORT
-    global DATABASE
-    global USER
-    global PASSWORD
-    if not database:
-        database = DATABASE
+    global DBCONFIG
+    if database:
+        DBCONFIG["database"] = database
     try:
-        with psycopg2.connect(dbname=database, user=USER, password=PASSWORD,
-                              host=HOST, port=PORT) as conn:
+        with psycopg2.connect(dbname=DBCONFIG["database"], user=DBCONFIG["username"],
+                              password=DBCONFIG["password"], host=DBCONFIG["host"],
+                              port=DBCONFIG["port"]) as conn:
             with conn.cursor() as cur:
                 cur.execute(query)
                 return cur.fetchone()[0].tobytes().decode("utf-8")
@@ -62,16 +46,26 @@ def sql_query_filepath(query, database=None):
 
 
 def to_sql(sql, args, database=None):
-    global HOST
-    global PORT
-    global DATABASE
-    global USER
-    global PASSWORD
-    if not database:
-        database = DATABASE
+    global DBCONFIG
+    if database:
+        DBCONFIG["database"] = database
     try:
-        with psycopg2.connect(dbname=database, user=USER, password=PASSWORD,
-                              host=HOST, port=PORT) as conn:
+        engine = create_engine(URL(DBCONFIG))
+        with engine.connect() as conn:
+            conn.execute(sql, **args)
+        engine.dispose()
+    except Exception as error:
+        print(error)
+
+
+def file_to_sql(sql, args, database=None):
+    global DBCONFIG
+    if database:
+        DBCONFIG["database"] = database
+    try:
+        with psycopg2.connect(dbname=DBCONFIG["database"], user=DBCONFIG["username"],
+                              password=DBCONFIG["password"], host=DBCONFIG["host"],
+                              port=DBCONFIG["port"]) as conn:
             with conn.cursor() as cur:
                 cur.execute(sql, args)
                 conn.commit()
@@ -80,32 +74,27 @@ def to_sql(sql, args, database=None):
 
 
 def append_to_sql(df, database=None):
-    global HOST
-    global PORT
-    global DATABASE
-    global USER
-    global PASSWORD
-    if not database:
-        database = DATABASE
+    global DBCONFIG
+    if database:
+        DBCONFIG["database"] = database
     try:
-        with psycopg2.connect(dbname=database, user=USER, password=PASSWORD,
-                              host=HOST, port=PORT) as conn:
+        engine = create_engine(URL(DBCONFIG))
+        with engine.connect() as conn:
             df.to_sql(conn, if_exists="append")
     except (Exception, psycopg2.DatabaseError) as error:
         print(error)
+    finally:
+        engine.dispose()
 
 
 def create_pgadb(dbname, user=None, passwd=None):
-    global HOST
-    global PORT
-    global USER
-    global PASSWORD
-    if not user:
-        user = USER
-    if not passwd:
-        passwd = PASSWORD
-    prot = "postgresql+psycopg2://{}:{}@{}:{}/{}".format(user, passwd, HOST, PORT, dbname)
-    engine = create_engine(prot)
+    global DBCONFIG
+    DBCONFIG["database"] = dbname
+    if user:
+        DBCONFIG["username"] = user
+    if passwd:
+        DBCONFIG["password"] = passwd
+    engine = create_engine(URL(DBCONFIG))
     metadata = MetaData()
     loci = Table("loci", metadata,
                  Column("locus_id", postgresql.VARCHAR(50), primary_key=True, nullable=False),
@@ -126,3 +115,4 @@ def create_pgadb(dbname, user=None, passwd=None):
                        Column("description", postgresql.TEXT),
                        Column("is_paralog", postgresql.BOOLEAN))
     metadata.create_all(engine)
+    engine.dispose()
