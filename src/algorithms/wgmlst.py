@@ -5,7 +5,7 @@ import functional
 import pandas as pd
 from concurrent.futures import ProcessPoolExecutor
 from Bio import SeqIO
-
+import subprocess
 from src.models import logs
 from src.utils import files, seq, cmds, operations
 from src.utils.db import load_database_config, from_sql, append_to_sql
@@ -20,7 +20,7 @@ virulence_genes = ["lpfA", "lpfA_1", "lpfA_2", "lpfA_3", "lpfA_4", "lpfB", "lpfB
 
 def identify_loci(args):
     filename, out_dir = args
-    os.system(cmds.form_prodigal_cmd(filename, out_dir))
+    subprocess.run(cmds.form_prodigal_cmd(filename, out_dir), shell=True)
     return filename
 
 

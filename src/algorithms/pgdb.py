@@ -4,7 +4,7 @@ from collections import Counter, defaultdict
 from concurrent.futures import ProcessPoolExecutor
 import pandas as pd
 from Bio import SeqIO
-
+import subprocess
 from src.models import logs
 from src.utils import files, seq, docker, cmds, operations, db
 
@@ -154,7 +154,7 @@ def annotate_configs(input_dir, output_dir, logger=None, threads=8, use_docker=T
     else:
         c = [cmds.form_prokka_cmd(x, genome_dir, annotate_dir) for x in namemap.values()]
         with ProcessPoolExecutor(int(threads / 2)) as executor:
-            executor.map(os.system, c)
+            executor.map(lambda cmd: subprocess.run(cmd, shell=True), c)
 
     logger.info("Moving protein CDS (.ffn) files...")
     ffn_dir = files.joinpath(output_dir, "FFN")
@@ -181,7 +181,7 @@ def make_database(output_dir, logger=None, threads=2, use_docker=True):
         docker.roary(files.joinpath(output_dir, "GFF"), output_dir, min_identity, threads)
     else:
         c = cmds.form_roary_cmd(files.joinpath(output_dir, "GFF"), output_dir, min_identity, threads)
-        os.system(c)
+        subprocess.run(c, shell=True)
 
     logger.info("Creating database")
     dbname = os.path.basename(output_dir)
