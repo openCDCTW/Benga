@@ -198,14 +198,14 @@ def blast_for_new_alleles(candidates, alleles, ref_db, genome_id, temp_dir, iden
 
 def update_database(new_allels, alleles):
     cols = ["allele_id", "locus_id", "dna_seq", "peptide_seq", "count"]
-    result = []
+    collect = []
     for allele_id, locus_id in new_allels.items():
         dna = str(alleles[allele_id][0])
         peptide = str(alleles[allele_id][1])
         count = 1
-        result.append((allele_id, locus_id, dna, peptide, count))
-    result = pd.DataFrame(result, columns=cols)
-    append_to_sql(result, database="alleles")
+        collect.append((allele_id, locus_id, dna, peptide, count))
+    result = pd.DataFrame(collect, columns=cols)
+    append_to_sql("alleles", result)
     return result[["allele_id", "locus_id"]]
 
 
@@ -226,38 +226,29 @@ def profiling(output_dir, input_dir, database, threads, occr_level=None, selecte
     with open(files.joinpath(output_dir, "namemap.json"), "w") as f:
         f.write(json.dumps(namemap))
 
-    if os.path.isdir(database):
-        logger.info("Profiling loci...")
-        refseq_fna = files.joinpath(database, "panRefSeq.fa")
-        profile_loci(refseq_fna, query_dir, output_dir, aligcov_cut, identity, threads)
+    logger.info("Identifying loci and allocating alleles...")
+    if selected_loci:
+        selected_loci = set(selected_loci)
+    else:  # select loci by scheme
+        query = "select locus_id from loci where occurrence>={};".format(occr_level)
+        selected_loci = set(from_sql(query, database=database).iloc[:, 0])
 
-        logger.info("Allocating alleles...")
-        profile_alleles(query_dir, database, output_dir, threads, occr_level)
-    else:
-        logger.info("Identifying loci and allocating alleles...")
+    temp_dir = os.path.join(query_dir, "temp")
+    files.create_if_not_exist(temp_dir)
+    ref_db = os.path.join(temp_dir, "ref_blastpdb")
+    make_ref_blastpdb(ref_db, database)
 
-        # select loci by scheme
-        if selected_loci:
-            selected_loci = set(selected_loci)
-        else:
-            query = "select locus_id from loci where occurrence>={};".format(occr_level)
-            selected_loci = set(from_sql(query, database=database).iloc[:, 0])
-
-        temp_dir = os.path.join(query_dir, "temp")
-        files.create_if_not_exist(temp_dir)
-        ref_db = os.path.join(temp_dir, "ref_blastpdb")
-        make_ref_blastpdb(ref_db, database)
-
-        collect = []
-        args = [(os.path.join(query_dir, filename), temp_dir) for filename in os.listdir(query_dir) if filename.endswith(".fa")]
-        with ProcessPoolExecutor(threads) as executor:
-            for filename in executor.map(identify_loci, args):
-                genome_id = files.fasta_filename(filename)
-                target_file = os.path.join(temp_dir, genome_id + ".locus.fna")
-                profile = profile_by_query(target_file, genome_id, selected_loci, database, ref_db, temp_dir)
-                collect.append(profile)
-        result = pd.concat(collect, axis=1)
-        result.to_csv(files.joinpath(output_dir, "wgmlst.tsv"), sep="\t")
+    collect = []
+    args = [(os.path.join(query_dir, filename), temp_dir)
+            for filename in os.listdir(query_dir) if filename.endswith(".fa")]
+    with ProcessPoolExecutor(threads) as executor:
+        for filename in executor.map(identify_loci, args):
+            genome_id = files.fasta_filename(filename)
+            target_file = os.path.join(temp_dir, genome_id + ".locus.fna")
+            profile = profile_by_query(target_file, genome_id, selected_loci, database, ref_db, temp_dir)
+            collect.append(profile)
+    result = pd.concat(collect, axis=1)
+    result.to_csv(files.joinpath(output_dir, "wgmlst.tsv"), sep="\t")
 
     shutil.rmtree(query_dir)
 
