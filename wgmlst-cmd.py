@@ -3,6 +3,7 @@ import os.path
 import datetime
 import json
 import sys
+from src.utils import db
 from src.algorithms import pgdb, wgmlst, phylotree
 
 PROJECT_HOME = os.path.dirname(sys.argv[0])
@@ -14,19 +15,17 @@ def parse_args():
     arg_parser.add_argument(
         "-a", "--algorithm",
         required=True,
-        choices=["make_db", "profiling", "MLST", "virulence", "tree"],
+        choices=["make_db", "profiling", "MLST", "virulence", "tree", "setupdb"],
         help="Execute specified algorithm. (necessary)"
     )
 
     arg_parser.add_argument(
         "-o", "--output",
-        required=True,
         help="Output data directory. (necessary)"
     )
 
     arg_parser.add_argument(
         "-i", "--input",
-        required=True,
         help="Input data (for query) directory. (necessary)"
     )
 
@@ -71,6 +70,9 @@ def main():
     threads = args.threads
     docker = args.docker
 
+    if args.algorithm == "setupdb":
+        db.createdb("profiling")
+        db.create_profiling_relations()
     if args.algorithm == "make_db":
         pgdb.annotate_configs(input_dir, output_dir, threads=threads, use_docker=docker)
         pgdb.make_database(output_dir, threads=threads, use_docker=docker)

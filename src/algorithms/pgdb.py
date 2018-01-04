@@ -186,7 +186,7 @@ def make_database(output_dir, logger=None, threads=2, use_docker=True):
     logger.info("Creating database")
     dbname = os.path.basename(output_dir)
     db.createdb(dbname)
-    db.create_pgadb(dbname)
+    db.create_pgadb_relations(dbname)
 
     logger.info("Extract profiles from roary result matrix...")
     matrix_file = files.joinpath(output_dir, "roary", "gene_presence_absence.csv")
