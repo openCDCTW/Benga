@@ -70,11 +70,12 @@ def extract_profiles(roary_matrix_file, dbname, metadata_cols=13):
 
 def save_locus_metadata(matrix, dbname, select_col=None, repeat_tol=1.5):
     if not select_col:
-        select_col = ["locus_id", "num_isolates", "num_sequences", "description", "is_paralogs"]
+        select_col = ["locus_id", "num_isolates", "num_sequences", "description", "is_paralog"]
     avg = "Avg sequences per isolate"
-    matrix["is_paralogs"] = [x > repeat_tol for x in matrix[avg]]
-    matrix = matrix.reset_index()[select_col]
-    db.append_to_sql("locus_meta", matrix, dbname)
+    meta = matrix.copy()
+    meta["is_paralog"] = [x > repeat_tol for x in meta[avg]]
+    meta = meta.reset_index()[select_col]
+    db.append_to_sql("locus_meta", meta, dbname)
 
 
 def collect_allele_infos(profiles, ffn_dir):
@@ -170,6 +171,7 @@ def annotate_configs(input_dir, output_dir, logger=None, threads=8, use_docker=T
 
 
 def make_database(output_dir, logger=None, threads=2, use_docker=True):
+    db.load_database_config()
     if not logger:
         logger = logs.console_logger(__name__)
 
@@ -183,6 +185,7 @@ def make_database(output_dir, logger=None, threads=2, use_docker=True):
 
     logger.info("Creating database")
     dbname = os.path.basename(output_dir)
+    db.createdb(dbname)
     db.create_pgadb(dbname)
 
     logger.info("Extract profiles from roary result matrix...")

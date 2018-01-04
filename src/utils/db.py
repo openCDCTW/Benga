@@ -1,4 +1,5 @@
 import json
+import subprocess
 import psycopg2
 import pandas as pd
 from sqlalchemy import create_engine, MetaData, Table, Column, ForeignKey
@@ -23,7 +24,7 @@ def from_sql(query, database=None):
     global DBCONFIG
     if database:
         DBCONFIG["database"] = database
-    engine = create_engine(URL(DBCONFIG))
+    engine = create_engine(URL(**DBCONFIG))
     with engine.connect() as conn:
         t = pd.read_sql_query(query, con=conn)
     engine.dispose()
@@ -50,7 +51,7 @@ def to_sql(sql, args, database=None):
     if database:
         DBCONFIG["database"] = database
     try:
-        engine = create_engine(URL(DBCONFIG))
+        engine = create_engine(URL(**DBCONFIG))
         with engine.connect() as conn:
             conn.execute(sql, **args)
         engine.dispose()
@@ -77,14 +78,14 @@ def append_to_sql(table, df, database=None):
     global DBCONFIG
     if database:
         DBCONFIG["database"] = database
-    try:
-        engine = create_engine(URL(DBCONFIG))
-        with engine.connect() as conn:
-            df.to_sql(table, conn, index=False, chunksize=3000, if_exists="append")
-    except (Exception, psycopg2.DatabaseError) as error:
-        print(error)
-    finally:
-        engine.dispose()
+    engine = create_engine(URL(**DBCONFIG))
+    with engine.connect() as conn:
+        df.to_sql(table, conn, index=False, chunksize=3000, if_exists="append")
+    engine.dispose()
+
+
+def createdb(dbname):
+    subprocess.run(["createdb", dbname])
 
 
 def create_pgadb(dbname, user=None, passwd=None):
@@ -97,19 +98,19 @@ def create_pgadb(dbname, user=None, passwd=None):
     engine = create_engine(URL(**DBCONFIG))
     metadata = MetaData()
     loci = Table("loci", metadata,
-                 Column("locus_id", postgresql.VARCHAR(50), primary_key=True, nullable=False),
+                 Column("locus_id", None, ForeignKey("locus_meta.locus_id", ondelete="CASCADE")),
                  Column("ref_allele", None, ForeignKey("alleles.allele_id", ondelete="CASCADE"),
                         nullable=False),
                  Column("occurrence", postgresql.REAL))
     alleles = Table("alleles", metadata,
-                    Column("allele_id", postgresql.VARCHAR(16), primary_key=True, nullable=False, unique=True),
-                    Column("locus_id", None, ForeignKey("loci.locus_id", ondelete="CASCADE"),
+                    Column("allele_id", postgresql.CHAR(64), primary_key=True, nullable=False, unique=True),
+                    Column("locus_id", None, ForeignKey("locus_meta.locus_id", ondelete="CASCADE"),
                            primary_key=True),
                     Column("dna_seq", postgresql.TEXT, nullable=False),
                     Column("peptide_seq", postgresql.TEXT, nullable=False),
                     Column("count", postgresql.SMALLINT, nullable=False))
     locus_meta = Table("locus_meta", metadata,
-                       Column("locus_id", None, ForeignKey("loci.locus_id", ondelete="CASCADE")),
+                       Column("locus_id", postgresql.VARCHAR(50), primary_key=True, nullable=False),
                        Column("num_isolates", postgresql.SMALLINT),
                        Column("num_sequences", postgresql.SMALLINT),
                        Column("description", postgresql.TEXT),
