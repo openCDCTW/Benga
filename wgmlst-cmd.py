@@ -2,7 +2,10 @@ import argparse
 import os.path
 import datetime
 import json
+import sys
 from src.algorithms import pgdb, wgmlst, phylotree
+
+PROJECT_HOME = os.path.dirname(sys.argv[0])
 
 
 def parse_args():
@@ -11,7 +14,7 @@ def parse_args():
     arg_parser.add_argument(
         "-a", "--algorithm",
         required=True,
-        choices=["make_db", "profiling", "tree"],
+        choices=["make_db", "profiling", "MLST", "virulence", "tree"],
         help="Execute specified algorithm. (necessary)"
     )
 
@@ -63,7 +66,7 @@ def main():
 
     input_dir = args.input
     output_dir = args.output
-    db_dir = args.database
+    database = args.database
     occr_level = args.occr
     threads = args.threads
     docker = args.docker
@@ -72,7 +75,11 @@ def main():
         pgdb.annotate_configs(input_dir, output_dir, threads=threads, use_docker=docker)
         pgdb.make_database(output_dir, threads=threads, use_docker=docker)
     if args.algorithm == "profiling":
-        wgmlst.profiling(output_dir, input_dir, db_dir, occr_level, threads=threads)
+        wgmlst.profiling(output_dir, input_dir, database, threads=threads, occr_level=occr_level)
+    if args.algorithm == "MLST":
+        wgmlst.mlst_profiling(output_dir, input_dir, database, threads=threads)
+    if args.algorithm == "virulence":
+        wgmlst.virulence_profiling(output_dir, input_dir, database, threads=threads)
     if args.algorithm == "tree":
         with open(os.path.join(input_dir, "namemap.json"), "r") as file:
             names = json.loads(file.read())

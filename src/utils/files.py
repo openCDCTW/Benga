@@ -45,3 +45,7 @@ def replace_ext(x, extensions=[".fna", ".fa"]):
         y = y.replace(ext, "")
     return y
 
+
+def fasta_filename(filename):
+    return os.path.basename(filename).replace(".fa", "").replace(".fna", "")
+
