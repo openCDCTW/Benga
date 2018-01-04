@@ -6,7 +6,7 @@ import pandas as pd
 from Bio import SeqIO
 
 from src.models import logs
-from src.utils import files, seq, docker, cmds, operations
+from src.utils import files, seq, docker, cmds, operations, db
 
 
 def parse_filenames(path, ext=".fna"):
@@ -55,25 +55,26 @@ def create_noncds(database_dir, gff_dir):
         file.write(json.dumps(noncds))
 
 
-def extract_profiles(roary_matrix_file, metadata_file, metadata_cols=13):
+def extract_profiles(roary_matrix_file, dbname, metadata_cols=13):
     matrix = pd.read_csv(roary_matrix_file)
     matrix["Gene"] = matrix["Gene"].str.replace("/", "_")
     rename_cols = {"Gene": "locus_id", "No. isolates": "num_isolates", "No. sequences": "num_sequences",
                    "Annotation": "description"}
     matrix.rename(columns=rename_cols, inplace=True)
     matrix.set_index("locus_id", inplace=True)
-    save_locus_metadata(matrix, metadata_file)
+    save_locus_metadata(matrix, dbname)
     profiles = matrix.iloc[:, metadata_cols:]
     isolates = len(matrix.columns) - metadata_cols
     return profiles, isolates
 
 
-def save_locus_metadata(matrix, metadata_file, select_col=None, repeat_tol=1.5):
+def save_locus_metadata(matrix, dbname, select_col=None, repeat_tol=1.5):
     if not select_col:
-        select_col = ["num_isolates", "num_sequences", "description", "is_paralogs"]
+        select_col = ["locus_id", "num_isolates", "num_sequences", "description", "is_paralogs"]
     avg = "Avg sequences per isolate"
     matrix["is_paralogs"] = [x > repeat_tol for x in matrix[avg]]
-    matrix[select_col].to_csv(metadata_file, sep="\t")
+    matrix = matrix.reset_index()[select_col]
+    db.append_to_sql("locus_meta", matrix, dbname)
 
 
 def collect_allele_infos(profiles, ffn_dir):
@@ -100,24 +101,35 @@ def collect_allele_infos(profiles, ffn_dir):
     return new_profiles, freq
 
 
-def save_sequences(freq, seq_file):
-    with open(seq_file, "w") as file:
-        file.write("locus_id\tallele_id\tdna_seq\tpeptide_seq\tcount")
-        for locus, counter in freq.items():
-            for allele, count in counter.items():
-                dna_seq = str(allele)
-                pept_seq = str(allele.translate(table=11))
-                allele_id = operations.make_seqid(dna_seq)
-                file.write("\n{}\t{}\t{}\t{}\t{}".format(locus, allele_id, dna_seq, pept_seq, count))
+def batch_to_db(data, dbname):
+    df = pd.DataFrame(data, columns=["locus_id", "allele_id", "dna_seq", "peptide_seq", "count"])
+    db.append_to_sql("alleles", df, dbname)
+    return []
 
 
-def make_schemes(locusmeta_file, scheme_file, freq, total_isolates):
+def save_sequences(freq, dbname):
+    i = 0
+    results = []
+    for locus, counter in freq.items():
+        for allele, count in counter.items():
+            dna_seq = str(allele)
+            pept_seq = str(allele.translate(table=11))
+            allele_id = operations.make_seqid(dna_seq)
+            results.append((locus, allele_id, dna_seq, pept_seq, count))
+            i += 1
+            if i % 10000 == 0:
+                results = batch_to_db(results, dbname)
+    if results:
+        batch_to_db(results, dbname)
+
+
+def make_schemes(freq, total_isolates, dbname):
     refseqs = {locus: operations.make_seqid(counter.most_common(1)[0][0]) for locus, counter in freq.items()}
-    schemes = pd.read_csv(locusmeta_file, sep="\t")
+    schemes = db.from_sql("select locus_id, num_isolates from locus_meta;", dbname)
     schemes["occurrence"] = list(map(lambda x: round(x/total_isolates * 100, 2), schemes["num_isolates"]))
     schemes["ref_allele"] = list(map(lambda x: refseqs[x], schemes["locus_id"]))
     schemes = schemes.loc[schemes["occurrence"] >= 2.0, ["locus_id", "occurrence", "ref_allele"]]
-    schemes.to_csv(scheme_file, index=False, sep="\t")
+    db.append_to_sql("loci", schemes, dbname)
 
 
 def annotate_configs(input_dir, output_dir, logger=None, threads=8, use_docker=True):
@@ -161,9 +173,6 @@ def make_database(output_dir, logger=None, threads=2, use_docker=True):
     if not logger:
         logger = logs.console_logger(__name__)
 
-    database_dir = files.joinpath(output_dir, "database")
-    files.create_if_not_exist(database_dir)
-
     logger.info("Calculating the pan genome...")
     min_identity = 95
     if use_docker:
@@ -172,22 +181,24 @@ def make_database(output_dir, logger=None, threads=2, use_docker=True):
         c = cmds.form_roary_cmd(files.joinpath(output_dir, "GFF"), output_dir, min_identity, threads)
         os.system(c)
 
+    logger.info("Creating database")
+    dbname = os.path.basename(output_dir)
+    db.create_pgadb(dbname)
+
     logger.info("Extract profiles from roary result matrix...")
     matrix_file = files.joinpath(output_dir, "roary", "gene_presence_absence.csv")
-    locusmeta_file = files.joinpath(database_dir, "locus_meta.tsv")
-    profiles, total_isolates = extract_profiles(matrix_file, locusmeta_file)
+    profiles, total_isolates = extract_profiles(matrix_file, dbname)
 
     logger.info("Collecting allele profiles and making allele frequencies and reference sequence...")
     ffn_dir = files.joinpath(output_dir, "FFN")
-    profile_file = files.joinpath(database_dir, "allele_profiles.tsv")
+    profile_file = files.joinpath(output_dir, "allele_profiles.tsv")
     profiles, freq = collect_allele_infos(profiles, ffn_dir)
     profiles.to_csv(profile_file, sep="\t")
 
-    sequences_file = files.joinpath(database_dir, "alleles.tsv")
-    save_sequences(freq, sequences_file)
+    logger.info("Saving allele sequences...")
+    save_sequences(freq, dbname)
 
     logger.info("Making dynamic schemes...")
-    scheme_file = files.joinpath(database_dir, "scheme.tsv")
-    make_schemes(locusmeta_file, scheme_file, freq, total_isolates)
+    make_schemes(freq, total_isolates, dbname)
     logger.info("Done!!")
 

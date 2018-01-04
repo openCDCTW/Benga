@@ -73,14 +73,14 @@ def file_to_sql(sql, args, database=None):
         print(error)
 
 
-def append_to_sql(df, database=None):
+def append_to_sql(table, df, database=None):
     global DBCONFIG
     if database:
         DBCONFIG["database"] = database
     try:
         engine = create_engine(URL(DBCONFIG))
         with engine.connect() as conn:
-            df.to_sql(conn, if_exists="append")
+            df.to_sql(table, conn, index=False, chunksize=3000, if_exists="append")
     except (Exception, psycopg2.DatabaseError) as error:
         print(error)
     finally:
