@@ -31,47 +31,39 @@ def from_sql(query, database=None):
     return t
 
 
-def sql_query_filepath(query, database=None):
+def query_filepath(query, database=None):
     global DBCONFIG
     if database:
         DBCONFIG["database"] = database
-    try:
-        with psycopg2.connect(dbname=DBCONFIG["database"], user=DBCONFIG["username"],
-                              password=DBCONFIG["password"], host=DBCONFIG["host"],
-                              port=DBCONFIG["port"]) as conn:
-            with conn.cursor() as cur:
-                cur.execute(query)
-                return cur.fetchone()[0].tobytes().decode("utf-8")
-    except (Exception, psycopg2.DatabaseError) as error:
-        print(error)
+    with psycopg2.connect(dbname=DBCONFIG["database"], user=DBCONFIG["username"],
+                          password=DBCONFIG["password"], host=DBCONFIG["host"],
+                          port=DBCONFIG["port"]) as conn:
+        with conn.cursor() as cur:
+            cur.execute(query)
+            filepath = cur.fetchone()[0].tobytes().decode("utf-8")
+    return filepath
 
 
 def to_sql(sql, args, database=None):
     global DBCONFIG
     if database:
         DBCONFIG["database"] = database
-    try:
-        engine = create_engine(URL(**DBCONFIG))
-        with engine.connect() as conn:
-            conn.execute(sql, **args)
-        engine.dispose()
-    except Exception as error:
-        print(error)
+    engine = create_engine(URL(**DBCONFIG))
+    with engine.connect() as conn:
+        conn.execute(sql, **args)
+    engine.dispose()
 
 
 def file_to_sql(sql, args, database=None):
     global DBCONFIG
     if database:
         DBCONFIG["database"] = database
-    try:
-        with psycopg2.connect(dbname=DBCONFIG["database"], user=DBCONFIG["username"],
-                              password=DBCONFIG["password"], host=DBCONFIG["host"],
-                              port=DBCONFIG["port"]) as conn:
-            with conn.cursor() as cur:
-                cur.execute(sql, args)
-                conn.commit()
-    except (Exception, psycopg2.DatabaseError) as error:
-        print(error)
+    with psycopg2.connect(dbname=DBCONFIG["database"], user=DBCONFIG["username"],
+                          password=DBCONFIG["password"], host=DBCONFIG["host"],
+                          port=DBCONFIG["port"]) as conn:
+        with conn.cursor() as cur:
+            cur.execute(sql, args)
+            conn.commit()
 
 
 def append_to_sql(table, df, database=None):

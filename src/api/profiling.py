@@ -128,7 +128,7 @@ class ProfileAPI(Resource):
         if len(id) != 32:
             abort(404)
         sql = "select file from profile where id='{}';".format(id)
-        filepath = db.sql_query_filepath(sql, database="profiling")
+        filepath = db.query_filepath(sql, database="profiling")
         if not filepath:
             abort(404)
         return send_file(filepath, mimetype="text/tab-separated-values")
@@ -160,7 +160,7 @@ class DendrogramAPI(Resource):
         if len(id) != 32:
             abort(404)
         sql = "select {} from dendrogram where id='{}';".format(filetype + "_file", id)
-        filepath = db.sql_query_filepath(sql, database="profiling")
+        filepath = db.query_filepath(sql, database="profiling")
         if not filepath:
             abort(404)
         return send_file(filepath)

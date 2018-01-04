@@ -124,13 +124,13 @@ def save_sequences(freq, dbname):
         batch_to_db(results, dbname)
 
 
-def make_schemes(freq, total_isolates, dbname):
+def make_schemes(freq, total_isolates):
     refseqs = {locus: operations.make_seqid(counter.most_common(1)[0][0]) for locus, counter in freq.items()}
-    schemes = db.from_sql("select locus_id, num_isolates from locus_meta;", dbname)
+    schemes = db.from_sql("select locus_id, num_isolates from locus_meta;")
     schemes["occurrence"] = list(map(lambda x: round(x/total_isolates * 100, 2), schemes["num_isolates"]))
     schemes["ref_allele"] = list(map(lambda x: refseqs[x], schemes["locus_id"]))
     schemes = schemes.loc[schemes["occurrence"] >= 2.0, ["locus_id", "occurrence", "ref_allele"]]
-    db.append_to_sql("loci", schemes, dbname)
+    db.append_to_sql("loci", schemes)
 
 
 def annotate_configs(input_dir, output_dir, logger=None, threads=8, use_docker=True):
@@ -202,6 +202,6 @@ def make_database(output_dir, logger=None, threads=2, use_docker=True):
     save_sequences(freq, dbname)
 
     logger.info("Making dynamic schemes...")
-    make_schemes(freq, total_isolates, dbname)
+    make_schemes(freq, total_isolates)
     logger.info("Done!!")
 
