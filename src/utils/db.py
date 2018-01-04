@@ -94,7 +94,7 @@ def create_pgadb(dbname, user=None, passwd=None):
         DBCONFIG["username"] = user
     if passwd:
         DBCONFIG["password"] = passwd
-    engine = create_engine(**URL(DBCONFIG))
+    engine = create_engine(URL(**DBCONFIG))
     metadata = MetaData()
     loci = Table("loci", metadata,
                  Column("locus_id", postgresql.VARCHAR(50), primary_key=True, nullable=False),
