@@ -102,8 +102,8 @@ def update_database(new_allels, alleles):
 
 def add_new_alleles(id_allele_list, ref_db, temp_dir):
     all_alleles = functools.reduce(lambda x, y: {**x, **y[1]}, id_allele_list, {})
-    existed_alleles = from_sql("select allele_id from alleles;")
-    candidates = list(filter(lambda x: x not in existed_alleles["allele_id"], all_alleles.keys()))
+    existed_alleles = from_sql("select allele_id from alleles;")["allele_id"].tolist()
+    candidates = list(filter(lambda x: x not in existed_alleles, all_alleles.keys()))
     new_alleles = blast_for_new_alleles(candidates, all_alleles, ref_db, temp_dir)
     if new_alleles.keys():
         update_database(new_alleles, all_alleles)
