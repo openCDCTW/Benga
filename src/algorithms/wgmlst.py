@@ -109,7 +109,8 @@ def add_new_alleles(id_allele_list, ref_db, temp_dir):
         update_database(new_alleles, all_alleles)
 
 
-def profiling(output_dir, input_dir, database, threads, occr_level=None, selected_loci=None, logger=None):
+def profiling(output_dir, input_dir, database, threads, occr_level=None, selected_loci=None,
+              enable_adding_new_alleles=True, logger=None):
     load_database_config()
     if not logger:
         logger = logs.console_logger(__name__)
@@ -121,24 +122,30 @@ def profiling(output_dir, input_dir, database, threads, occr_level=None, selecte
     with open(files.joinpath(output_dir, "namemap.json"), "w") as f:
         f.write(json.dumps(namemap))
 
-    logger.info("Identifying loci and allocating alleles...")
+    logger.info("Selecting loci by specified scheme {}%...".format(occr_level))
     if selected_loci:
         selected_loci = set(selected_loci)
     else:  # select loci by scheme
         query = "select locus_id from loci where occurrence>={};".format(occr_level)
         selected_loci = set(from_sql(query, database=database).iloc[:, 0])
 
+    logger.info("Making reference blastdb for blastp...")
     temp_dir = os.path.join(query_dir, "temp")
     files.create_if_not_exist(temp_dir)
     ref_db = os.path.join(temp_dir, "ref_blastpdb")
     make_ref_blastpdb(ref_db, database)
 
+    logger.info("Identifying loci and allocating alleles...")
     args = [(os.path.join(query_dir, filename), temp_dir)
             for filename in os.listdir(query_dir) if filename.endswith(".fa")]
     with ProcessPoolExecutor(threads) as executor:
         id_allele_list = list(executor.map(identify_loci, args))
-    add_new_alleles(id_allele_list, ref_db, temp_dir)
 
+    if enable_adding_new_alleles:
+        logger.info("Adding new alleles to database...")
+        add_new_alleles(id_allele_list, ref_db, temp_dir)
+
+    logger.info("Collecting allele profiles of each genomes...")
     collect = []
     for genome_id, alleles in id_allele_list:
         profile = profile_by_query(alleles, genome_id, selected_loci, database)
@@ -147,6 +154,7 @@ def profiling(output_dir, input_dir, database, threads, occr_level=None, selecte
     result.to_csv(files.joinpath(output_dir, "wgmlst.tsv"), sep="\t")
 
     shutil.rmtree(query_dir)
+    logger.info("Done!")
 
 
 def mlst_profiling(output_dir, input_dir, database, threads, logger=None):

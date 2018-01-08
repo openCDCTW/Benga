@@ -51,6 +51,13 @@ def parse_args():
     )
 
     arg_parser.add_argument(
+        "--no_new_alleles",
+        help="Disable adding new alleles to database. [Default: True]",
+        action='store_true',
+        default=True
+    )
+
+    arg_parser.add_argument(
         "--docker",
         help="Use docker version of prokka and roary, instead of the locally installed one.",
         action='store_true',
@@ -69,6 +76,7 @@ def main():
     occr_level = args.occr
     threads = args.threads
     docker = args.docker
+    new_alleles = not args.no_new_alleles
 
     if args.algorithm == "setupdb":
         db.createdb("profiling")
@@ -77,7 +85,8 @@ def main():
         pgdb.annotate_configs(input_dir, output_dir, threads=threads, use_docker=docker)
         pgdb.make_database(output_dir, threads=threads, use_docker=docker)
     if args.algorithm == "profiling":
-        wgmlst.profiling(output_dir, input_dir, database, threads=threads, occr_level=occr_level)
+        wgmlst.profiling(output_dir, input_dir, database, threads=threads, occr_level=occr_level,
+                         enable_adding_new_alleles=new_alleles)
     if args.algorithm == "MLST":
         wgmlst.mlst_profiling(output_dir, input_dir, database, threads=threads)
     if args.algorithm == "virulence":
