@@ -3,6 +3,7 @@ import os
 import shutil
 import functional
 import pandas as pd
+import functools
 from concurrent.futures import ProcessPoolExecutor
 from Bio import SeqIO
 import subprocess
@@ -21,27 +22,21 @@ virulence_genes = ["lpfA", "lpfA_1", "lpfA_2", "lpfA_3", "lpfA_4", "lpfB", "lpfB
 def identify_loci(args):
     filename, out_dir = args
     subprocess.run(cmds.form_prodigal_cmd(filename, out_dir), shell=True)
-    return filename
-
-
-def profile_by_query(filename, genome_id, selected_loci, database, ref_db, temp_dir):
+    genome_id = files.fasta_filename(filename)
+    target_file = os.path.join(out_dir, genome_id + ".locus.fna")
     alleles = {operations.make_seqid(rec.seq): (rec.seq, rec.seq.translate(table=11))
-                  for rec in SeqIO.parse(filename, "fasta")}
+               for rec in SeqIO.parse(target_file, "fasta")}
+    return genome_id, alleles
+
+
+def profile_by_query(alleles, genome_id, selected_loci, database):
     locus_ids = ",".join("'{}'".format(x) for x in selected_loci)
-    query = "select allele_id, locus_id" \
-            "from alleles" \
-            "where allele_id in ({}) and locus_id in ({});".format(",".join("'{}'".format(alleles.keys())),
-                                                                   locus_ids)
+    allele_ids = ",".join("'{}'".format(x) for x in alleles.keys())
+    query = "select allele_id, locus_id " \
+            "from alleles " \
+            "where allele_id in ({}) and locus_id in ({});".format(allele_ids, locus_ids)
     # ensure allele_id is mapped only once
     profile = from_sql(query, database=database).drop_duplicates("allele_id")
-    # collect unmapped alleles as new allele candidates
-    candidates = list(filter(lambda x: x not in profile.tolist(), alleles.keys()))
-    # blastp for locus with 95% identity and coverage 90%
-    new_alleles_map = blast_for_new_alleles(candidates, alleles, ref_db, genome_id, temp_dir)
-    if new_alleles_map.keys():
-        # update new allele-locus pairs to database
-        new_allele_profile = update_database(new_alleles_map, alleles)
-        profile = patch_profile(profile, new_allele_profile)
     # ensure locus_id exists only once
     profile = profile.drop_duplicates("locus_id").set_index("locus_id")
     profile = profile.rename(columns={"allele_id": genome_id}).iloc[:, 0]
@@ -168,9 +163,8 @@ def match_allele(args):
 
 
 def make_ref_blastpdb(ref_db_file, database):
-    query = "select locus_id, peptide_seq" \
-            "from loci" \
-            "inner join alleles" \
+    query = "select loci.locus_id, alleles.peptide_seq " \
+            "from loci inner join alleles " \
             "on loci.ref_allele = alleles.allele_id;"
     refs = from_sql(query, database=database)
 
@@ -182,12 +176,14 @@ def make_ref_blastpdb(ref_db_file, database):
     os.remove(ref_fasta)
 
 
-def blast_for_new_alleles(candidates, alleles, ref_db, genome_id, temp_dir, identity=95):
-    candidate_file = os.path.join(temp_dir, genome_id + ".fasta")
+def blast_for_new_alleles(candidates, alleles, ref_db, temp_dir, identity=95):
+    '''blastp for locus with 95% identity and coverage 90%'''
+    filename = "new_allele_candidates"
+    candidate_file = os.path.join(temp_dir, filename + ".fasta")
     recs = [seq.new_record(cand, alleles[cand][1], seqtype="protein") for cand in candidates]
     seq.save_records(recs, candidate_file)
 
-    blastp_out_file = files.joinpath(temp_dir, "{}.blastp.out".format(genome_id))
+    blastp_out_file = files.joinpath(temp_dir, "{}.blastp.out".format(filename))
     seq.query_blastpdb(candidate_file, ref_db, blastp_out_file, seq.BLAST_COLUMNS, cov=90)
 
     blastp_out = pd.read_csv(blastp_out_file, sep="\t", header=None, names=seq.BLAST_COLUMNS)
@@ -202,19 +198,23 @@ def update_database(new_allels, alleles):
     for allele_id, locus_id in new_allels.items():
         dna = str(alleles[allele_id][0])
         peptide = str(alleles[allele_id][1])
-        count = 1
+        count = 1  # TODO: not real counting number
         collect.append((allele_id, locus_id, dna, peptide, count))
     result = pd.DataFrame(collect, columns=cols)
     append_to_sql("alleles", result)
     return result[["allele_id", "locus_id"]]
 
 
-def patch_profile(profile, new_profile):
-    return pd.concat([profile, new_profile])
+def add_new_alleles(id_allele_list, ref_db, temp_dir):
+    all_alleles = functools.reduce(lambda x, y: {**x, **y[1]}, id_allele_list, {})
+    existed_alleles = from_sql("select allele_id from alleles;")
+    candidates = list(filter(lambda x: x not in existed_alleles["allele_id"], all_alleles.keys()))
+    new_alleles = blast_for_new_alleles(candidates, all_alleles, ref_db, temp_dir)
+    if new_alleles.keys():
+        update_database(new_alleles, all_alleles)
 
 
-def profiling(output_dir, input_dir, database, threads, occr_level=None, selected_loci=None, logger=None,
-              aligcov_cut=0.5, identity=90):
+def profiling(output_dir, input_dir, database, threads, occr_level=None, selected_loci=None, logger=None):
     load_database_config()
     if not logger:
         logger = logs.console_logger(__name__)
@@ -238,26 +238,25 @@ def profiling(output_dir, input_dir, database, threads, occr_level=None, selecte
     ref_db = os.path.join(temp_dir, "ref_blastpdb")
     make_ref_blastpdb(ref_db, database)
 
-    collect = []
     args = [(os.path.join(query_dir, filename), temp_dir)
             for filename in os.listdir(query_dir) if filename.endswith(".fa")]
     with ProcessPoolExecutor(threads) as executor:
-        for filename in executor.map(identify_loci, args):
-            genome_id = files.fasta_filename(filename)
-            target_file = os.path.join(temp_dir, genome_id + ".locus.fna")
-            profile = profile_by_query(target_file, genome_id, selected_loci, database, ref_db, temp_dir)
-            collect.append(profile)
+        id_allele_list = list(executor.map(identify_loci, args))
+    add_new_alleles(id_allele_list, ref_db, temp_dir)
+
+    collect = []
+    for genome_id, alleles in id_allele_list:
+        profile = profile_by_query(alleles, genome_id, selected_loci, database)
+        collect.append(profile)
     result = pd.concat(collect, axis=1)
     result.to_csv(files.joinpath(output_dir, "wgmlst.tsv"), sep="\t")
 
     shutil.rmtree(query_dir)
 
 
-def mlst_profiling(output_dir, input_dir, database, threads, logger=None, aligcov_cut=0.5, identity=90):
-    return profiling(output_dir, input_dir, database, threads, logger=logger, selected_loci=MLST,
-                     aligcov_cut=aligcov_cut, identity=identity)
+def mlst_profiling(output_dir, input_dir, database, threads, logger=None):
+    return profiling(output_dir, input_dir, database, threads, logger=logger, selected_loci=MLST)
 
 
-def virulence_profiling(output_dir, input_dir, database, threads, logger=None, aligcov_cut=0.5, identity=90):
-    return profiling(output_dir, input_dir, database, threads, logger=logger, selected_loci=virulence_genes,
-                     aligcov_cut=aligcov_cut, identity=identity)
+def virulence_profiling(output_dir, input_dir, database, threads, logger=None):
+    return profiling(output_dir, input_dir, database, threads, logger=logger, selected_loci=virulence_genes)

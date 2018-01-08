@@ -29,11 +29,11 @@ def save_records(seqs, filename):
 
 
 def compile_blastndb(input_file, output_file):
-    subprocess.run(["makeblastdb", "-in", input_file, "-dbtype", "nucl", "-out", output_file], shell=True)
+    subprocess.run(" ".join(["makeblastdb", "-in", input_file, "-dbtype", "nucl", "-out", output_file]), shell=True)
 
 
 def compile_blastpdb(input_file, output_file):
-    subprocess.run(["makeblastdb", "-in", input_file, "-dbtype", "prot", "-out", output_file], shell=True)
+    subprocess.run(" ".join(["makeblastdb", "-in", input_file, "-dbtype", "prot", "-out", output_file]), shell=True)
 
 
 def query_blastndb(query, db_dir, output_file, cols, threads=2):
