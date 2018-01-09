@@ -90,12 +90,12 @@ def create_pgadb_relations(dbname, user=None, passwd=None):
     engine = create_engine(URL(**DBCONFIG))
     metadata = MetaData()
     loci = Table("loci", metadata,
-                 Column("locus_id", None, ForeignKey("locus_meta.locus_id", ondelete="CASCADE")),
-                 Column("ref_allele", None, ForeignKey("alleles.allele_id", ondelete="CASCADE"),
-                        nullable=False),
+                 Column("locus_id", None, ForeignKey("locus_meta.locus_id", ondelete="CASCADE"),
+                        primary_key=True),
+                 Column("ref_allele", postgresql.CHAR(64), nullable=False),
                  Column("occurrence", postgresql.REAL))
     alleles = Table("alleles", metadata,
-                    Column("allele_id", postgresql.CHAR(64), primary_key=True, nullable=False, unique=True),
+                    Column("allele_id", postgresql.CHAR(64), primary_key=True, nullable=False),
                     Column("locus_id", None, ForeignKey("locus_meta.locus_id", ondelete="CASCADE"),
                            primary_key=True),
                     Column("dna_seq", postgresql.TEXT, nullable=False),
