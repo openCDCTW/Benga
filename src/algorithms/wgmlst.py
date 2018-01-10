@@ -111,9 +111,12 @@ def add_new_alleles(id_allele_list, ref_db, temp_dir):
 
 def profiling(output_dir, input_dir, database, threads, occr_level=None, selected_loci=None,
               enable_adding_new_alleles=True, logger=None):
-    load_database_config()
     if not logger:
-        logger = logs.console_logger(__name__)
+        lf = logs.LoggerFactory
+        lf.addConsoleHandler()
+        lf.addFileHandler(files.joinpath(output_dir, "profiling.log"))
+        logger = lf.create()
+    load_database_config(logger=logger)
 
     logger.info("Renaming contigs...")
     query_dir = files.joinpath(output_dir, "query")

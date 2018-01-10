@@ -5,8 +5,8 @@ from ete3 import Tree
 from scipy.cluster import hierarchy
 from scipy.spatial.distance import squareform
 import matplotlib
-matplotlib.use('Agg')
 import matplotlib.pyplot as plt
+matplotlib.use('Agg')
 
 
 class Dendrogram:

@@ -135,7 +135,10 @@ def make_schemes(freq, total_isolates):
 
 def annotate_configs(input_dir, output_dir, logger=None, threads=8, use_docker=True):
     if not logger:
-        logger = logs.console_logger(__name__)
+        lf = logs.LoggerFactory
+        lf.addConsoleHandler()
+        lf.addFileHandler(files.joinpath(output_dir, "annotation.log"))
+        logger = lf.create()
 
     logger.info("Formating contigs...")
     filenames = parse_filenames(input_dir)
@@ -171,9 +174,12 @@ def annotate_configs(input_dir, output_dir, logger=None, threads=8, use_docker=T
 
 
 def make_database(output_dir, logger=None, threads=2, use_docker=True):
-    db.load_database_config()
     if not logger:
-        logger = logs.console_logger(__name__)
+        lf = logs.LoggerFactory
+        lf.addConsoleHandler()
+        lf.addFileHandler(files.joinpath(output_dir, "make_database.log"))
+        logger = lf.create()
+    db.load_database_config(logger=logger)
 
     logger.info("Calculating the pan genome...")
     min_identity = 95
@@ -181,6 +187,7 @@ def make_database(output_dir, logger=None, threads=2, use_docker=True):
         docker.roary(files.joinpath(output_dir, "GFF"), output_dir, min_identity, threads)
     else:
         c = cmds.form_roary_cmd(files.joinpath(output_dir, "GFF"), output_dir, min_identity, threads)
+        logger.info("Run roary with following command: " + c)
         subprocess.run(c, shell=True)
 
     logger.info("Creating database")

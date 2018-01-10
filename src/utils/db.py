@@ -9,7 +9,7 @@ from sqlalchemy.dialects import postgresql
 DBCONFIG = {}
 
 
-def load_database_config(filename="database.config"):
+def load_database_config(filename="database.config", logger=None):
     global DBCONFIG
     with open(filename, "r") as file:
         DBCONFIG = json.loads(file.read())
@@ -18,6 +18,12 @@ def load_database_config(filename="database.config"):
         DBCONFIG["host"] = "localhost"
     if "port" not in DBCONFIG.keys():
         DBCONFIG["port"] = 5432
+    logger.info("Read database configuration successfully from {}!".format(filename))
+    logger.info("Database: {}:{}".format(DBCONFIG["host"], DBCONFIG["port"]))
+    if "password" in DBCONFIG.keys():
+        logger.info("Login database as USER {} with PASSWORD ******".format(DBCONFIG["username"]))
+    else:
+        raise Exception("Passwrod for {} is not available in {}!".format(DBCONFIG["username"], filename))
 
 
 def from_sql(query, database=None):
