@@ -4,6 +4,7 @@ import datetime
 import json
 import sys
 from src.utils import db
+from src.models import logs
 from src.algorithms import pgdb, wgmlst, phylotree
 
 PROJECT_HOME = os.path.dirname(sys.argv[0])
@@ -79,6 +80,9 @@ def main():
     new_alleles = not args.no_new_alleles
 
     if args.algorithm == "setupdb":
+        lf = logs.LoggerFactory()
+        lf.addConsoleHandler()
+        db.load_database_config(logger=lf.create())
         db.createdb("profiling")
         db.create_profiling_relations()
     if args.algorithm == "make_db":

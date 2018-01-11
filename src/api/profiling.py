@@ -8,7 +8,7 @@ import os
 from threading import Thread
 from src.api import internals
 from src.utils import db
-from src.utils.files import create_if_not_exist, joinpath
+from src.utils.files import create_if_not_exist
 from src.models import logs
 
 INDIR = "input"
@@ -18,7 +18,6 @@ DB = "profiling"
 create_if_not_exist(OUTDIR)
 lf = logs.LoggerFactory()
 lf.addConsoleHandler()
-lf.addFileHandler(joinpath(OUTDIR, "database.log"))
 logger = lf.create()
 db.load_database_config(logger=logger)
 
