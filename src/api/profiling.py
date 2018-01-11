@@ -7,12 +7,18 @@ import hashlib
 import os
 from threading import Thread
 from src.api import internals
-from src.utils import db
+from src.utils import db, files
+from src.models import logs
 
 INDIR = "input"
 OUTDIR = "output"
 DB = "profiling"
-db.load_database_config()
+
+lf = logs.LoggerFactory()
+lf.addConsoleHandler()
+lf.addFileHandler(files.joinpath(OUTDIR, "database.log"))
+logger = lf.create()
+db.load_database_config(logger=logger)
 
 
 def create_if_not_exist(path):
