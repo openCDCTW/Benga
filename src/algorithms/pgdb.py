@@ -135,7 +135,7 @@ def make_schemes(freq, total_isolates):
 
 def annotate_configs(input_dir, output_dir, logger=None, threads=8, use_docker=True):
     if not logger:
-        lf = logs.LoggerFactory
+        lf = logs.LoggerFactory()
         lf.addConsoleHandler()
         lf.addFileHandler(files.joinpath(output_dir, "annotation.log"))
         logger = lf.create()
@@ -175,7 +175,7 @@ def annotate_configs(input_dir, output_dir, logger=None, threads=8, use_docker=T
 
 def make_database(output_dir, logger=None, threads=2, use_docker=True):
     if not logger:
-        lf = logs.LoggerFactory
+        lf = logs.LoggerFactory()
         lf.addConsoleHandler()
         lf.addFileHandler(files.joinpath(output_dir, "make_database.log"))
         logger = lf.create()
