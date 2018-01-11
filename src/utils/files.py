@@ -22,7 +22,7 @@ def drop_duplicate(l, idfun=None):
 
 def create_if_not_exist(path):
     if not os.path.exists(path):
-        os.mkdir(path)
+        os.makedirs(path)
 
 
 def clear_folder(path):
