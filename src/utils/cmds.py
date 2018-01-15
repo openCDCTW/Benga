@@ -11,7 +11,7 @@ def form_prokka_cmd(newname, inpath, outpath):
 
 
 def form_roary_cmd(inpath, outpath, ident_min, threads):
-    args = ["roary", "-p", threads, "-i", ident_min, "-s", "-f", files.joinpath(outpath, "roary"),
+    args = ["roary", "-p", str(threads), "-i", str(ident_min), "-s", "-f", files.joinpath(outpath, "roary"),
             files.joinpath(inpath, "*.gff")]
     return " ".join(args)
 
