@@ -1,4 +1,5 @@
 import os.path
+import subprocess
 from src.utils import files
 
 
@@ -21,3 +22,8 @@ def form_prodigal_cmd(infile, outpath):
             "-d", os.path.join(outpath, filename + ".locus.fna"),
             "-o", os.path.join(outpath, filename + ".gbk")]
     return " ".join(args)
+
+
+def execute_cmd(args):
+    cmd = args
+    subprocess.run(cmd, shell=True)

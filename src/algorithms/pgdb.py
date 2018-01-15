@@ -157,7 +157,7 @@ def annotate_configs(input_dir, output_dir, logger=None, threads=8, use_docker=T
     else:
         c = [cmds.form_prokka_cmd(x, genome_dir, annotate_dir) for x in namemap.values()]
         with ProcessPoolExecutor(int(threads / 2)) as executor:
-            executor.map(lambda cmd: subprocess.run(cmd, shell=True), c)
+            executor.map(cmds.execute_cmd, c)
 
     logger.info("Moving protein CDS (.ffn) files...")
     ffn_dir = files.joinpath(output_dir, "FFN")
