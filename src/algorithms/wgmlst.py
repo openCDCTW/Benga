@@ -3,12 +3,13 @@ import os
 import shutil
 import pandas as pd
 import functools
+from collections import Counter
 from concurrent.futures import ProcessPoolExecutor
 from Bio import SeqIO
 import subprocess
 from src.models import logs
 from src.utils import files, seq, cmds, operations
-from src.utils.db import load_database_config, from_sql, append_to_sql
+from src.utils.db import load_database_config, from_sql, append_to_sql, to_sql
 
 MLST = ["aroC_1", "aroC_2", "aroC_3", "dnaN", "hemD", "hisD", "purE", "sucA_1", "sucA_2", "thrA_2", "thrA_3"]
 virulence_genes = ["lpfA", "lpfA_1", "lpfA_2", "lpfA_3", "lpfA_4", "lpfB", "lpfB_1", "lpfB_2", "lpfC", "lpfC_1",
@@ -28,11 +29,24 @@ def identify_loci(args):
     return genome_id, alleles
 
 
+def update_allele_counts(counter, database):
+    allele_ids = ",".join("'{}'".format(x) for x in counter.keys())
+    query = "select allele_id, count " \
+            "from alleles " \
+            "where allele_id in ({});".format(allele_ids)
+    table = from_sql(query, database=database)
+    sql = ""
+    for _, row in table.iterrows():
+        x = row["allele_id"]
+        sql += "update alleles set count={} where allele_id={};".format(row["count"] + counter[x], x)
+    to_sql(sql, database=database)
+
+
 def profile_by_query(alleles, genome_id, selected_loci, database):
     locus_ids = ",".join("'{}'".format(x) for x in selected_loci)
     allele_ids = ",".join("'{}'".format(x) for x in alleles.keys())
     query = "select allele_id, locus_id " \
-            "from alleles " \
+            "from pairs " \
             "where allele_id in ({}) and locus_id in ({});".format(allele_ids, locus_ids)
     # ensure allele_id is mapped only once
     profile = from_sql(query, database=database).drop_duplicates("allele_id")
@@ -83,30 +97,31 @@ def blast_for_new_alleles(candidates, alleles, ref_db, temp_dir, identity=95):
 
     blastp_out = pd.read_csv(blastp_out_file, sep="\t", header=None, names=seq.BLAST_COLUMNS)
     blastp_out = blastp_out[blastp_out["pident"] >= identity].drop_duplicates("qseqid")
-    new_alleles = {row["qseqid"]: row["sseqid"] for _, row in blastp_out.iterrows()}
-    return new_alleles
+    new_allele_pairs = [(row["qseqid"], row["sseqid"]) for _, row in blastp_out.iterrows()]
+    return new_allele_pairs
 
 
-def update_database(new_allels, alleles):
-    cols = ["allele_id", "locus_id", "dna_seq", "peptide_seq", "count"]
+def update_database(new_allele_pairs, alleles):
     collect = []
-    for allele_id, locus_id in new_allels.items():
+    for allele_id, locus_id in new_allele_pairs:
         dna = str(alleles[allele_id][0])
         peptide = str(alleles[allele_id][1])
-        count = 1  # TODO: not real counting number
-        collect.append((allele_id, locus_id, dna, peptide, count))
-    result = pd.DataFrame(collect, columns=cols)
-    append_to_sql("alleles", result)
-    return result[["allele_id", "locus_id"]]
+        count = 0  # TODO: put counting mechanism to profiling
+        collect.append((allele_id, dna, peptide, count))
+    collect = pd.DataFrame(collect, columns=["allele_id", "dna_seq", "peptide_seq", "count"]).drop_duplicates()
+    append_to_sql("alleles", collect)
+    pairs = pd.DataFrame(new_allele_pairs, columns=["allele_id", "locus_id"]).drop_duplicates()
+    append_to_sql("pairs", pairs)
+    return pairs
 
 
 def add_new_alleles(id_allele_list, ref_db, temp_dir):
     all_alleles = functools.reduce(lambda x, y: {**x, **y[1]}, id_allele_list, {})
     existed_alleles = from_sql("select allele_id from alleles;")["allele_id"].tolist()
     candidates = list(filter(lambda x: x not in existed_alleles, all_alleles.keys()))
-    new_alleles = blast_for_new_alleles(candidates, all_alleles, ref_db, temp_dir)
-    if new_alleles.keys():
-        update_database(new_alleles, all_alleles)
+    new_allele_pairs = blast_for_new_alleles(candidates, all_alleles, ref_db, temp_dir)
+    if new_allele_pairs:
+        update_database(new_allele_pairs, all_alleles)
 
 
 def profiling(output_dir, input_dir, database, threads, occr_level=None, selected_loci=None,
@@ -149,13 +164,16 @@ def profiling(output_dir, input_dir, database, threads, occr_level=None, selecte
         add_new_alleles(id_allele_list, ref_db, temp_dir)
 
     logger.info("Collecting allele profiles of each genomes...")
+    allele_counts = Counter()
     collect = []
     for genome_id, alleles in id_allele_list:
         profile = profile_by_query(alleles, genome_id, selected_loci, database)
         collect.append(profile)
+        allele_counts.update(alleles.keys())
     result = pd.concat(collect, axis=1)
     result.to_csv(files.joinpath(output_dir, "wgmlst.tsv"), sep="\t")
 
+    update_allele_counts(allele_counts)
     shutil.rmtree(query_dir)
     logger.info("Done!")
 

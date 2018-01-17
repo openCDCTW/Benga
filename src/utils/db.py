@@ -50,7 +50,7 @@ def query_filepath(query, database=None):
     return filepath
 
 
-def to_sql(sql, args, database=None):
+def to_sql(sql, args={}, database=None):
     global DBCONFIG
     if database:
         DBCONFIG["database"] = database
@@ -98,12 +98,16 @@ def create_pgadb_relations(dbname, user=None, passwd=None):
     loci = Table("loci", metadata,
                  Column("locus_id", None, ForeignKey("locus_meta.locus_id", ondelete="CASCADE"),
                         primary_key=True),
-                 Column("ref_allele", postgresql.CHAR(64), nullable=False),
+                 Column("ref_allele", None, ForeignKey("alleles.allele_id", ondelete="CASCADE"),
+                        nullable=False),
                  Column("occurrence", postgresql.REAL))
-    alleles = Table("alleles", metadata,
-                    Column("allele_id", postgresql.CHAR(64), primary_key=True, nullable=False),
+    pairs = Table("pairs", metadata,
+                    Column("allele_id", None, ForeignKey("alleles.allele_id", ondelete="CASCADE"),
+                           primary_key=True, nullable=False),
                     Column("locus_id", None, ForeignKey("locus_meta.locus_id", ondelete="CASCADE"),
-                           primary_key=True),
+                           primary_key=True))
+    alleles = Table("alleles", metadata,
+                    Column("allele_id", postgresql.CHAR(64), primary_key=True, nullable=False, unique=True),
                     Column("dna_seq", postgresql.TEXT, nullable=False),
                     Column("peptide_seq", postgresql.TEXT, nullable=False),
                     Column("count", postgresql.SMALLINT, nullable=False))

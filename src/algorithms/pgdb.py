@@ -102,26 +102,30 @@ def collect_allele_infos(profiles, ffn_dir):
     return new_profiles, freq
 
 
-def batch_to_db(data, dbname):
-    df = pd.DataFrame(data, columns=["locus_id", "allele_id", "dna_seq", "peptide_seq", "count"])
+def to_allele_table(data, dbname):
+    df = pd.DataFrame(data, columns=["allele_id", "dna_seq", "peptide_seq", "count"])
+    df = df.groupby("allele_id").agg({"dna_seq": "first", "peptide_seq": "first", "count": "sum"})
+    df.reset_index(inplace=True)
     db.append_to_sql("alleles", df, dbname)
-    return []
+
+
+def to_pair_table(data, dbname):
+    df = pd.DataFrame(data, columns=["allele_id", "locus_id"])
+    db.append_to_sql("pairs", df, dbname)
 
 
 def save_sequences(freq, dbname):
-    i = 0
-    results = []
+    alleles = []
+    pairs = []
     for locus, counter in freq.items():
         for allele, count in counter.items():
             dna_seq = str(allele)
             pept_seq = str(allele.translate(table=11))
             allele_id = operations.make_seqid(dna_seq)
-            results.append((locus, allele_id, dna_seq, pept_seq, count))
-            i += 1
-            if i % 10000 == 0:
-                results = batch_to_db(results, dbname)
-    if results:
-        batch_to_db(results, dbname)
+            alleles.append((allele_id, dna_seq, pept_seq, count))
+            pairs.append((locus, allele_id))
+    to_allele_table(alleles, dbname)
+    to_pair_table(pairs, dbname)
 
 
 def make_schemes(freq, total_isolates):
