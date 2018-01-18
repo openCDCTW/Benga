@@ -173,7 +173,7 @@ def profiling(output_dir, input_dir, database, threads, occr_level=None, selecte
     result = pd.concat(collect, axis=1)
     result.to_csv(files.joinpath(output_dir, "wgmlst.tsv"), sep="\t")
 
-    update_allele_counts(allele_counts)
+    update_allele_counts(allele_counts, database)
     shutil.rmtree(query_dir)
     logger.info("Done!")
 
