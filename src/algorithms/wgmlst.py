@@ -38,7 +38,7 @@ def update_allele_counts(counter, database):
     sql = ""
     for _, row in table.iterrows():
         x = row["allele_id"]
-        sql += "update alleles set count={} where allele_id={};".format(row["count"] + counter[x], x)
+        sql += "update alleles set count={} where allele_id='{}';".format(row["count"] + counter[x], x)
     to_sql(sql, database=database)
 
 
