@@ -53,9 +53,9 @@ def parse_args():
 
     arg_parser.add_argument(
         "--no_new_alleles",
-        help="Disable adding new alleles to database. [Default: True]",
+        help="Disable adding new alleles to database. [Default: False]",
         action='store_true',
-        default=True
+        default=False
     )
 
     arg_parser.add_argument(
