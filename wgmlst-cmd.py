@@ -59,6 +59,13 @@ def parse_args():
     )
 
     arg_parser.add_argument(
+        "--debug",
+        help="Debug mode.",
+        action='store_true',
+        default=False
+    )
+
+    arg_parser.add_argument(
         "--docker",
         help="Use docker version of prokka and roary, instead of the locally installed one.",
         action='store_true',
@@ -77,6 +84,7 @@ def main():
     occr_level = args.occr
     threads = args.threads
     docker = args.docker
+    debug = args.debug
     new_alleles = not args.no_new_alleles
 
     if args.algorithm == "setupdb":
@@ -90,7 +98,7 @@ def main():
         pgdb.make_database(output_dir, threads=threads, use_docker=docker)
     if args.algorithm == "profiling":
         wgmlst.profiling(output_dir, input_dir, database, threads=threads, occr_level=occr_level,
-                         enable_adding_new_alleles=new_alleles)
+                         enable_adding_new_alleles=new_alleles, debug=debug)
     if args.algorithm == "MLST":
         wgmlst.mlst_profiling(output_dir, input_dir, database, threads=threads)
     if args.algorithm == "virulence":

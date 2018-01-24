@@ -106,7 +106,7 @@ def update_database(new_allele_pairs, alleles):
     for allele_id, locus_id in new_allele_pairs:
         dna = str(alleles[allele_id][0])
         peptide = str(alleles[allele_id][1])
-        count = 0  # TODO: put counting mechanism to profiling
+        count = 0
         collect.append((allele_id, dna, peptide, count))
     collect = pd.DataFrame(collect, columns=["allele_id", "dna_seq", "peptide_seq", "count"]).drop_duplicates()
     append_to_sql("alleles", collect)
@@ -125,7 +125,7 @@ def add_new_alleles(id_allele_list, ref_db, temp_dir):
 
 
 def profiling(output_dir, input_dir, database, threads, occr_level=None, selected_loci=None,
-              enable_adding_new_alleles=True, logger=None):
+              enable_adding_new_alleles=True, logger=None, debug=False):
     if not logger:
         lf = logs.LoggerFactory()
         lf.addConsoleHandler()
@@ -174,7 +174,8 @@ def profiling(output_dir, input_dir, database, threads, occr_level=None, selecte
     result.to_csv(files.joinpath(output_dir, "wgmlst.tsv"), sep="\t")
 
     update_allele_counts(allele_counts, database)
-    shutil.rmtree(query_dir)
+    if not debug:
+        shutil.rmtree(query_dir)
     logger.info("Done!")
 
 
