@@ -123,7 +123,7 @@ def save_sequences(freq, dbname):
             pept_seq = str(allele.translate(table=11))
             allele_id = operations.make_seqid(dna_seq)
             alleles.append((allele_id, dna_seq, pept_seq, count))
-            pairs.append((locus, allele_id))
+            pairs.append((allele_id, locus))
     to_allele_table(alleles, dbname)
     to_pair_table(pairs, dbname)
 
