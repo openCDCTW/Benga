@@ -195,7 +195,7 @@ def make_database(output_dir, logger=None, threads=2, use_docker=True):
         subprocess.run(c, shell=True)
 
     logger.info("Creating database")
-    dbname = os.path.basename(output_dir)
+    dbname = os.path.basename(output_dir[:-1] if output_dir.endswith("/") else output_dir)
     db.createdb(dbname)
     db.create_pgadb_relations(dbname)
 
