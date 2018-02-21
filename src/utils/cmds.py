@@ -3,6 +3,10 @@ import subprocess
 from src.utils import files
 
 
+DIR_PATH = os.path.dirname(os.path.realpath(__file__))
+BINARIES_PATH = os.path.dirname(os.path.join(DIR_PATH, "..", "..", "binaries"))
+
+
 def form_prokka_cmd(newname, inpath, outpath):
     name, ext = newname.split(".")
     args = ["prokka", "--prefix", name, "--cpus", "2", "--outdir", files.joinpath(outpath, name),
@@ -18,7 +22,8 @@ def form_roary_cmd(inpath, outpath, ident_min, threads):
 
 def form_prodigal_cmd(infile, outpath):
     filename = files.fasta_filename(infile)
-    args = ["prodigal", "-c", "-m", "-q", "-g", "11", "-i", infile,
+    args = [os.path.join(BINARIES_PATH, "prodigal"), "-c", "-m", "-q", "-g", "11",
+            "-i", infile,
             "-d", os.path.join(outpath, filename + ".locus.fna"),
             "-o", os.path.join(outpath, filename + ".gbk")]
     return " ".join(map(str, args))
