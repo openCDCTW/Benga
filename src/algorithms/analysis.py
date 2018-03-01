@@ -9,8 +9,6 @@ from Bio import SeqIO
 from src.utils import db
 plt.style.use("ggplot")
 
-db.load_database_config()
-
 
 TO_INT = ["No. isolates", "No. sequences", "Genome Fragment", "Order within Fragment", "Accessory Fragment",
           "Accessory Order with Fragment", "Min group size nuc", "Max group size nuc", "Avg group size nuc"]
@@ -45,9 +43,10 @@ def richness(weighted=True):
         return np.average(ent)
 
 
-def calculate_loci_coverage(input_dir, output_dir):
+def calculate_loci_coverage(input_dir, output_dir, database):
+    db.load_database_config()
     subject_number = count_subjects(input_dir)
-    plot_stats(output_dir, subject_number)
+    plot_stats(output_dir, subject_number, database)
 
 
 def count_subjects(input_dir):
@@ -58,8 +57,9 @@ def count_subjects(input_dir):
     return len(genomes)
 
 
-def plot_stats(output_dir, subject_number):
-    table = db.from_sql("select locus_id, num_isolates, is_paralog from locus_meta where is_paralog=TRUE;")
+def plot_stats(output_dir, subject_number, database):
+    sql = "select locus_id, num_isolates, is_paralog from locus_meta where is_paralog=TRUE;"
+    table = db.from_sql(sql, database=database)
     table["owned by"] = [int(x / subject_number * 100) for x in table["num_isolates"]]
     plot_genome_coverage(table["owned by"], output_dir, perc=0)
     plot_genome_coverage(table["owned by"], output_dir)
@@ -86,6 +86,7 @@ def plot_genome_coverage(data, output_dir, perc=5, cumulative=False):
 
 
 def calculate_allele_length(input_dir, output_dir):
+    db.load_database_config()
     db_dir = os.path.join(input_dir, "database")
     plot_length_heamap(db_dir, output_dir)
 
