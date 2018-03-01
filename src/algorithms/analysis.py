@@ -71,7 +71,7 @@ def count_subjects(input_dir):
 
 
 def plot_stats(output_dir, subject_number, database):
-    sql = "select locus_id, num_isolates, is_paralog from locus_meta where is_paralog=TRUE;"
+    sql = "select locus_id, num_isolates, is_paralog from locus_meta where is_paralog=FALSE;"
     table = db.from_sql(sql, database=database)
     table["owned by"] = [int(x / subject_number * 100) for x in table["num_isolates"]]
     plot_genome_coverage(table["owned by"], output_dir, perc=0)
