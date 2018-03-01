@@ -2,12 +2,9 @@ import argparse
 import os.path
 import datetime
 import json
-import sys
 from src.utils import db
 from src.models import logs
 from src.algorithms import pgdb, wgmlst, phylotree, analysis
-
-PROJECT_HOME = os.path.dirname(sys.argv[0])
 
 
 def parse_args():
@@ -97,7 +94,7 @@ def main():
         pgdb.annotate_configs(input_dir, output_dir, threads=threads, use_docker=docker)
         pgdb.make_database(output_dir, threads=threads, use_docker=docker)
     if args.algorithm == "analysis":
-        analysis.calculate_loci_coverage(input_dir, output_dir)
+        analysis.calculate_loci_coverage(input_dir, output_dir, database=database)
     if args.algorithm == "profiling":
         wgmlst.profiling(output_dir, input_dir, database, threads=threads, occr_level=occr_level,
                          enable_adding_new_alleles=new_alleles, debug=debug)

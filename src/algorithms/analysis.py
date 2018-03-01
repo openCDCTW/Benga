@@ -16,8 +16,10 @@ TO_STR = ["Non-unique Gene name", "Annotation", "QC"]
 TO_FLOAT = ["Avg sequences per isolate"]
 
 
-def power():
-    counts = db.from_sql("select locus_id, count(locus_id) as counts from pairs group by locus_id;")
+def power(database):
+    db.load_database_config()
+    sql = "select locus_id, count(locus_id) as counts from pairs group by locus_id;"
+    counts = db.from_sql(sql, database=database)
     counts["log_counts"] = np.log2(counts["counts"])
     return np.sum(counts["log_counts"])
 
@@ -27,16 +29,17 @@ def locus_entropy(x):
     return np.sum(prob * np.log2(prob))
 
 
-def richness(weighted=True):
+def richness(database, weighted=True):
+    db.load_database_config()
     sql = "select a.locus_id, a.allele_id, b.count" \
           " from pairs as a" \
           " left join (select allele_id, count from alleles) as b" \
           " on a.allele_id=b.allele_id;"
-    counts = db.from_sql(sql)
+    counts = db.from_sql(sql, database=database)
     ent = counts.groupby("locus_id").agg({"count": locus_entropy})
     if weighted:
         sql = "select locus_id, occurrence from loci;"
-        loci = db.from_sql(sql)
+        loci = db.from_sql(sql, database=database)
         weight = pd.merge(ent, loci, left_index=True, right_on="locus_id")
         return np.average(weight["count"], weights=weight["occurrence"])
     else:
