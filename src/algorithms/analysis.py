@@ -6,6 +6,7 @@ import numpy as np
 import pandas as pd
 import seaborn as sns
 from Bio import SeqIO
+from src.models import logs
 from src.utils import db
 plt.style.use("ggplot")
 
@@ -17,7 +18,10 @@ TO_FLOAT = ["Avg sequences per isolate"]
 
 
 def power(database):
-    db.load_database_config()
+    lf = logs.LoggerFactory()
+    lf.addConsoleHandler()
+    logger = lf.create()
+    db.load_database_config(logger=logger)
     sql = "select locus_id, count(locus_id) as counts from pairs group by locus_id;"
     counts = db.from_sql(sql, database=database)
     counts["log_counts"] = np.log2(counts["counts"])
@@ -30,7 +34,10 @@ def locus_entropy(x):
 
 
 def richness(database, weighted=True):
-    db.load_database_config()
+    lf = logs.LoggerFactory()
+    lf.addConsoleHandler()
+    logger = lf.create()
+    db.load_database_config(logger=logger)
     sql = "select a.locus_id, a.allele_id, b.count" \
           " from pairs as a" \
           " left join (select allele_id, count from alleles) as b" \
@@ -47,7 +54,10 @@ def richness(database, weighted=True):
 
 
 def calculate_loci_coverage(input_dir, output_dir, database):
-    db.load_database_config()
+    lf = logs.LoggerFactory()
+    lf.addConsoleHandler()
+    logger = lf.create()
+    db.load_database_config(logger=logger)
     subject_number = count_subjects(input_dir)
     plot_stats(output_dir, subject_number, database)
 
@@ -89,7 +99,10 @@ def plot_genome_coverage(data, output_dir, perc=5, cumulative=False):
 
 
 def calculate_allele_length(input_dir, output_dir):
-    db.load_database_config()
+    lf = logs.LoggerFactory()
+    lf.addConsoleHandler()
+    logger = lf.create()
+    db.load_database_config(logger=logger)
     db_dir = os.path.join(input_dir, "database")
     plot_length_heamap(db_dir, output_dir)
 
