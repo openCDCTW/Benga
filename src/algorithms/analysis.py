@@ -39,67 +39,28 @@ def richness(weighted=True):
     if weighted:
         sql = "select locus_id, occurrence from loci;"
         loci = db.from_sql(sql)
-        loci["normalized"] = loci["occurrence"] / np.sum(loci["occurrence"])
         weight = pd.merge(ent, loci, left_index=True, right_on="locus_id")
-        return np.average(weight["count"], weights=weight["normalized"])
+        return np.average(weight["count"], weights=weight["occurrence"])
     else:
         return np.average(ent)
 
 
-## locus
-
 def calculate_loci_coverage(input_dir, output_dir):
-    roary_dir = os.path.join(input_dir, "roary")
-    parse_gene_presence_absence(roary_dir, output_dir)
     subject_number = count_subjects(input_dir)
-    plot_stats(output_dir, output_dir, subject_number)
-
-
-def parse_gene_presence_absence(db_dir, output_dir):
-    input_file = os.path.join(db_dir, "gene_presence_absence.csv")
-    output_file = os.path.join(output_dir, "strain_gene_profile.tsv")
-    table = large_csv_parser(input_file)
-    table = parse_datatype(table)
-    table.to_csv(output_file, sep="\t", index=False)
-
-
-def parse_datatype(table):
-    for col in TO_INT:
-        table[col] = [np.nan if x == "" else int(x) for x in table[col]]
-    for col in TO_FLOAT:
-        table[col] = [np.nan if x == "" else float(x) for x in table[col]]
-    for col in TO_STR:
-        table[col] = [np.nan if x == "" else x for x in table[col]]
-    return table
-
-
-def large_csv_parser(filename):
-    columns = []
-    data = []
-    for i, line in enumerate(open(filename, "r")):
-        token = list(map(lambda x: x.replace('"', ""), line.split('",')))
-        if i == 0:
-            columns += token
-        else:
-            head = token[0:14]
-            tail = list(map(lambda x: len(x.split("\t")), token[14:]))
-            data.append(head + tail)
-    table = pd.DataFrame(data, columns=columns)
-    return table
+    plot_stats(output_dir, subject_number)
 
 
 def count_subjects(input_dir):
-    input_file = os.path.join(input_dir, "namemap.json")
+    input_file = os.path.join(input_dir, "allele_profiles.tsv")
     with open(input_file, "r") as file:
-        m = json.loads(file.read())
-    return len(m.keys())
+        first_line = file.readline()
+    genomes = first_line.strip().split("\t")
+    return len(genomes)
 
 
-def plot_stats(input_dir, output_dir, subject_number):
-    input_file = os.path.join(input_dir, "strain_gene_profile.tsv")
-    table = pd.read_csv(input_file, sep="\t")
-    table = table[table["No. isolates"] == table["No. sequences"]]
-    table["owned by"] = [int(x / subject_number * 100) for x in table["No. isolates"]]
+def plot_stats(output_dir, subject_number):
+    table = db.from_sql("select locus_id, num_isolates, is_paralog from locus_meta where is_paralog=TRUE;")
+    table["owned by"] = [int(x / subject_number * 100) for x in table["num_isolates"]]
     plot_genome_coverage(table["owned by"], output_dir, perc=0)
     plot_genome_coverage(table["owned by"], output_dir)
     plot_genome_coverage(table["owned by"], output_dir, perc=0, cumulative=-1)
