@@ -102,10 +102,10 @@ def create_pgadb_relations(dbname, user=None, passwd=None):
                         nullable=False),
                  Column("occurrence", postgresql.REAL))
     pairs = Table("pairs", metadata,
-                    Column("allele_id", None, ForeignKey("alleles.allele_id", ondelete="CASCADE"),
-                           primary_key=True, nullable=False),
-                    Column("locus_id", None, ForeignKey("locus_meta.locus_id", ondelete="CASCADE"),
-                           primary_key=True))
+                  Column("allele_id", None, ForeignKey("alleles.allele_id", ondelete="CASCADE"),
+                         primary_key=True, nullable=False),
+                  Column("locus_id", None, ForeignKey("locus_meta.locus_id", ondelete="CASCADE"),
+                         primary_key=True))
     alleles = Table("alleles", metadata,
                     Column("allele_id", postgresql.CHAR(64), primary_key=True, nullable=False, unique=True),
                     Column("dna_seq", postgresql.TEXT, nullable=False),
