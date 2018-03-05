@@ -56,6 +56,14 @@ def parse_args():
     )
 
     arg_parser.add_argument(
+        "--no_profiles",
+        help="Not generating profiles (wgmlst.tsv). This option is simply for "
+             "updating database with alleles. [Default: False]",
+        action='store_true',
+        default=False
+    )
+
+    arg_parser.add_argument(
         "--debug",
         help="Debug mode.",
         action='store_true',
@@ -83,6 +91,7 @@ def main():
     docker = args.docker
     debug = args.debug
     new_alleles = not args.no_new_alleles
+    generate_profiles = not args.no_profiles
 
     if args.algorithm == "setupdb":
         lf = logs.LoggerFactory()
@@ -97,7 +106,8 @@ def main():
         analysis.calculate_loci_coverage(input_dir, output_dir, database=database)
     if args.algorithm == "profiling":
         wgmlst.profiling(output_dir, input_dir, database, threads=threads, occr_level=occr_level,
-                         enable_adding_new_alleles=new_alleles, debug=debug)
+                         enable_adding_new_alleles=new_alleles, generate_profiles=generate_profiles,
+                         debug=debug)
     if args.algorithm == "MLST":
         wgmlst.mlst_profiling(output_dir, input_dir, database, threads=threads)
     if args.algorithm == "virulence":

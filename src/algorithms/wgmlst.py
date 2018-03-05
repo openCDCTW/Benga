@@ -125,7 +125,7 @@ def add_new_alleles(id_allele_list, ref_db, temp_dir):
 
 
 def profiling(output_dir, input_dir, database, threads, occr_level=None, selected_loci=None,
-              enable_adding_new_alleles=True, logger=None, debug=False):
+              enable_adding_new_alleles=True, generate_profiles=True, logger=None, debug=False):
     if not logger:
         lf = logs.LoggerFactory()
         lf.addConsoleHandler()
@@ -165,13 +165,18 @@ def profiling(output_dir, input_dir, database, threads, occr_level=None, selecte
 
     logger.info("Collecting allele profiles of each genomes...")
     allele_counts = Counter()
-    collect = []
-    for genome_id, alleles in id_allele_list:
-        profile = profile_by_query(alleles, genome_id, selected_loci, database)
-        collect.append(profile)
-        allele_counts.update(alleles.keys())
-    result = pd.concat(collect, axis=1)
-    result.to_csv(files.joinpath(output_dir, "wgmlst.tsv"), sep="\t")
+    if generate_profiles:
+        collect = []
+        for genome_id, alleles in id_allele_list:
+            profile = profile_by_query(alleles, genome_id, selected_loci, database)
+            collect.append(profile)
+            allele_counts.update(alleles.keys())
+        result = pd.concat(collect, axis=1)
+        result.to_csv(files.joinpath(output_dir, "wgmlst.tsv"), sep="\t")
+    else:
+        logger.info("Not going to output profiles.")
+        for genome_id, alleles in id_allele_list:
+            allele_counts.update(alleles.keys())
 
     update_allele_counts(allele_counts, database)
     if not debug:
