@@ -86,14 +86,14 @@ def make_ref_blastpdb(ref_db_file, database):
 
 
 def blast_for_new_alleles(candidates, alleles, ref_db, temp_dir, identity=95):
-    '''blastp for locus with 95% identity and coverage 90%'''
+    '''blastp for locus with 95% identity and coverage 50%'''
     filename = "new_allele_candidates"
     candidate_file = os.path.join(temp_dir, filename + ".fasta")
     recs = [seq.new_record(cand, alleles[cand][1], seqtype="protein") for cand in candidates]
     seq.save_records(recs, candidate_file)
 
     blastp_out_file = files.joinpath(temp_dir, "{}.blastp.out".format(filename))
-    seq.query_blastpdb(candidate_file, ref_db, blastp_out_file, seq.BLAST_COLUMNS, cov=90)
+    seq.query_blastpdb(candidate_file, ref_db, blastp_out_file, seq.BLAST_COLUMNS, cov=50)
 
     blastp_out = pd.read_csv(blastp_out_file, sep="\t", header=None, names=seq.BLAST_COLUMNS)
     blastp_out = blastp_out[blastp_out["pident"] >= identity].drop_duplicates("qseqid")
