@@ -98,25 +98,31 @@ def plot_genome_coverage(data, output_dir, perc=5, cumulative=False):
 # allele
 
 
-def calculate_allele_length(input_dir, output_dir):
+def calculate_allele_length(output_dir, database):
     lf = logs.LoggerFactory()
     lf.addConsoleHandler()
     logger = lf.create()
     db.load_database_config(logger=logger)
-    db_dir = os.path.join(input_dir, "database")
-    plot_length_heamap(db_dir, output_dir)
+    plot_length_heamap(output_dir, database)
 
 
-def plot_length_heamap(input_dir, output_dir, interval=20):
+def plot_length_heamap(output_dir, database, interval=20):
     output_file = os.path.join(output_dir, "allele_length_heatmap.png")
-    allele_freq = parse_freq(input_dir)
-    allele_len = parse_length(os.path.join(input_dir, "locusfiles"), allele_freq)
-    table = to_dataframe(allele_len, interval)
+    allele_info = get_allele_info(database)
+    allele_info["intervals"] = (int(allele_info["length"] / interval) + 1) * interval
+    pairs = db.from_sql("select * from pairs;", database=database)
+    collect = []
+    for locus_id, df in pairs.groupby("locus_id"):
+        df2 = pd.merge(df, allele_info, on="allele_id", kind="left")
+        series = df2.groupby("intervals")["count"].sum()
+        series.name = locus_id
+        collect.append(series)
+    table = pd.concat(collect, axis=1).fillna(0).T
     table = table.apply(lambda x: 100 * x / np.sum(x), axis=1)
 
     # sort by scheme order
-    freq = pd.read_csv(os.path.join(input_dir, "scheme.tsv"), sep="\t", usecols=["locus"])
-    table = pd.merge(freq, table, left_on="locus", right_index=True).set_index("locus")
+    freq = db.from_sql("select locus_id from loci order by occurrence;", database=database)
+    table = pd.merge(freq, table, left_on="locus_id", right_index=True).set_index("locus_id")
 
     table = table.apply(mask_by_length, axis=1).apply(np.floor, axis=1)
     to_show = table.iloc[0:100, 0:80]
@@ -131,35 +137,9 @@ def plot_length_heamap(input_dir, output_dir, interval=20):
     plt.savefig(output_file)
 
 
-def to_dataframe(allele_len, interval):
-    collect = []
-    for locus, lens in allele_len.items():
-        times = [(int(x / interval) + 1) * interval for x in lens]
-        series = pd.Series(data=Counter(times), name=locus)
-        collect.append(series)
-    table = pd.concat(collect, axis=1).fillna(0).T
-    return table
-
-
-def parse_freq(db_dir):
-    file = os.path.join(db_dir, "allele_frequency.json")
-    with open(file, "r") as f:
-        allele_freq = json.loads(f.read())
-    return allele_freq
-
-
-def parse_length(locus_dir, freq):
-    allele_len = {}
-    for fastafile in os.listdir(locus_dir):
-        file = os.path.join(locus_dir, fastafile)
-        locus = fastafile.split(".")[0]
-        allele_f = freq[locus]
-        weighted = []
-        for rec in SeqIO.parse(file, "fasta"):
-            l = len(rec.seq)
-            weighted.extend([l] * allele_f[rec.id])
-        allele_len[locus] = weighted
-    return allele_len
+def get_allele_info(database):
+    sql = "select allele_id, char_length(dna_seq) as length, count from alleles;"
+    return db.from_sql(sql, database=database)
 
 
 def mask_by_length(x):
