@@ -82,6 +82,16 @@ def append_to_sql(table, df, database=None):
     engine.dispose()
 
 
+def table_to_sql(table, df, database=None):
+    global DBCONFIG
+    if database:
+        DBCONFIG["database"] = database
+    engine = create_engine(URL(**DBCONFIG))
+    with engine.connect() as conn:
+        df.to_sql(table, conn, index=False, chunksize=3000)
+    engine.dispose()
+
+
 def createdb(dbname):
     subprocess.run(["createdb", dbname])
 

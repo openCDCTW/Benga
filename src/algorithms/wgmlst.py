@@ -9,7 +9,7 @@ from Bio import SeqIO
 import subprocess
 from src.models import logs
 from src.utils import files, seq, cmds, operations
-from src.utils.db import load_database_config, from_sql, append_to_sql, to_sql
+from src.utils.db import load_database_config, from_sql, append_to_sql, to_sql, table_to_sql
 
 MLST = ["aroC_1", "aroC_2", "aroC_3", "dnaN", "hemD", "hisD", "purE", "sucA_1", "sucA_2", "thrA_2", "thrA_3"]
 virulence_genes = ["lpfA", "lpfA_1", "lpfA_2", "lpfA_3", "lpfA_4", "lpfB", "lpfB_1", "lpfB_2", "lpfC", "lpfC_1",
@@ -30,16 +30,13 @@ def identify_loci(args):
 
 
 def update_allele_counts(counter, database):
-    allele_ids = ",".join("'{}'".format(x) for x in counter.keys())
-    query = "select allele_id, count " \
-            "from alleles " \
-            "where allele_id in ({});".format(allele_ids)
-    table = from_sql(query, database=database)
-    sql = ""
-    for _, row in table.iterrows():
-        x = row["allele_id"]
-        sql += "update alleles set count={} where allele_id='{}';".format(row["count"] + counter[x], x)
-    to_sql(sql, database=database)
+    table_to_sql("batch_add_counts", counter, database=database)
+    query = "update alleles " \
+            "set count = count + ba.count " \
+            "from batch_add_counts as ba " \
+            "where allele_id=ba.allele_id;"
+    to_sql(query, database=database)
+    to_sql("drop table batch_add_counts;", database=database)
 
 
 def profile_by_query(alleles, genome_id, selected_loci, database):
@@ -178,6 +175,7 @@ def profiling(output_dir, input_dir, database, threads, occr_level=None, selecte
         for genome_id, alleles in id_allele_list:
             allele_counts.update(alleles.keys())
 
+    allele_counts = pd.DataFrame(allele_counts, index=[0]).T.rename({0: "count"}, axis=1)
     update_allele_counts(allele_counts, database)
     if not debug:
         shutil.rmtree(query_dir)
