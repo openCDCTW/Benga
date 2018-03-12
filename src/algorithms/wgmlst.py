@@ -176,7 +176,7 @@ def profiling(output_dir, input_dir, database, threads, occr_level=None, selecte
             allele_counts.update(alleles.keys())
 
     allele_counts = pd.DataFrame(allele_counts, index=[0]).T\
-        .reset_index().rename({"index": "allele_id", 0: "count"}, axis=1)
+        .reset_index().rename(columns={"index": "allele_id", 0: "count"})
     update_allele_counts(allele_counts, database)
     if not debug:
         shutil.rmtree(query_dir)
