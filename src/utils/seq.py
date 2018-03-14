@@ -7,7 +7,7 @@ from Bio.SeqRecord import SeqRecord
 from Bio.SeqIO import write
 
 BLAST_COLUMNS = ["qseqid", "sseqid", "pident", "length", "mismatch", "gapopen", "qstart", "qend",
-                 "sstart", "send", "evalue", "bitscore"]
+                 "sstart", "send", "evalue", "bitscore", "qcovs"]
 
 
 def new_record(seqid, seq, desc="", seqtype=None):
@@ -41,7 +41,6 @@ def query_blastndb(query, db_dir, output_file, cols, threads=2):
                           outfmt="'6 {}'".format(" ".join(cols)), num_threads=threads)()
 
 
-def query_blastpdb(query, db_dir, output_file, cols, cov=90, threads=2):
+def query_blastpdb(query, db_dir, output_file, cols, threads=2):
     NcbiblastpCommandline(query=query, db=db_dir, out=output_file,
-                          outfmt="'6 {}'".format(" ".join(cols)), num_threads=threads,
-                          qcov_hsp_perc=cov)()
+                          outfmt="'6 {}'".format(" ".join(cols)), num_threads=threads)()
