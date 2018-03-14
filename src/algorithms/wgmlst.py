@@ -32,9 +32,9 @@ def identify_loci(args):
 def update_allele_counts(counter, database):
     table_to_sql("batch_add_counts", counter, database=database)
     query = "update alleles " \
-            "set count = count + ba.count " \
+            "set count = alleles.count + ba.count " \
             "from batch_add_counts as ba " \
-            "where allele_id=ba.allele_id;"
+            "where alleles.allele_id=ba.allele_id;"
     to_sql(query, database=database)
     to_sql("drop table batch_add_counts;", database=database)
 
