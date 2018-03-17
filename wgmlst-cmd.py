@@ -104,6 +104,7 @@ def main():
         pgdb.make_database(output_dir, threads=threads, use_docker=docker)
     if args.algorithm == "analysis":
         analysis.calculate_loci_coverage(input_dir, output_dir, database=database)
+        analysis.calculate_allele_length(output_dir, database=database)
     if args.algorithm == "profiling":
         wgmlst.profiling(output_dir, input_dir, database, threads=threads, occr_level=occr_level,
                          enable_adding_new_alleles=new_alleles, generate_profiles=generate_profiles,

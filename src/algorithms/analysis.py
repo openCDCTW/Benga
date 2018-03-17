@@ -92,18 +92,15 @@ def plot_genome_coverage(data, output_dir, perc=5, cumulative=False):
     fig.savefig(output_file)
 
 
-# allele
-
-
-def calculate_allele_length(output_dir, database):
+def calculate_allele_length(output_dir, database, interval=20):
     lf = logs.LoggerFactory()
     lf.addConsoleHandler()
     logger = lf.create()
     db.load_database_config(logger=logger)
-    plot_length_heamap(output_dir, database)
+    plot_length_heamap(output_dir, database, interval=interval)
 
 
-def plot_length_heamap(output_dir, database, interval=20):
+def plot_length_heamap(output_dir, database, interval):
     output_file = os.path.join(output_dir, "allele_length_heatmap.png")
     allele_info = get_allele_info(database)
     allele_info["intervals"] = list(map(lambda x: (int(x / interval) + 1) * interval, allele_info["length"]))
