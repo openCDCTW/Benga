@@ -1,11 +1,8 @@
-import json
 import os.path
-from collections import Counter
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import seaborn as sns
-from Bio import SeqIO
 from src.models import logs
 from src.utils import db
 plt.style.use("ggplot")
@@ -109,11 +106,11 @@ def calculate_allele_length(output_dir, database):
 def plot_length_heamap(output_dir, database, interval=20):
     output_file = os.path.join(output_dir, "allele_length_heatmap.png")
     allele_info = get_allele_info(database)
-    allele_info["intervals"] = (int(allele_info["length"] / interval) + 1) * interval
+    allele_info["intervals"] = list(map(lambda x: (int(x / interval) + 1) * interval, allele_info["length"]))
     pairs = db.from_sql("select * from pairs;", database=database)
     collect = []
     for locus_id, df in pairs.groupby("locus_id"):
-        df2 = pd.merge(df, allele_info, on="allele_id", kind="left")
+        df2 = pd.merge(df, allele_info, on="allele_id", how="left")
         series = df2.groupby("intervals")["count"].sum()
         series.name = locus_id
         collect.append(series)
@@ -121,7 +118,7 @@ def plot_length_heamap(output_dir, database, interval=20):
     table = table.apply(lambda x: 100 * x / np.sum(x), axis=1)
 
     # sort by scheme order
-    freq = db.from_sql("select locus_id from loci order by occurrence;", database=database)
+    freq = db.from_sql("select locus_id from loci order by occurrence DESC;", database=database)
     table = pd.merge(freq, table, left_on="locus_id", right_index=True).set_index("locus_id")
 
     table = table.apply(mask_by_length, axis=1).apply(np.floor, axis=1)
