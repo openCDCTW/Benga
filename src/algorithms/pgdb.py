@@ -68,7 +68,7 @@ def extract_profiles(roary_matrix_file, dbname, metadata_cols=13):
     return profiles, isolates
 
 
-def save_locus_metadata(matrix, dbname, select_col=None, repeat_tol=1.5):
+def save_locus_metadata(matrix, dbname, select_col=None, repeat_tol=1.2):
     if not select_col:
         select_col = ["locus_id", "num_isolates", "num_sequences", "description", "is_paralog"]
     avg = "Avg sequences per isolate"
@@ -133,7 +133,7 @@ def make_schemes(freq, total_isolates):
     schemes = db.from_sql("select locus_id, num_isolates from locus_meta;")
     schemes["occurrence"] = list(map(lambda x: round(x/total_isolates * 100, 2), schemes["num_isolates"]))
     schemes["ref_allele"] = list(map(lambda x: refseqs[x], schemes["locus_id"]))
-    schemes = schemes.loc[schemes["occurrence"] >= 2.0, ["locus_id", "occurrence", "ref_allele"]]
+    schemes = schemes[["locus_id", "occurrence", "ref_allele"]]
     db.append_to_sql("loci", schemes)
 
 
