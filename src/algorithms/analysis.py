@@ -1,4 +1,4 @@
-import os.path
+import os
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
@@ -193,7 +193,7 @@ def collect_high_occurrence_loci(pairs, database):
         ocr1 = occur.loc[occur["locus_id"] == id1, "occurrence"].iloc[0, :]
         ocr2 = occur.loc[occur["locus_id"] == id2, "occurrence"].iloc[0, :]
         drops.update(id2 if ocr1 >= ocr2 else id1)
-    filtered_loci = list(set(occur["locus_id"]) - drops)
+    filtered_loci = set(occur["locus_id"]) - drops
     return filtered_loci
 
 
@@ -206,3 +206,38 @@ def filter_locus(blastp_out_file, database):
     filtered_loci = collect_high_occurrence_loci(pairs, database)
     return filtered_loci
 
+
+def extract_database_ref_sequence(old_database, new_database, keep_loci):
+    alleles = db.from_sql("select * from alleles;", database=old_database)
+    loci = db.from_sql("select * from loci;", database=old_database)
+    locus_meta = db.from_sql("select * from locus_meta;", database=old_database)
+    pairs = db.from_sql("select * from pairs;", database=old_database)
+
+    ref_alleles = set(loci["ref_allele"])
+    alleles = alleles[alleles["allele_id"].isin(ref_alleles)]
+    pairs = pairs[(pairs["allele_id"].isin(ref_alleles)) & (pairs["locus_id"].isin(keep_loci))]
+    loci = loci[loci["locus_id"].isin(keep_loci)]
+
+    db.append_to_sql("alleles", alleles, new_database)
+    db.append_to_sql("loci", loci, new_database)
+    db.append_to_sql("locus_meta", locus_meta, new_database)
+    db.append_to_sql("pairs", pairs, new_database)
+
+
+def build_locus_library(output_dir, old_database, logger=None):
+    if not logger:
+        lf = logs.LoggerFactory()
+        lf.addConsoleHandler()
+        lf.addFileHandler(files.joinpath(output_dir, "make_database.log"))
+        logger = lf.create()
+    db.load_database_config(logger=logger)
+
+    new_database = old_database + "_new"
+    db.createdb(new_database)
+    db.create_pgadb_relations(new_database)
+
+    blastp_out_file = reference_self_blastp(output_dir, old_database)
+    filtered_loci = filter_locus(blastp_out_file, old_database)
+    extract_database_ref_sequence(old_database, new_database, filtered_loci)
+    os.remove(blastp_out_file)
+    return new_database
