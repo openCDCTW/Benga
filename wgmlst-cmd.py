@@ -13,7 +13,7 @@ def parse_args():
     arg_parser.add_argument(
         "-a", "--algorithm",
         required=True,
-        choices=["make_db", "profiling", "MLST", "virulence", "tree", "setupdb", "analysis"],
+        choices=["make_db", "profiling", "MLST", "virulence", "tree", "setupdb", "analysis", "locus_library"],
         help="Execute specified algorithm. (necessary)"
     )
 
@@ -29,7 +29,7 @@ def parse_args():
 
     arg_parser.add_argument(
         "-d", "--database",
-        help="Pan genome allele database for query. (necessary for profiling)"
+        help="Pan genome allele database for query. (necessary for profiling, locus_library)"
     )
 
     arg_parser.add_argument(
@@ -102,6 +102,8 @@ def main():
     if args.algorithm == "make_db":
         pgdb.annotate_configs(input_dir, output_dir, threads=threads, use_docker=docker)
         pgdb.make_database(output_dir, threads=threads, use_docker=docker)
+    if args.algorithm == "locus_library":
+        analysis.build_locus_library(output_dir, database)
     if args.algorithm == "analysis":
         analysis.calculate_loci_coverage(input_dir, output_dir, database=database)
         analysis.calculate_allele_length(output_dir, database=database)
