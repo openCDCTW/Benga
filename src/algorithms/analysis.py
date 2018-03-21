@@ -4,7 +4,7 @@ import numpy as np
 import pandas as pd
 import seaborn as sns
 from src.models import logs
-from src.utils import db
+from src.utils import db, seq, files
 plt.style.use("ggplot")
 
 
@@ -145,3 +145,64 @@ def mask_by_length(x):
             break
     y[tostop+1:] = np.nan
     return y
+
+
+def reference_self_blastp(output_dir, database):
+    query = "select loci.locus_id, alleles.peptide_seq" \
+            " from loci inner join alleles on loci.ref_allele=alleles.allele_id;"
+    ref = db.from_sql(query, database=database)
+    ref_recs = [seq.new_record(row["locus_id"], row["peptide_seq"]) for _, row in ref.iterrows()]
+    ref_faa = files.joinpath(output_dir, "ref_seq.faa")
+    seq.save_records(ref_recs, ref_faa)
+
+    ref_db = files.joinpath(output_dir, "ref_db")
+    seq.compile_blastpdb(ref_faa, ref_db)
+
+    blastp_out_file = files.joinpath(output_dir, "ref_db.blastp.out")
+    seq.query_blastpdb(ref_faa, ref_db, blastp_out_file, seq.BLAST_COLUMNS)
+    return blastp_out_file
+
+
+def identify_pairs(df):
+    sseqids = df["sseqid"].tolist()
+    pairs = []
+    counted = set()
+    for _, row in df.iterrows():
+        if row["qseqid"] in sseqids and not row["qseqid"] in counted:
+            counted.update(row["qseqid"])
+            counted.update(row["sseqid"])
+            pairs.append((row["qseqid"], row["sseqid"]))
+    return row
+
+
+def filter_pairs(pairs, df):
+    new_pairs = []
+    for id1, id2 in pairs:
+        qcov1 = df.loc[df["qseqid"] == id1, "qcovs"].iloc[0, :]
+        qcov2 = df.loc[df["qseqid"] == id2, "qcovs"].iloc[0, :]
+        if qcov1 == 100 or qcov2 == 100:
+            new_pairs.append((id1, id2))
+    return new_pairs
+
+
+def collect_high_occurrence_loci(pairs, database):
+    query = "select locus_id, occurrence from loci;"
+    occur = db.from_sql(query, database=database)
+    drops = set()
+    for id1, id2 in pairs:
+        ocr1 = occur.loc[occur["locus_id"] == id1, "occurrence"].iloc[0, :]
+        ocr2 = occur.loc[occur["locus_id"] == id2, "occurrence"].iloc[0, :]
+        drops.update(id2 if ocr1 >= ocr2 else id1)
+    filtered_loci = list(set(occur["locus_id"]) - drops)
+    return filtered_loci
+
+
+def filter_locus(blastp_out_file, database):
+    blastp_out = pd.read_csv(blastp_out_file, sep="\t", header=None, names=seq.BLAST_COLUMNS)
+    blastp_out = blastp_out[blastp_out["pident"] >= 95]
+    blastp_out = blastp_out[blastp_out["qseqid"] != blastp_out["sseqid"]]
+    pairs = identify_pairs(blastp_out)
+    pairs = filter_pairs(pairs, blastp_out)
+    filtered_loci = collect_high_occurrence_loci(pairs, database)
+    return filtered_loci
+
