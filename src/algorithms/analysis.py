@@ -172,7 +172,7 @@ def identify_pairs(df):
             counted.update(row["qseqid"])
             counted.update(row["sseqid"])
             pairs.append((row["qseqid"], row["sseqid"]))
-    return row
+    return pairs
 
 
 def filter_pairs(pairs, df):
