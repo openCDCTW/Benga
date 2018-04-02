@@ -178,8 +178,8 @@ def identify_pairs(df):
 def filter_pairs(pairs, df):
     new_pairs = []
     for id1, id2 in pairs:
-        qcov1 = df.loc[df["qseqid"] == id1, "qcovs"]
-        qcov2 = df.loc[df["qseqid"] == id2, "qcovs"]
+        qcov1 = df.loc[(df["qseqid"] == id1) & (df["sseqid"] == id2), "qcovs"]
+        qcov2 = df.loc[(df["qseqid"] == id2) & (df["sseqid"] == id1), "qcovs"]
         if len(qcov1) != 0 and len(qcov2) != 0 and (qcov1.iloc[0] == 100 or qcov2.iloc[0] == 100):
             new_pairs.append((id1, id2))
     return new_pairs
@@ -192,7 +192,7 @@ def collect_high_occurrence_loci(pairs, database):
     for id1, id2 in pairs:
         ocr1 = occur.loc[occur["locus_id"] == id1, "occurrence"].iloc[0]
         ocr2 = occur.loc[occur["locus_id"] == id2, "occurrence"].iloc[0]
-        drops.update(id2 if ocr1 >= ocr2 else id1)
+        drops.update([id2] if ocr1 >= ocr2 else [id1])
     filtered_loci = set(occur["locus_id"]) - drops
     return filtered_loci
 
