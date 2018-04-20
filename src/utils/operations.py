@@ -1,6 +1,5 @@
 import hashlib
 from functools import reduce
-import functional
 import uuid
 
 
