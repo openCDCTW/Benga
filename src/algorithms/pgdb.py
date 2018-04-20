@@ -90,13 +90,13 @@ def collect_allele_infos(profiles, ffn_dir):
             if "\t" not in prokka_str:
                 allele = seqs[prokka_str]
                 freq[locus].update([allele])
-                new_profile.set_value(locus, operations.make_seqid(allele))
+                new_profile.at[locus] = operations.make_seqid(allele)
             else:
                 prokka_id = prokka_str.split("\t")
                 alleles = [seqs[x] for x in prokka_id]
                 freq[locus].update(alleles)
                 v = "\t".join(operations.make_seqid(x) for x in alleles)
-                new_profile.set_value(locus, v)
+                new_profile.at[locus] = v
         new_profiles.append(new_profile)
     new_profiles = pd.concat(new_profiles, axis=1).sort_index().sort_index(axis=1)
     return new_profiles, freq
