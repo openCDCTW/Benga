@@ -2,10 +2,9 @@ import argparse
 import os.path
 import datetime
 import json
-import sys
-from src.algorithms import pgdb, wgmlst, phylotree
-
-PROJECT_HOME = os.path.dirname(sys.argv[0])
+from src.utils import db
+from src.models import logs
+from src.algorithms import pgdb, wgmlst, phylotree, analysis
 
 
 def parse_args():
@@ -14,25 +13,23 @@ def parse_args():
     arg_parser.add_argument(
         "-a", "--algorithm",
         required=True,
-        choices=["make_db", "profiling", "MLST", "virulence", "tree"],
+        choices=["make_db", "profiling", "MLST", "virulence", "tree", "setupdb", "analysis", "locus_library"],
         help="Execute specified algorithm. (necessary)"
     )
 
     arg_parser.add_argument(
         "-o", "--output",
-        required=True,
         help="Output data directory. (necessary)"
     )
 
     arg_parser.add_argument(
         "-i", "--input",
-        required=True,
         help="Input data (for query) directory. (necessary)"
     )
 
     arg_parser.add_argument(
         "-d", "--database",
-        help="Pan genome allele database for query. (necessary for profiling)"
+        help="Pan genome allele database for query. (necessary for profiling, locus_library)"
     )
 
     arg_parser.add_argument(
@@ -49,6 +46,28 @@ def parse_args():
         default=2,
         help="Number of threads for computation. [Default: 2]",
         metavar="THREADS"
+    )
+
+    arg_parser.add_argument(
+        "--no_new_alleles",
+        help="Disable adding new alleles to database. [Default: False]",
+        action='store_true',
+        default=False
+    )
+
+    arg_parser.add_argument(
+        "--no_profiles",
+        help="Not generating profiles (wgmlst.tsv). This option is simply for "
+             "updating database with alleles. [Default: False]",
+        action='store_true',
+        default=False
+    )
+
+    arg_parser.add_argument(
+        "--debug",
+        help="Debug mode.",
+        action='store_true',
+        default=False
     )
 
     arg_parser.add_argument(
@@ -70,12 +89,28 @@ def main():
     occr_level = args.occr
     threads = args.threads
     docker = args.docker
+    debug = args.debug
+    new_alleles = not args.no_new_alleles
+    generate_profiles = not args.no_profiles
 
+    if args.algorithm == "setupdb":
+        lf = logs.LoggerFactory()
+        lf.addConsoleHandler()
+        db.load_database_config(logger=lf.create())
+        db.createdb("profiling")
+        db.create_profiling_relations()
     if args.algorithm == "make_db":
         pgdb.annotate_configs(input_dir, output_dir, threads=threads, use_docker=docker)
         pgdb.make_database(output_dir, threads=threads, use_docker=docker)
+    if args.algorithm == "locus_library":
+        analysis.build_locus_library(output_dir, database)
+    if args.algorithm == "analysis":
+        analysis.calculate_loci_coverage(input_dir, output_dir, database=database)
+        analysis.calculate_allele_length(output_dir, database=database)
     if args.algorithm == "profiling":
-        wgmlst.profiling(output_dir, input_dir, database, threads=threads, occr_level=occr_level)
+        wgmlst.profiling(output_dir, input_dir, database, threads=threads, occr_level=occr_level,
+                         enable_adding_new_alleles=new_alleles, generate_profiles=generate_profiles,
+                         debug=debug)
     if args.algorithm == "MLST":
         wgmlst.mlst_profiling(output_dir, input_dir, database, threads=threads)
     if args.algorithm == "virulence":

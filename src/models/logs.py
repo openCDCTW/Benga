@@ -1,18 +1,7 @@
 import logging
 
-
-def console_logger(name):
-    logger = logging.getLogger(name)
-    logger.setLevel(logging.INFO)
-
-    ch = logging.StreamHandler()
-    ch.setLevel(logging.INFO)
-
-    formatter = logging.Formatter(fmt="(PID:%(process)d)%(asctime)-20s[%(levelname)s] %(message)s",
-                                  datefmt="%Y-%m-%d %H:%M:%S")
-    ch.setFormatter(formatter)
-    logger.addHandler(ch)
-    return logger
+FMT = "(PID:%(process)d)%(asctime)-20s[%(levelname)s] %(message)s"
+DATEFMT = "%Y-%m-%d %H:%M:%S"
 
 
 class ConsoleLogHandler(logging.Handler):
@@ -32,8 +21,8 @@ class LoggerFactory:
     def __init__(self):
         self._logger = logging.getLogger(__name__)
         self._logger.setLevel(logging.INFO)
-        self.log_format = "(PID:%(process)d)%(asctime)-20s[%(levelname)s] %(message)s"
-        self.date_format = "%Y-%m-%d %H:%M:%S"
+        self.log_format = FMT
+        self.date_format = DATEFMT
 
     def addLogBoxHandler(self, logbox):
         logHandler = ConsoleLogHandler(logbox)
@@ -46,6 +35,13 @@ class LoggerFactory:
         formatter = logging.Formatter(self.log_format, self.date_format)
         fh.setFormatter(formatter)
         self._logger.addHandler(fh)
+
+    def addConsoleHandler(self):
+        ch = logging.StreamHandler()
+        ch.setLevel(logging.INFO)
+        formatter = logging.Formatter(self.log_format, self.date_format)
+        ch.setFormatter(formatter)
+        self._logger.addHandler(ch)
 
     def redircet_stdout(self):
         pass

@@ -1,6 +1,5 @@
 import hashlib
 from functools import reduce
-import functional
 import uuid
 
 
@@ -21,13 +20,6 @@ def partition(lst, number):
 
 def create_uuid():
     return str(uuid.uuid1())
-
-
-def format_cmd(prog, flags, arg):
-    flag = (functional.seq(flags)
-            .map(lambda x: x[0] + "=" + str(x[1]) if x[1] != "" else x[0])
-            .reduce(lambda x, y: x + " " + y))
-    return prog + " " + flag + " " + arg
 
 
 def make_seqid(x):

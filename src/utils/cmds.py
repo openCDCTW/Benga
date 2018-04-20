@@ -1,34 +1,34 @@
 import os.path
-from src.utils import operations, files
+import subprocess
+from src.utils import files
+
+
+DIR_PATH = os.path.dirname(os.path.realpath(__file__))
+BINARIES_PATH = os.path.abspath(os.path.join(DIR_PATH, "..", "..", "binaries", "linux"))
 
 
 def form_prokka_cmd(newname, inpath, outpath):
     name, ext = newname.split(".")
-
-    args = list()
-    args.append(("--cpus", "2"))
-    args.append(("--outdir", files.joinpath(outpath, name)))
-    args.append(("--prefix", name))
-    return operations.format_cmd("prokka", args, files.joinpath(inpath, newname))
+    args = ["prokka", "--prefix", name, "--cpus", "2", "--outdir", files.joinpath(outpath, name),
+            files.joinpath(inpath, newname)]
+    return " ".join(map(str, args))
 
 
 def form_roary_cmd(inpath, outpath, ident_min, threads):
-    args = list()
-    args.append(("-s", ""))
-    args.append(("-p", threads))
-    args.append(("-i", ident_min))
-    args.append(("-f", files.joinpath(outpath, "roary")))
-    return operations.format_cmd("roary", args, files.joinpath(inpath, "*.gff"))
+    args = ["roary", "-p", threads, "-i", ident_min, "-s", "-f", files.joinpath(outpath, "roary"),
+            files.joinpath(inpath, "*.gff")]
+    return " ".join(map(str, args))
 
 
 def form_prodigal_cmd(infile, outpath):
-    args = list()
     filename = files.fasta_filename(infile)
-    args.append(("-i {}".format(infile), ""))
-    args.append(("-c", ""))
-    args.append(("-m", ""))
-    args.append(("-q", ""))
-    args.append(("-g 11", ""))
-    args.append(("-d {}".format(os.path.join(outpath, filename + ".locus.fna")), ""))
-    args.append(("-o {}".format(os.path.join(outpath, filename + ".gbk")), ""))
-    return operations.format_cmd("prodigal", args, "")
+    args = [os.path.join(BINARIES_PATH, "prodigal"), "-c", "-m", "-q", "-g", "11",
+            "-i", infile,
+            "-d", os.path.join(outpath, filename + ".locus.fna"),
+            "-o", os.path.join(outpath, filename + ".gbk")]
+    return " ".join(map(str, args))
+
+
+def execute_cmd(args):
+    cmd = args
+    subprocess.run(cmd, shell=True)

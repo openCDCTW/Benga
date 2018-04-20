@@ -8,16 +8,18 @@ import os
 from threading import Thread
 from src.api import internals
 from src.utils import db
+from src.utils.files import create_if_not_exist
+from src.models import logs
 
 INDIR = "input"
 OUTDIR = "output"
 DB = "profiling"
-db.load_database_config()
 
-
-def create_if_not_exist(path):
-    if not os.path.exists(path):
-        os.makedirs(path)
+create_if_not_exist(OUTDIR)
+lf = logs.LoggerFactory()
+lf.addConsoleHandler()
+logger = lf.create()
+db.load_database_config(logger=logger)
 
 
 def get_seq_id(file):
@@ -39,7 +41,7 @@ class UploadListAPI(Resource):
 
     def get(self):
         sql = "select seq_id, filename from upload;"
-        results = db.sql_query(sql, database=DB).to_dict(orient="records")
+        results = db.from_sql(sql, database=DB).to_dict(orient="records")
         return results
 
     def post(self):
@@ -53,7 +55,7 @@ class UploadListAPI(Resource):
         sql = "INSERT INTO upload (seq_id,batch_id,created,filename,file) VALUES(%s,%s,%s,%s,%s);"
         args = (data['seq_id'], data['batch_id'], data["created"], data['filename'],
                 psycopg2.Binary(data['file'].read()))
-        db.to_sql(sql, args, database=DB)
+        db.file_to_sql(sql, args, database=DB)
         data.pop('file', None)
         return data, 201
 
@@ -74,7 +76,7 @@ class UploadAPI(Resource):
         else:
             abort(404)
 
-        results = db.sql_query(sql, database=DB).to_dict(orient="records")
+        results = db.from_sql(sql, database=DB).to_dict(orient="records")
         if len(results) != 0:
             return results
         else:
@@ -93,7 +95,7 @@ class ProfilingAPI(Resource):
         if len(id) != 32:
             abort(404)
         sql = "select * from upload where batch_id='{}';".format(id)
-        results = db.sql_query(sql, database=DB).to_dict(orient="records")
+        results = db.from_sql(sql, database=DB).to_dict(orient="records")
         if len(results) == 0:
             abort(404)
         Thread(target=internals.profiling_api, args=(id, "Salmonella_5k", 95), daemon=True).start()
@@ -111,7 +113,7 @@ class ProfileListAPI(Resource):
 
     def get(self):
         sql = "select id, occurrence, database from profile;"
-        results = db.sql_query(sql, database=DB).to_dict(orient="records")
+        results = db.from_sql(sql, database=DB).to_dict(orient="records")
         return results
 
 
@@ -128,7 +130,7 @@ class ProfileAPI(Resource):
         if len(id) != 32:
             abort(404)
         sql = "select file from profile where id='{}';".format(id)
-        filepath = db.sql_query_filepath(sql, database="profiling")
+        filepath = db.query_filepath(sql, database="profiling")
         if not filepath:
             abort(404)
         return send_file(filepath, mimetype="text/tab-separated-values")
@@ -146,7 +148,7 @@ class DendrogramListAPI(Resource):
 
     def get(self):
         sql = "select id from dendrogram;"
-        results = db.sql_query(sql, database=DB).to_dict(orient="records")
+        results = db.from_sql(sql, database=DB).to_dict(orient="records")
         return results
 
 
@@ -160,7 +162,7 @@ class DendrogramAPI(Resource):
         if len(id) != 32:
             abort(404)
         sql = "select {} from dendrogram where id='{}';".format(filetype + "_file", id)
-        filepath = db.sql_query_filepath(sql, database="profiling")
+        filepath = db.query_filepath(sql, database="profiling")
         if not filepath:
             abort(404)
         return send_file(filepath)

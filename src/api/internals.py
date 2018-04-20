@@ -35,10 +35,14 @@ def profiling_api(batch_id, database, occr_level):
     png_filename = os.path.join(output_dir, "dendrogram_{}.png".format(batch_id[0:8]))
     dendro.scipy_tree(png_filename)
 
-    sql = "INSERT INTO profile (id,created,file,occurrence,database) VALUES(%s,%s,%s,%s,%s);"
-    data = (batch_id, profile_created, profile_filename, occr_level, database)
+    sql = "INSERT INTO profile (id,created,file,occurrence,database)" \
+          "VALUES(:id,:created,:file,:occr,:db);"
+    data = {"id": batch_id, "created": profile_created, "file": profile_filename,
+            "occr": occr_level, "db": database}
     db.to_sql(sql, data, database="profiling")
 
-    sql = "INSERT INTO dendrogram (id,created,png_file,pdf_file,svg_file,newick_file) VALUES(%s,%s,%s,%s,%s,%s);"
-    data = (batch_id, dendro_created, png_filename, pdf_filename, svg_filename, newick_filename)
+    sql = "INSERT INTO dendrogram (id,created,png_file,pdf_file,svg_file,newick_file)" \
+          "VALUES(:id,:created,:png,:pdf,:svg,:new);"
+    data = {"id": batch_id, "created": dendro_created, "png": png_filename, "pdf": pdf_filename,
+            "svg": svg_filename, "new": newick_filename}
     db.to_sql(sql, data, database="profiling")
