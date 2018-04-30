@@ -196,7 +196,7 @@ def query_covs(covs, key):
 
 def filter_locus(blastp_out_file, database):
     blastp_out = pd.read_csv(blastp_out_file, sep="\t", header=None, names=seq.BLAST_COLUMNS)
-    blastp_out = blastp_out[(blastp_out["pident"] >= 95) & (blastp_out["evalue"] < 1e-6)]
+    blastp_out = blastp_out[blastp_out["pident"] >= 95]
     blastp_out = blastp_out[blastp_out["qseqid"] != blastp_out["sseqid"]]
     covs = {(row["qseqid"], row["sseqid"]): row["qcovs"] for _, row in blastp_out.iterrows()}
     blastp_out["scovs"] = [query_covs(covs, (row["sseqid"], row["qseqid"])) for _, row in blastp_out.iterrows()]
