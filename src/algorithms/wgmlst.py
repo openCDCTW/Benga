@@ -135,8 +135,7 @@ def profiling(output_dir, input_dir, database, threads, occr_level=None, selecte
     query_dir = files.joinpath(output_dir, "query")
     files.create_if_not_exist(query_dir)
     namemap = rename(query_dir, input_dir)
-    with open(files.joinpath(output_dir, "namemap.json"), "w") as f:
-        f.write(json.dumps(namemap))
+    rev_namemap = {v: k for k, v in namemap.items()}
 
     logger.info("Selecting loci by specified scheme {}%...".format(occr_level))
     if selected_loci:
@@ -170,6 +169,7 @@ def profiling(output_dir, input_dir, database, threads, occr_level=None, selecte
             collect.append(profile)
             allele_counts.update(alleles.keys())
         result = pd.concat(collect, axis=1)
+        result.columns = list(map(lambda x: rev_namemap[x], result.columns))
         result.to_csv(files.joinpath(output_dir, "wgmlst.tsv"), sep="\t")
     else:
         logger.info("Not going to output profiles.")
