@@ -175,16 +175,6 @@ def identify_pairs(df):
     return pairs
 
 
-def filter_pairs(pairs, df):
-    new_pairs = []
-    for id1, id2 in pairs:
-        qcov1 = df.loc[(df["qseqid"] == id1) & (df["sseqid"] == id2), "qcovs"]
-        qcov2 = df.loc[(df["qseqid"] == id2) & (df["sseqid"] == id1), "qcovs"]
-        if len(qcov1) != 0 and len(qcov2) != 0 and (qcov1.iloc[0] == 100 or qcov2.iloc[0] == 100):
-            new_pairs.append((id1, id2))
-    return new_pairs
-
-
 def collect_high_occurrence_loci(pairs, database):
     query = "select locus_id, occurrence from loci;"
     occur = db.from_sql(query, database=database)
@@ -197,12 +187,24 @@ def collect_high_occurrence_loci(pairs, database):
     return filtered_loci
 
 
+def query_covs(covs, key):
+    if key in covs.keys():
+        return covs[key]
+    else:
+        return np.nan
+
+
 def filter_locus(blastp_out_file, database):
     blastp_out = pd.read_csv(blastp_out_file, sep="\t", header=None, names=seq.BLAST_COLUMNS)
     blastp_out = blastp_out[blastp_out["pident"] >= 95]
     blastp_out = blastp_out[blastp_out["qseqid"] != blastp_out["sseqid"]]
+    covs = {(row["qseqid"], row["sseqid"]): row["qcovs"] for _, row in blastp_out.iterrows()}
+    blastp_out["scovs"] = [query_covs(covs, (row["sseqid"], row["qseqid"])) for _, row in blastp_out.iterrows()]
+    blastp_out["qlen/alen"] = 100 / blastp_out["qcovs"]
+    blastp_out["qlen/slen"] = blastp_out["scovs"] / blastp_out["qcovs"]
+    blastp_out = blastp_out[(0.75 < blastp_out["qlen/alen"]) & (blastp_out["qlen/alen"] <= 1.25)]
+    blastp_out = blastp_out[(0.75 < blastp_out["qlen/slen"]) & (blastp_out["qlen/slen"] <= 1.25)]
     pairs = identify_pairs(blastp_out)
-    pairs = filter_pairs(pairs, blastp_out)
     filtered_loci = collect_high_occurrence_loci(pairs, database)
     return filtered_loci
 
