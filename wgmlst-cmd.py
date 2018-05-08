@@ -4,7 +4,7 @@ import datetime
 import json
 from src.utils import db
 from src.models import logs
-from src.algorithms import pgdb, wgmlst, phylotree, analysis
+from src.algorithms import pgdb, wgmlst, phylotree, statistics
 
 
 def parse_args():
@@ -13,7 +13,7 @@ def parse_args():
     arg_parser.add_argument(
         "-a", "--algorithm",
         required=True,
-        choices=["make_db", "profiling", "MLST", "virulence", "tree", "setupdb", "analysis", "locus_library"],
+        choices=["make_db", "profiling", "MLST", "virulence", "tree", "setupdb", "statistics", "locus_library"],
         help="Execute specified algorithm. (necessary)"
     )
 
@@ -102,11 +102,13 @@ def main():
     if args.algorithm == "make_db":
         pgdb.annotate_configs(input_dir, output_dir, threads=threads, use_docker=docker)
         pgdb.make_database(output_dir, threads=threads, use_docker=docker)
+        statistics.calculate_loci_coverage(output_dir, output_dir, database=database)
+        statistics.calculate_allele_length(output_dir, database=database)
     if args.algorithm == "locus_library":
-        analysis.build_locus_library(output_dir, database)
-    if args.algorithm == "analysis":
-        analysis.calculate_loci_coverage(input_dir, output_dir, database=database)
-        analysis.calculate_allele_length(output_dir, database=database)
+        statistics.build_locus_library(output_dir, database)
+    if args.algorithm == "statistics":
+        statistics.calculate_loci_coverage(input_dir, output_dir, database=database)
+        statistics.calculate_allele_length(output_dir, database=database)
     if args.algorithm == "profiling":
         wgmlst.profiling(output_dir, input_dir, database, threads=threads, occr_level=occr_level,
                          enable_adding_new_alleles=new_alleles, generate_profiles=generate_profiles,
