@@ -1,16 +1,19 @@
-import pandas as pd
+def generate_encoder(alleles):
+    encoder = {}
+    for i, x in enumerate(sorted(set(alleles))):
+        if x == '0':
+            encoder[x] = 0
+        else:
+            encoder[x] = i
+    return encoder
 
-def bionumerics(profile):
-    wgmlst= profile.fillna('0').transpose()
+
+def to_bionumerics_format(profile):
+    wgmlst = profile.fillna('0').transpose()
     for col in wgmlst.columns:
-        allele_id_pairs = {}
-        c = 1
-        for i in sorted(set(wgmlst[col])):
-            if i == '0':
-                allele_id_pairs[i] = 0
-            else:
-                allele_id_pairs[i] = c
-                c += 1
-        wgmlst[col] = [allele_id_pairs[i] for i in wgmlst[col]]
+        alleles = wgmlst[col]
+        encoder = generate_encoder(alleles)
+        wgmlst[col] = [encoder[i] for i in alleles]
     wgmlst.insert(0, 'Key', wgmlst.index)
     return wgmlst
+
