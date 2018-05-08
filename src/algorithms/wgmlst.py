@@ -10,6 +10,7 @@ import subprocess
 from src.models import logs
 from src.utils import files, seq, cmds, operations
 from src.utils.db import load_database_config, from_sql, append_to_sql, to_sql, table_to_sql
+from src.algorithms.bionumerics import bionumerics
 
 MLST = ["aroC_1", "aroC_2", "aroC_3", "dnaN", "hemD", "hisD", "purE", "sucA_1", "sucA_2", "thrA_2", "thrA_3"]
 virulence_genes = ["lpfA", "lpfA_1", "lpfA_2", "lpfA_3", "lpfA_4", "lpfB", "lpfB_1", "lpfB_2", "lpfC", "lpfC_1",
@@ -171,6 +172,8 @@ def profiling(output_dir, input_dir, database, threads, occr_level=None, selecte
         result = pd.concat(collect, axis=1)
         result.columns = list(map(lambda x: rev_namemap[x], result.columns))
         result.to_csv(files.joinpath(output_dir, "wgmlst.tsv"), sep="\t")
+        bio = bionumerics(result)
+        bio.to_csv(os.path.join(output_dir, 'bionumerics.csv'), index=False)
     else:
         logger.info("Not going to output profiles.")
         for genome_id, alleles in id_allele_list:
