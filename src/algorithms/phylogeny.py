@@ -62,6 +62,7 @@ def hamming(xs, ys):
 
 
 def distance_matrix(profiles):
+    profiles = profiles.fillna('0')
     distances = pd.DataFrame(index=profiles.columns, columns=profiles.columns)
     for x in profiles.columns:
         for y in profiles.columns:
