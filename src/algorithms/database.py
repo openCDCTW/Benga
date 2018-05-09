@@ -1,5 +1,5 @@
 import json
-import os
+import os, re
 from collections import Counter, defaultdict
 from concurrent.futures import ProcessPoolExecutor
 import pandas as pd
@@ -55,6 +55,31 @@ def create_noncds(database_dir, gff_dir):
         file.write(json.dumps(noncds))
 
 
+def filter_tRNA(matrix):
+    c = re.compile(r"tRNA-\w+\(\w{3}\)")
+    is_trna = []
+    for x in matrix["description"]:
+        m = c.match(x)
+        is_trna.append(m is not None)
+    matrix["is_trna"] = is_trna
+    return matrix[~matrix["is_trna"]].drop("is_trna", axis=1)
+
+
+def filter_rRNA(matrix):
+    c1 = re.compile("ribosomal RNA")
+    c2 = re.compile("subunit")
+    is_rrna = []
+    for x in matrix["description"]:
+        m1 = c1.match(x)
+        if m1 is not None:
+            m2 = c2.match(x)
+            is_rrna.append(m2 is None)
+        else:
+            is_rrna.append(False)
+    matrix["is_rrna"] = is_rrna
+    return matrix[~matrix["is_rrna"]].drop("is_rrna", axis=1)
+
+
 def extract_profiles(roary_matrix_file, dbname, metadata_cols=13):
     matrix = pd.read_csv(roary_matrix_file)
     matrix["Gene"] = matrix["Gene"].str.replace("/", "_")
@@ -62,6 +87,8 @@ def extract_profiles(roary_matrix_file, dbname, metadata_cols=13):
                    "Annotation": "description"}
     matrix.rename(columns=rename_cols, inplace=True)
     matrix.set_index("locus_id", inplace=True)
+    matrix = filter_tRNA(matrix)
+    matrix = filter_rRNA(matrix)
     save_locus_metadata(matrix, dbname)
     profiles = matrix.iloc[:, metadata_cols:]
     isolates = len(matrix.columns) - metadata_cols
