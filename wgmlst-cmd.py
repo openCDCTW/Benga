@@ -4,7 +4,7 @@ import datetime
 import json
 from src.utils import db
 from src.models import logs
-from src.algorithms import pgdb, wgmlst, phylotree, statistics
+from src.algorithms import database, profiling, phylogeny, statistics
 
 
 def parse_args():
@@ -100,8 +100,8 @@ def main():
         db.createdb("profiling")
         db.create_profiling_relations()
     if args.algorithm == "make_db":
-        pgdb.annotate_configs(input_dir, output_dir, threads=threads, use_docker=docker)
-        pgdb.make_database(output_dir, threads=threads, use_docker=docker)
+        database.annotate_configs(input_dir, output_dir, threads=threads, use_docker=docker)
+        database.make_database(output_dir, threads=threads, use_docker=docker)
         statistics.calculate_loci_coverage(output_dir, output_dir, database=database)
         statistics.calculate_allele_length(output_dir, database=database)
     if args.algorithm == "locus_library":
@@ -110,17 +110,17 @@ def main():
         statistics.calculate_loci_coverage(input_dir, output_dir, database=database)
         statistics.calculate_allele_length(output_dir, database=database)
     if args.algorithm == "profiling":
-        wgmlst.profiling(output_dir, input_dir, database, threads=threads, occr_level=occr_level,
-                         enable_adding_new_alleles=new_alleles, generate_profiles=generate_profiles,
-                         debug=debug)
+        profiling.profiling(output_dir, input_dir, database, threads=threads, occr_level=occr_level,
+                            enable_adding_new_alleles=new_alleles, generate_profiles=generate_profiles,
+                            debug=debug)
     if args.algorithm == "MLST":
-        wgmlst.mlst_profiling(output_dir, input_dir, database, threads=threads)
+        profiling.mlst_profiling(output_dir, input_dir, database, threads=threads)
     if args.algorithm == "virulence":
-        wgmlst.virulence_profiling(output_dir, input_dir, database, threads=threads)
+        profiling.virulence_profiling(output_dir, input_dir, database, threads=threads)
     if args.algorithm == "tree":
         with open(os.path.join(input_dir, "namemap.json"), "r") as file:
             names = json.loads(file.read())
-        dendro = phylotree.Dendrogram()
+        dendro = phylogeny.Dendrogram()
         dendro.make_tree(os.path.join(input_dir, "wgmlst.tsv"), names)
         date = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M")
         filename = date + "_tree"

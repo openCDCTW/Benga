@@ -1,5 +1,5 @@
 from PySide import QtGui, QtCore
-from src.algorithms import pgdb, phylotree, wgmlst
+from src.algorithms import database, phylogeny, profiling
 from src.models import worker
 from src.models.jobs import *
 from src.models.logs import *
@@ -71,8 +71,8 @@ class Window(Ui_mainTab):
         logger = factory.create()
 
         # process algorithms
-        pgdb.annotate_configs(source_dir, job_dir, logger=logger)
-        pgdb.make_database(job_dir, logger=logger)
+        database.annotate_configs(source_dir, job_dir, logger=logger)
+        database.make_database(job_dir, logger=logger)
 
         self.enable(switch_widgets)
 
@@ -100,7 +100,7 @@ class Window(Ui_mainTab):
         logger = factory.create()
 
         # process algorithms
-        wgmlst.profiling(job_dir, profile_dir, database_dir, logger)
+        profiling.profiling(job_dir, profile_dir, database_dir, logger)
 
         self.enable(switch_widgets)
 
@@ -110,7 +110,7 @@ class Window(Ui_mainTab):
         self.disable(switch_widgets)
 
         profile_dir = str(self.plottingSelectText.toPlainText())
-        self.tree, self.newick = phylotree.make_tree(profile_dir, "wgMLST_pan")
+        self.tree, self.newick = phylogeny.make_tree(profile_dir, "wgMLST_pan")
         self.tree.show()  # TODO: bug gui fixed
 
         self.enable(switch_widgets)

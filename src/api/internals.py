@@ -2,7 +2,7 @@ import datetime
 import os
 import json
 from src.utils import db
-from src.algorithms import wgmlst, phylotree
+from src.algorithms import profiling, phylogeny
 from src.utils import files
 
 PROJECT_HOME = os.getcwd()
@@ -15,7 +15,7 @@ def profiling_api(batch_id, database, occr_level):
     files.create_if_not_exist(OUTDIR)
     output_dir = os.path.join(OUTDIR, batch_id)
     files.create_if_not_exist(output_dir)
-    wgmlst.profiling(output_dir, input_dir, database, occr_level=occr_level, threads=2)
+    profiling.profiling(output_dir, input_dir, database, occr_level=occr_level, threads=2)
     profile_created = datetime.datetime.now()
 
     with open(os.path.join(output_dir, "namemap.json"), "r") as file:
@@ -23,7 +23,7 @@ def profiling_api(batch_id, database, occr_level):
     profile_filename = os.path.join(output_dir,
                                     "cgMLST_{}_{}_{}.tsv".format(database, occr_level, batch_id[0:8]))
     os.rename(os.path.join(output_dir, "wgmlst.tsv"), profile_filename)
-    dendro = phylotree.Dendrogram()
+    dendro = phylogeny.Dendrogram()
     dendro.make_tree(profile_filename, names)
     dendro_created = datetime.datetime.now()
     newick_filename = os.path.join(output_dir, "dendrogram_{}.newick".format(batch_id[0:8]))
