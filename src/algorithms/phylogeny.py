@@ -1,12 +1,13 @@
 import fastcluster
 import pandas as pd
-import re
+import math
 from ete3 import Tree
 from scipy.cluster import hierarchy
 from scipy.spatial.distance import squareform
 import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
+from collections import Counter
 
 
 class Dendrogram:
@@ -44,13 +45,8 @@ class Dendrogram:
                              leaf_font_size=10, above_threshold_color="#808080")
         fig.savefig(file, dpi=dpi, bbox_inches='tight', pad_inches=1)
 
-    def make_tree(self, profile_file, names=None):
+    def make_tree(self, profile_file):
         profiles = pd.read_csv(profile_file, sep="\t", index_col=0)
-        new_names = {}        
-        if names:
-            for i in names:
-                new_names[i] = re.sub(r"_S\d+_L\d{3}[\d\w_-]+", "", names[i]).replace("-", ".")
-        profiles.columns = list(map(lambda x: new_names[x], profiles.columns))
         self._nodes = list(profiles.columns)
         distances = distance_matrix(profiles)
         self._linkage = fastcluster.average(squareform(distances))
@@ -69,7 +65,8 @@ def distance_matrix(profiles):
     distances = pd.DataFrame(index=profiles.columns, columns=profiles.columns)
     for x in profiles.columns:
         for y in profiles.columns:
-            distances.loc[x, y] = hamming(profiles[x], profiles[y])
+            if math.isnan(distances.loc[x, y]) == True:
+                distances.loc[y, x] = distances.loc[x, y] = Counter(profiles[x] == profiles[y])[0]
     return distances
 
 

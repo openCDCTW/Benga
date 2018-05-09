@@ -118,10 +118,8 @@ def main():
     if args.algorithm == "virulence":
         profiling.virulence_profiling(output_dir, input_dir, database, threads=threads)
     if args.algorithm == "tree":
-        with open(os.path.join(input_dir, "namemap.json"), "r") as file:
-            names = json.loads(file.read())
         dendro = phylogeny.Dendrogram()
-        dendro.make_tree(os.path.join(input_dir, "wgmlst.tsv"), names)
+        dendro.make_tree(os.path.join(input_dir, "wgmlst.tsv"))
         date = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M")
         filename = date + "_tree"
         dendro.to_newick(os.path.join(output_dir, "{}.newick".format(filename)))
