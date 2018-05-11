@@ -4,7 +4,7 @@ import datetime
 import json
 from src.utils import db
 from src.models import logs
-from src.algorithms import database, profiling, phylogeny, statistics
+from src.algorithms import databases, profiling, phylogeny, statistics
 
 
 def parse_args():
@@ -100,8 +100,8 @@ def main():
         db.createdb("profiling")
         db.create_profiling_relations()
     if args.algorithm == "make_db":
-        database.annotate_configs(input_dir, output_dir, threads=threads, use_docker=docker)
-        database.make_database(output_dir, threads=threads, use_docker=docker)
+        databases.annotate_configs(input_dir, output_dir, threads=threads, use_docker=docker)
+        databases.make_database(output_dir, threads=threads, use_docker=docker)
         statistics.calculate_loci_coverage(output_dir, output_dir, database=database)
         statistics.calculate_allele_length(output_dir, database=database)
     if args.algorithm == "locus_library":

@@ -1,5 +1,5 @@
 from PySide import QtGui, QtCore
-from src.algorithms import database, phylogeny, profiling
+from src.algorithms import databases, phylogeny, profiling
 from src.models import worker
 from src.models.jobs import *
 from src.models.logs import *
@@ -71,8 +71,8 @@ class Window(Ui_mainTab):
         logger = factory.create()
 
         # process algorithms
-        database.annotate_configs(source_dir, job_dir, logger=logger)
-        database.make_database(job_dir, logger=logger)
+        databases.annotate_configs(source_dir, job_dir, logger=logger)
+        databases.make_database(job_dir, logger=logger)
 
         self.enable(switch_widgets)
 

@@ -11,3 +11,4 @@ flask-restful
 uWSGI
 psycopg2
 sqlalchemy
+seaborn
