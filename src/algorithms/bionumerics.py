@@ -1,6 +1,6 @@
 def generate_encoder(alleles):
     encoder = {}
-    for i, x in enumerate(sorted(set(alleles))):
+    for i, x in enumerate(sorted(set(alleles)), 1):
         if x == '0':
             encoder[x] = 0
         else:
