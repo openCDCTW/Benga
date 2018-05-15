@@ -55,7 +55,9 @@ def calculate_loci_coverage(input_dir, output_dir, database):
     lf.addConsoleHandler()
     logger = lf.create()
     db.load_database_config(logger=logger)
+    logger.info("Start calculating locus coverage...")
     subject_number = count_subjects(input_dir)
+    logger.info("Start plotting locus coverage...")
     plot_stats(output_dir, subject_number, database)
 
 
@@ -97,6 +99,7 @@ def calculate_allele_length(output_dir, database, interval=20):
     lf.addConsoleHandler()
     logger = lf.create()
     db.load_database_config(logger=logger)
+    logger.info("Start calculating allele length heatmap...")
     plot_length_heamap(output_dir, database, interval=interval)
 
 

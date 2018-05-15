@@ -101,7 +101,7 @@ def main():
         db.create_profiling_relations()
     if args.algorithm == "make_db":
         databases.annotate_configs(input_dir, output_dir, threads=threads, use_docker=docker)
-        databases.make_database(output_dir, threads=threads, use_docker=docker)
+        database = databases.make_database(output_dir, threads=threads, use_docker=docker)
         statistics.calculate_loci_coverage(output_dir, output_dir, database=database)
         statistics.calculate_allele_length(output_dir, database=database)
     if args.algorithm == "locus_library":

@@ -242,4 +242,4 @@ def make_database(output_dir, logger=None, threads=2, use_docker=True):
     logger.info("Making dynamic schemes...")
     make_schemes(freq, total_isolates)
     logger.info("Done!!")
-
+    return dbname
