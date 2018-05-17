@@ -237,7 +237,7 @@ def build_locus_library(output_dir, old_database, logger=None):
         logger = lf.create()
     db.load_database_config(logger=logger)
 
-    new_database = old_database + "_new"
+    new_database = os.path.basename(output_dir[:-1] if output_dir.endswith("/") else output_dir)
     db.createdb(new_database)
     db.create_pgadb_relations(new_database)
 
