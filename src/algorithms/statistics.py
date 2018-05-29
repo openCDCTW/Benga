@@ -222,6 +222,7 @@ def extract_database_ref_sequence(old_database, new_database, keep_loci):
     alleles = alleles[alleles["allele_id"].isin(ref_alleles)]
     pairs = pairs[(pairs["allele_id"].isin(ref_alleles)) & (pairs["locus_id"].isin(keep_loci))]
     loci = loci[loci["locus_id"].isin(keep_loci)]
+    locus_meta = locus_meta[locus_meta["locus_id"].isin(keep_loci)]
 
     db.append_to_sql("alleles", alleles, new_database)
     db.append_to_sql("locus_meta", locus_meta, new_database)
