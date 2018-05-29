@@ -218,11 +218,11 @@ def extract_database_ref_sequence(old_database, new_database, keep_loci):
     locus_meta = db.from_sql("select * from locus_meta;", database=old_database)
     pairs = db.from_sql("select * from pairs;", database=old_database)
 
+    locus_meta = locus_meta[locus_meta["locus_id"].isin(keep_loci)]
+    loci = loci[loci["locus_id"].isin(keep_loci)]
     ref_alleles = set(loci["ref_allele"])
     alleles = alleles[alleles["allele_id"].isin(ref_alleles)]
     pairs = pairs[(pairs["allele_id"].isin(ref_alleles)) & (pairs["locus_id"].isin(keep_loci))]
-    loci = loci[loci["locus_id"].isin(keep_loci)]
-    locus_meta = locus_meta[locus_meta["locus_id"].isin(keep_loci)]
 
     db.append_to_sql("alleles", alleles, new_database)
     db.append_to_sql("locus_meta", locus_meta, new_database)
@@ -238,7 +238,7 @@ def build_locus_library(output_dir, old_database, logger=None):
         logger = lf.create()
     db.load_database_config(logger=logger)
 
-    new_database = old_database + "_new"
+    new_database = os.path.basename(output_dir[:-1] if output_dir.endswith("/") else output_dir)
     db.createdb(new_database)
     db.create_pgadb_relations(new_database)
 
