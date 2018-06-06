@@ -135,7 +135,6 @@ def profiling(output_dir, input_dir, database, threads, occr_level=None, selecte
     query_dir = files.joinpath(output_dir, "query")
     files.create_if_not_exist(query_dir)
     namemap = rename(query_dir, input_dir)
-    # rev_namemap = {v: k for k, v in namemap.items()}
 
     logger.info("Selecting loci by specified scheme {}%...".format(occr_level))
     if selected_loci:
