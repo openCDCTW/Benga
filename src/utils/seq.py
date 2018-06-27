@@ -42,5 +42,5 @@ def query_blastndb(query, db_dir, output_file, cols, threads=2):
 
 
 def query_blastpdb(query, db_dir, output_file, cols, threads=2):
-    NcbiblastpCommandline(query=query, db=db_dir, out=output_file,
+    NcbiblastpCommandline(query=query, db=db_dir, out=output_file, evalue=1e-6,
                           outfmt="'6 {}'".format(" ".join(cols)), num_threads=threads)()

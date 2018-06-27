@@ -68,6 +68,10 @@ def rename(query_dir, input_dir):
     return namemap
 
 
+def generate_allele_len(recs):
+    return {rec.id: len(rec.seq) for rec in recs}
+
+
 def make_ref_blastpdb(ref_db_file, database):
     query = "select loci.locus_id, alleles.peptide_seq " \
             "from loci inner join alleles " \
@@ -77,24 +81,36 @@ def make_ref_blastpdb(ref_db_file, database):
     ref_recs = [seq.new_record(row["locus_id"], row["peptide_seq"], seqtype="protein") for _, row in refs.iterrows()]
     ref_fasta = ref_db_file + ".fasta"
     seq.save_records(ref_recs, ref_fasta)
+    ref_len = generate_allele_len(ref_recs)
 
     seq.compile_blastpdb(ref_fasta, ref_db_file)
     os.remove(ref_fasta)
+    return ref_len
 
 
-def blast_for_new_alleles(candidates, alleles, ref_db, temp_dir, identity=95, qcoverage=50):
-    '''blastp for locus with 95% identity and coverage 50%'''
+def blast_for_new_alleles(candidates, alleles, ref_db, temp_dir, ref_len, identity=95):
+    '''
+    blastp for locus with 95% identity, E-value < 1e-6,
+    75% <= qlen/slen < 125%, 75% <= qlen/alen < 125%.
+    '''
     filename = "new_allele_candidates"
     candidate_file = os.path.join(temp_dir, filename + ".fasta")
     recs = [seq.new_record(cand, alleles[cand][1], seqtype="protein") for cand in candidates]
     seq.save_records(recs, candidate_file)
+    allele_len = generate_allele_len(recs)
 
     blastp_out_file = files.joinpath(temp_dir, "{}.blastp.out".format(filename))
     seq.query_blastpdb(candidate_file, ref_db, blastp_out_file, seq.BLAST_COLUMNS)
 
     blastp_out = pd.read_csv(blastp_out_file, sep="\t", header=None, names=seq.BLAST_COLUMNS)
-    blastp_out = blastp_out[(blastp_out["pident"] >= identity) & (blastp_out["qcovs"] >= qcoverage)]\
-        .drop_duplicates("qseqid")
+    blastp_out = blastp_out[blastp_out["pident"] >= identity]
+    blastp_out["qlen"] = list(map(lambda x: allele_len[x], blastp_out["qseqid"]))
+    blastp_out["slen"] = list(map(lambda x: ref_len[x], blastp_out["sseqid"]))
+    blastp_out["qlen/slen"] = blastp_out["qlen"] / blastp_out["slen"]
+    blastp_out["qlen/alen"] = blastp_out["qlen"] / blastp_out["length"]
+    blastp_out = blastp_out[(0.75 <= blastp_out["qlen/slen"]) & (blastp_out["qlen/slen"] < 1.25)]
+    blastp_out = blastp_out[(0.75 <= blastp_out["qlen/alen"]) & (blastp_out["qlen/alen"] < 1.25)]
+    blastp_out = blastp_out.drop_duplicates("qseqid")
     new_allele_pairs = [(row["qseqid"], row["sseqid"]) for _, row in blastp_out.iterrows()]
     return new_allele_pairs
 
@@ -113,11 +129,11 @@ def update_database(new_allele_pairs, alleles):
     return pairs
 
 
-def add_new_alleles(id_allele_list, ref_db, temp_dir):
+def add_new_alleles(id_allele_list, ref_db, temp_dir, ref_len):
     all_alleles = functools.reduce(lambda x, y: {**x, **y[1]}, id_allele_list, {})
     existed_alleles = from_sql("select allele_id from alleles;")["allele_id"].tolist()
     candidates = list(filter(lambda x: x not in existed_alleles, all_alleles.keys()))
-    new_allele_pairs = blast_for_new_alleles(candidates, all_alleles, ref_db, temp_dir)
+    new_allele_pairs = blast_for_new_alleles(candidates, all_alleles, ref_db, temp_dir, ref_len)
     if new_allele_pairs:
         update_database(new_allele_pairs, all_alleles)
 
@@ -147,7 +163,7 @@ def profiling(output_dir, input_dir, database, threads, occr_level=None, selecte
     temp_dir = os.path.join(query_dir, "temp")
     files.create_if_not_exist(temp_dir)
     ref_db = os.path.join(temp_dir, "ref_blastpdb")
-    make_ref_blastpdb(ref_db, database)
+    ref_len = make_ref_blastpdb(ref_db, database)
 
     logger.info("Identifying loci and allocating alleles...")
     args = [(os.path.join(query_dir, filename), temp_dir)
@@ -157,7 +173,7 @@ def profiling(output_dir, input_dir, database, threads, occr_level=None, selecte
 
     if enable_adding_new_alleles:
         logger.info("Adding new alleles to database...")
-        add_new_alleles(id_allele_list, ref_db, temp_dir)
+        add_new_alleles(id_allele_list, ref_db, temp_dir, ref_len)
 
     logger.info("Collecting allele profiles of each genomes...")
     allele_counts = Counter()
