@@ -1,6 +1,5 @@
 import fastcluster
 import pandas as pd
-import math
 from ete3 import Tree
 from scipy.cluster import hierarchy
 from scipy.spatial.distance import squareform
@@ -61,13 +60,24 @@ def hamming(xs, ys):
     return sum(xs.ne(ys) & ~(xs.isnull() & ys.isnull()))
 
 
-def distance_matrix(profiles):
-    profiles = profiles.fillna('0')
-    distances = pd.DataFrame(index=profiles.columns, columns=profiles.columns)
-    for x in profiles.columns:
-        for y in profiles.columns:
-            if math.isnan(distances.loc[x, y]) == True:
-                distances.loc[y, x] = distances.loc[x, y] = Counter(profiles[x] == profiles[y])[0]
+def distance(pair):
+    d = Counter(pair[0] == pair[1])[0]
+    return (pair[0].name, pair[1].name ,d)
+
+
+def distance_matrix(profile):
+    profile = profile.fillna('0')
+    profile_columns = list(profile.columns)
+    pairs = []
+    for i in range(len(profile_columns)):
+        strain_1 = profile_columns.pop(0)
+        pairs.append((profile[strain_1], profile[strain_1]))
+        for strain_2 in profile_columns:
+            pairs.append((profile[strain_1], profile[strain_2]))
+    d_pairs = map(distance, pairs)
+    distances = pd.DataFrame()
+    for pair in d_pairs:
+        distances.loc[pair[0], pair[1]] = distances.loc[pair[1], pair[0]] = pair[2]
     return distances
 
 
