@@ -28,17 +28,8 @@ def save_records(seqs, filename):
     write(seqs, filename, "fasta")
 
 
-def compile_blastndb(input_file, output_file):
-    subprocess.run(" ".join(["makeblastdb", "-in", input_file, "-dbtype", "nucl", "-out", output_file]), shell=True)
-
-
 def compile_blastpdb(input_file, output_file):
     subprocess.run(" ".join(["makeblastdb", "-in", input_file, "-dbtype", "prot", "-out", output_file]), shell=True)
-
-
-def query_blastndb(query, db_dir, output_file, cols, threads=2):
-    NcbiblastnCommandline(query=query, db=db_dir, out=output_file,
-                          outfmt="'6 {}'".format(" ".join(cols)), num_threads=threads)()
 
 
 def query_blastpdb(query, db_dir, output_file, cols, threads=2):

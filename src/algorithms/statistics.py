@@ -155,6 +155,7 @@ def reference_self_blastp(output_dir, database):
             " from loci inner join alleles on loci.ref_allele=alleles.allele_id;"
     ref = db.from_sql(query, database=database)
     ref_recs = [seq.new_record(row["locus_id"], row["peptide_seq"]) for _, row in ref.iterrows()]
+    ref_length = {rec.id: len(rec.seq) for rec in ref_recs}
     ref_faa = files.joinpath(output_dir, "ref_seq.faa")
     seq.save_records(ref_recs, ref_faa)
 
@@ -163,7 +164,7 @@ def reference_self_blastp(output_dir, database):
 
     blastp_out_file = files.joinpath(output_dir, "ref_db.blastp.out")
     seq.query_blastpdb(ref_faa, ref_db, blastp_out_file, seq.BLAST_COLUMNS)
-    return blastp_out_file
+    return blastp_out_file, ref_length
 
 
 def identify_pairs(df):
@@ -197,16 +198,16 @@ def query_covs(covs, key):
         return np.nan
 
 
-def filter_locus(blastp_out_file, database):
+def filter_locus(blastp_out_file, database, ref_length):
     blastp_out = pd.read_csv(blastp_out_file, sep="\t", header=None, names=seq.BLAST_COLUMNS)
     blastp_out = blastp_out[blastp_out["pident"] >= 95]
     blastp_out = blastp_out[blastp_out["qseqid"] != blastp_out["sseqid"]]
-    covs = {(row["qseqid"], row["sseqid"]): row["qcovs"] for _, row in blastp_out.iterrows()}
-    blastp_out["scovs"] = [query_covs(covs, (row["sseqid"], row["qseqid"])) for _, row in blastp_out.iterrows()]
-    blastp_out["qlen/alen"] = 100 / blastp_out["qcovs"]
-    blastp_out["qlen/slen"] = blastp_out["scovs"] / blastp_out["qcovs"]
-    blastp_out = blastp_out[(0.75 < blastp_out["qlen/alen"]) & (blastp_out["qlen/alen"] <= 1.25)]
-    blastp_out = blastp_out[(0.75 < blastp_out["qlen/slen"]) & (blastp_out["qlen/slen"] <= 1.25)]
+    blastp_out["qlen"] = list(map(lambda x: ref_length[x], blastp_out["qseqid"]))
+    blastp_out["slen"] = list(map(lambda x: ref_length[x], blastp_out["sseqid"]))
+    blastp_out["qlen/slen"] = blastp_out["qlen"] / blastp_out["slen"]
+    blastp_out["qlen/alen"] = blastp_out["qlen"] / blastp_out["length"]
+    blastp_out = blastp_out[(0.75 <= blastp_out["qlen/slen"]) & (blastp_out["qlen/slen"] < 1.25)]
+    blastp_out = blastp_out[(0.75 <= blastp_out["qlen/alen"]) & (blastp_out["qlen/alen"] < 1.25)]
     pairs = identify_pairs(blastp_out)
     filtered_loci = collect_high_occurrence_loci(pairs, database)
     return filtered_loci
@@ -242,8 +243,8 @@ def build_locus_library(output_dir, old_database, logger=None):
     db.createdb(new_database)
     db.create_pgadb_relations(new_database)
 
-    blastp_out_file = reference_self_blastp(output_dir, old_database)
-    filtered_loci = filter_locus(blastp_out_file, old_database)
+    blastp_out_file, ref_length = reference_self_blastp(output_dir, old_database)
+    filtered_loci = filter_locus(blastp_out_file, old_database, ref_length)
     extract_database_ref_sequence(old_database, new_database, filtered_loci)
     os.remove(blastp_out_file)
     return new_database
