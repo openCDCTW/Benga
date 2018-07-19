@@ -2,9 +2,8 @@ import argparse
 import datetime
 import os.path
 
-from src.algorithms import databases, profiling, phylogeny, statistics
-from src.models import logs
-
+from benga.src.algorithms import databases, profiling, phylogeny, statistics
+from benga.src.models import logs
 from benga.src.utils import db
 
 
@@ -71,13 +70,6 @@ def parse_args():
         default=False
     )
 
-    arg_parser.add_argument(
-        "--docker",
-        help="Use docker version of prokka and roary, instead of the locally installed one.",
-        action='store_true',
-        default=False
-    )
-
     return arg_parser.parse_args()
 
 
@@ -89,7 +81,6 @@ def main():
     database = args.database
     occr_level = args.occr
     threads = args.threads
-    docker = args.docker
     debug = args.debug
     new_alleles = not args.no_new_alleles
     generate_profiles = not args.no_profiles
@@ -101,8 +92,8 @@ def main():
         db.createdb("profiling")
         db.create_profiling_relations()
     if args.algorithm == "make_db":
-        databases.annotate_configs(input_dir, output_dir, threads=threads, use_docker=docker)
-        database = databases.make_database(output_dir, threads=threads, use_docker=docker)
+        databases.annotate_configs(input_dir, output_dir, threads=threads)
+        database = databases.make_database(output_dir, threads=threads)
         statistics.calculate_loci_coverage(output_dir, output_dir, database=database)
         statistics.calculate_allele_length(output_dir, database=database)
     if args.algorithm == "locus_library":

@@ -8,7 +8,7 @@ from concurrent.futures import ProcessPoolExecutor
 import pandas as pd
 from Bio import SeqIO
 from benga.src.models import logs
-from benga.src.utils import files, docker, cmds, operations, db
+from benga.src.utils import files, cmds, operations, db
 
 from benga.src.utils import seq
 
@@ -169,7 +169,7 @@ def make_schemes(freq, total_isolates):
     db.append_to_sql("loci", schemes)
 
 
-def annotate_configs(input_dir, output_dir, logger=None, threads=8, use_docker=True):
+def annotate_configs(input_dir, output_dir, logger=None, threads=8):
     if not logger:
         lf = logs.LoggerFactory()
         lf.addConsoleHandler()
@@ -188,12 +188,9 @@ def annotate_configs(input_dir, output_dir, logger=None, threads=8, use_docker=T
     logger.info("Annotating...")
     annotate_dir = files.joinpath(output_dir, "Annotated")
     files.create_if_not_exist(annotate_dir)
-    if use_docker:
-        docker.prokka(genome_dir, annotate_dir)
-    else:
-        c = [cmds.form_prokka_cmd(x, genome_dir, annotate_dir) for x in namemap.values()]
-        with ProcessPoolExecutor(int(threads / 2)) as executor:
-            executor.map(cmds.execute_cmd, c)
+    c = [cmds.form_prokka_cmd(x, genome_dir, annotate_dir) for x in namemap.values()]
+    with ProcessPoolExecutor(int(threads / 2)) as executor:
+        executor.map(cmds.execute_cmd, c)
 
     logger.info("Moving protein CDS (.ffn) files...")
     ffn_dir = files.joinpath(output_dir, "FFN")
@@ -209,7 +206,7 @@ def annotate_configs(input_dir, output_dir, logger=None, threads=8, use_docker=T
     create_noncds(output_dir, gff_dir)
 
 
-def make_database(output_dir, logger=None, threads=2, use_docker=True):
+def make_database(output_dir, logger=None, threads=2):
     if not logger:
         lf = logs.LoggerFactory()
         lf.addConsoleHandler()
@@ -219,12 +216,9 @@ def make_database(output_dir, logger=None, threads=2, use_docker=True):
 
     logger.info("Calculating the pan genome...")
     min_identity = 95
-    if use_docker:
-        docker.roary(files.joinpath(output_dir, "GFF"), output_dir, min_identity, threads)
-    else:
-        c = cmds.form_roary_cmd(files.joinpath(output_dir, "GFF"), output_dir, min_identity, threads)
-        logger.info("Run roary with following command: " + c)
-        subprocess.run(c, shell=True)
+    c = cmds.form_roary_cmd(files.joinpath(output_dir, "GFF"), output_dir, min_identity, threads)
+    logger.info("Run roary with following command: " + c)
+    subprocess.run(c, shell=True)
 
     logger.info("Creating database")
     dbname = os.path.basename(output_dir[:-1] if output_dir.endswith("/") else output_dir)
