@@ -1,10 +1,11 @@
 import argparse
-import os.path
 import datetime
-import json
-from src.utils import db
-from src.models import logs
+import os.path
+
 from src.algorithms import databases, profiling, phylogeny, statistics
+from src.models import logs
+
+from benga.src.utils import db
 
 
 def parse_args():

@@ -1,12 +1,16 @@
 import json
-import os, re
+import os
+import re
+import subprocess
 from collections import Counter, defaultdict
 from concurrent.futures import ProcessPoolExecutor
+
 import pandas as pd
 from Bio import SeqIO
-import subprocess
 from src.models import logs
-from src.utils import files, seq, docker, cmds, operations, db
+from src.utils import files, docker, cmds, operations, db
+
+from benga.src.utils import seq
 
 
 def parse_filenames(path, ext=".fna"):

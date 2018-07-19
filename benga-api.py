@@ -2,8 +2,8 @@
 
 from flask import Flask
 from flask_restful import Api
-from src.api import profiling
 
+from benga.src.api import profiling
 
 app = Flask(__name__)
 api = Api(app)

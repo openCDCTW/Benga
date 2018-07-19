@@ -1,10 +1,11 @@
 from PySide import QtGui, QtCore
 from src.algorithms import databases, phylogeny, profiling
 from src.models import worker
-from src.models.jobs import *
 from src.models.logs import *
 from src.utils import files
 from src.view import Ui_mainTab
+
+from benga.src.models.jobs import *
 
 
 class Window(Ui_mainTab):

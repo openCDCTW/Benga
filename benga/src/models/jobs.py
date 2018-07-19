@@ -5,7 +5,7 @@ import uuid
 from datetime import datetime
 from enum import Enum
 
-from src.utils import files
+from benga.src.utils import files
 
 TIME_FMT = "%Y-%m-%d %H:%M:%S"
 
