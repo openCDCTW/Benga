@@ -1,7 +1,7 @@
 import subprocess
 
 from Bio.Alphabet import generic_dna, generic_protein
-from Bio.Blast.Applications import NcbiblastnCommandline, NcbiblastpCommandline
+from Bio.Blast.Applications import NcbiblastpCommandline
 from Bio.Seq import Seq
 from Bio.SeqRecord import SeqRecord
 from Bio.SeqIO import write

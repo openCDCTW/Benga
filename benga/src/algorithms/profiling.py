@@ -7,10 +7,10 @@ from concurrent.futures import ProcessPoolExecutor
 
 import pandas as pd
 from Bio import SeqIO
-from src.algorithms.bionumerics import to_bionumerics_format
-from src.models import logs
-from src.utils import files, cmds, operations
-from src.utils.db import load_database_config, from_sql, append_to_sql, to_sql, table_to_sql
+from benga.src.algorithms.bionumerics import to_bionumerics_format
+from benga.src.models import logs
+from benga.src.utils import files, cmds, operations
+from benga.src.utils.db import load_database_config, from_sql, append_to_sql, to_sql, table_to_sql
 
 from benga.src.utils import seq
 

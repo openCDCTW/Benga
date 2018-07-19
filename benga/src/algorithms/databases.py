@@ -7,8 +7,8 @@ from concurrent.futures import ProcessPoolExecutor
 
 import pandas as pd
 from Bio import SeqIO
-from src.models import logs
-from src.utils import files, docker, cmds, operations, db
+from benga.src.models import logs
+from benga.src.utils import files, docker, cmds, operations, db
 
 from benga.src.utils import seq
 

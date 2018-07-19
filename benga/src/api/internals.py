@@ -2,8 +2,8 @@ import datetime
 import json
 import os
 
-from src.algorithms import profiling, phylogeny
-from src.utils import files
+from benga.src.algorithms import profiling, phylogeny
+from benga.src.utils import files
 
 from benga.src.utils import db
 
