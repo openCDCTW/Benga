@@ -7,10 +7,7 @@ from concurrent.futures import ProcessPoolExecutor
 
 import pandas as pd
 from Bio import SeqIO
-from benga.src.models import logs
-from benga.src.utils import files, cmds, operations, db
-
-from benga.src.utils import seq
+from benga.src.utils import files, cmds, operations, db, logs, seq
 
 
 def parse_filenames(path, ext=".fna"):

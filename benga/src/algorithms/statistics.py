@@ -4,9 +4,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import seaborn as sns
-from benga.src.models import logs
-from benga.src.utils import db, files
 
+from benga.src.utils import db, files, logs
 from benga.src.utils import seq
 
 plt.style.use("ggplot")
