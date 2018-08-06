@@ -20,10 +20,6 @@ def new_record(seqid, seq, desc="", seqtype=None):
         print("None supported type: {}".format(type(seq)))
 
 
-def replace_id(record, newid):
-    return new_record(newid, str(record.seq))
-
-
 def save_records(seqs, filename):
     write(seqs, filename, "fasta")
 

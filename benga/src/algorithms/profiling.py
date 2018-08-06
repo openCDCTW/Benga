@@ -1,3 +1,4 @@
+import abc
 import functools
 import os
 import shutil
@@ -16,6 +17,29 @@ virulence_genes = ["lpfA", "lpfA_1", "lpfA_2", "lpfA_3", "lpfA_4", "lpfB", "lpfB
                    "fimA_1", "fimA_2", "fimA_4", "fimA_5", "fimA_6", "fimC_1", "fimC_2", "fimC_3",
                    "fimD_1", "fimD_2", "fimD_3", "fimD_4", "fimD_5", "fim_2", "viaA_1", "viaA_2",
                    "fur_1", "fur_2", "rpoS", "rpoS_1", "rpoS_2", "spvB", "spvB_1", "spvB_2", "spvC"]
+
+# class Profiler(metaclass=abc.ABCMeta):
+#     def __init__(self):
+#         raise NotImplementedError()
+#
+# class BatchProfiler(Profiler):
+#     def __init__(self):
+#         self.__profile = None
+#
+#     def run(self, ):
+#
+#
+# class BatchSelector(metaclass=abc.ABCMeta):
+#     def __init__(self):
+#         raise NotImplementedError()
+#
+# class BatchSchemeSelector(BatchSelector):
+#     def __init__(self):
+#         pass
+#
+#     def
+#
+# class BatchGeneSelector(BatchSelector):
 
 
 def identify_loci(args):
@@ -50,21 +74,6 @@ def profile_by_query(alleles, genome_id, selected_loci, database):
     profile = profile.drop_duplicates("locus_id").set_index("locus_id")
     profile = profile.rename(columns={"allele_id": genome_id}).iloc[:, 0]
     return profile
-
-
-def rename(query_dir, input_dir):
-    namemap = {}
-    for i, filename in enumerate(sorted(os.listdir(input_dir)), 1):
-        file = SeqIO.parse(files.joinpath(input_dir, filename), "fasta")
-        records = []
-        for j, record in enumerate(file, 1):
-            newid = "Genome_{i}::Contig_{j}".format(**locals())
-            records.append(seq.new_record(newid, str(record.seq)))
-
-        newname = "Genome_{i}.fa".format(**locals())
-        SeqIO.write(records, files.joinpath(query_dir, newname), "fasta")
-        namemap[files.replace_ext(newname)] = files.replace_ext(filename)
-    return namemap
 
 
 def generate_allele_len(recs):
@@ -146,10 +155,12 @@ def profiling(output_dir, input_dir, database, threads, occr_level=None, selecte
         logger = lf.create()
     load_database_config(logger=logger)
 
-    logger.info("Renaming contigs...")
+    logger.info("Formating contigs...")
     query_dir = files.joinpath(output_dir, "query")
     files.create_if_not_exist(query_dir)
-    namemap = rename(query_dir, input_dir)
+    contighandler = files.ContigHandler()
+    contighandler.new_format(input_dir, query_dir, replace_ext=True)
+    namemap = contighandler.namemap
 
     logger.info("Selecting loci by specified scheme {}%...".format(occr_level))
     if selected_loci:
@@ -198,11 +209,3 @@ def profiling(output_dir, input_dir, database, threads, occr_level=None, selecte
     if not debug:
         shutil.rmtree(query_dir)
     logger.info("Done!")
-
-
-def mlst_profiling(output_dir, input_dir, database, threads, logger=None):
-    return profiling(output_dir, input_dir, database, threads, logger=logger, selected_loci=MLST)
-
-
-def virulence_profiling(output_dir, input_dir, database, threads, logger=None):
-    return profiling(output_dir, input_dir, database, threads, logger=logger, selected_loci=virulence_genes)

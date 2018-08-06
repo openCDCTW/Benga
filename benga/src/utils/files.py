@@ -1,5 +1,56 @@
 import os
 import shutil
+from Bio import SeqIO
+from benga.src.utils import seq
+
+
+class ContigHandler:
+    def __init__(self):
+        self.__namemap = {}
+        self.extensions = [".fna", ".fa", ".fasta"]
+        self.filename_template = "Genome_{}.fa"
+        self.seqid_template = "Genome_{}::Contig_{}"
+
+    @property
+    def namemap(self):
+        return self.__namemap
+
+    def newname(self, i):
+        return self.filename_template.format(i)
+
+    def newseqid(self, i, j):
+        return self.seqid_template.format(i, j)
+
+    def isfasta(self, name):
+        for ext in self.extensions:
+            if name.endswith(ext):
+                return True
+        else:
+            return False
+
+    def replace_ext(self, xs):
+        ys = xs
+        for ext in self.extensions:
+            ys = ys.replace(ext, "")
+        return ys
+
+    def __write_new_format(self, source_file, sink_file, i):
+        records = []
+        for j, contig in enumerate(SeqIO.parse(source_file, "fasta"), 1):
+            seqid = self.newseqid(i, j)
+            records.append(seq.new_record(seqid, str(contig.seq)))
+        SeqIO.write(records, sink_file, "fasta")
+
+    def new_format(self, from_dir, to_dir, replace_ext=True):
+        for i, filename in enumerate(sorted(os.listdir(from_dir)), 1):
+            newname = self.newname(i)
+            if replace_ext:
+                self.__namemap[self.replace_ext(newname)] = self.replace_ext(filename)
+            else:
+                self.__namemap[newname] = filename
+            source_file = os.path.join(from_dir, filename)
+            sink_file = os.path.join(to_dir, newname)
+            self.__write_new_format(source_file, sink_file, i)
 
 
 def joinpath(a, *args):
@@ -37,13 +88,6 @@ def recursive_chown(dir, user):
             shutil.chown(joinpath(root, d), user)
         for f in files:
             shutil.chown(joinpath(root, f), user)
-
-
-def replace_ext(x, extensions=[".fna", ".fa"]):
-    y = x
-    for ext in extensions:
-        y = y.replace(ext, "")
-    return y
 
 
 def fasta_filename(filename):
