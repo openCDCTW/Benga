@@ -1,7 +1,7 @@
 import os.path
 import subprocess
 
-from benga.src.utils import files
+from src.utils import files
 
 DIR_PATH = os.path.dirname(os.path.realpath(__file__))
 BINARIES_PATH = os.path.abspath(os.path.join(DIR_PATH, "..", "..", "binaries", "linux"))
