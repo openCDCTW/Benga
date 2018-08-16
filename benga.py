@@ -104,10 +104,6 @@ def main():
         profiling.profiling(output_dir, input_dir, database, threads=threads, occr_level=occr_level,
                             enable_adding_new_alleles=new_alleles, generate_profiles=generate_profiles,
                             debug=debug)
-    if args.algorithm == "MLST":
-        profiling.mlst_profiling(output_dir, input_dir, database, threads=threads)
-    if args.algorithm == "virulence":
-        profiling.virulence_profiling(output_dir, input_dir, database, threads=threads)
     if args.algorithm == "tree":
         dendro = phylogeny.Dendrogram()
         dendro.make_tree(os.path.join(input_dir, "wgmlst.tsv"))
