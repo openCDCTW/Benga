@@ -1,8 +1,7 @@
 from django.test import TestCase
 import src.algorithms.databases
-import unittest
 
-class SmokingTestCase(unittest.TestCase):
+class SmokingTestCase(TestCase):
     def test_import(self):
         pass
 
