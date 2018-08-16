@@ -1,5 +1,5 @@
 from django.test import TestCase
-import benga.src.algorithms.databases
+import src.algorithms.databases
 import unittest
 
 class SmokingTestCase(unittest.TestCase):
