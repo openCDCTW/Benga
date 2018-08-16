@@ -6,8 +6,8 @@ fastcluster
 matplotlib
 biopython
 ete3
-flask
-flask-restful
+django
+djangorestframework
 uWSGI
 psycopg2
 sqlalchemy

@@ -1,7 +1,7 @@
 import subprocess
 
 from Bio.Alphabet import generic_dna, generic_protein
-from Bio.Blast.Applications import NcbiblastnCommandline, NcbiblastpCommandline
+from Bio.Blast.Applications import NcbiblastpCommandline
 from Bio.Seq import Seq
 from Bio.SeqRecord import SeqRecord
 from Bio.SeqIO import write
@@ -18,10 +18,6 @@ def new_record(seqid, seq, desc="", seqtype=None):
         return SeqRecord(seq, id=seqid, description=desc)
     else:
         print("None supported type: {}".format(type(seq)))
-
-
-def replace_id(record, newid):
-    return new_record(newid, str(record.seq))
 
 
 def save_records(seqs, filename):

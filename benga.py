@@ -1,10 +1,9 @@
 import argparse
-import os.path
 import datetime
-import json
-from src.utils import db
-from src.models import logs
-from src.algorithms import databases, profiling, phylogeny, statistics
+import os.path
+
+from benga.src.algorithms import databases, profiling, phylogeny, statistics
+from benga.src.utils import db, logs
 
 
 def parse_args():
@@ -70,13 +69,6 @@ def parse_args():
         default=False
     )
 
-    arg_parser.add_argument(
-        "--docker",
-        help="Use docker version of prokka and roary, instead of the locally installed one.",
-        action='store_true',
-        default=False
-    )
-
     return arg_parser.parse_args()
 
 
@@ -88,7 +80,6 @@ def main():
     database = args.database
     occr_level = args.occr
     threads = args.threads
-    docker = args.docker
     debug = args.debug
     new_alleles = not args.no_new_alleles
     generate_profiles = not args.no_profiles
@@ -100,8 +91,8 @@ def main():
         db.createdb("profiling")
         db.create_profiling_relations()
     if args.algorithm == "make_db":
-        databases.annotate_configs(input_dir, output_dir, threads=threads, use_docker=docker)
-        database = databases.make_database(output_dir, threads=threads, use_docker=docker)
+        databases.annotate_configs(input_dir, output_dir, threads=threads)
+        database = databases.make_database(output_dir, threads=threads)
         statistics.calculate_loci_coverage(output_dir, output_dir, database=database)
         statistics.calculate_allele_length(output_dir, database=database)
     if args.algorithm == "locus_library":
@@ -113,10 +104,6 @@ def main():
         profiling.profiling(output_dir, input_dir, database, threads=threads, occr_level=occr_level,
                             enable_adding_new_alleles=new_alleles, generate_profiles=generate_profiles,
                             debug=debug)
-    if args.algorithm == "MLST":
-        profiling.mlst_profiling(output_dir, input_dir, database, threads=threads)
-    if args.algorithm == "virulence":
-        profiling.virulence_profiling(output_dir, input_dir, database, threads=threads)
     if args.algorithm == "tree":
         dendro = phylogeny.Dendrogram()
         dendro.make_tree(os.path.join(input_dir, "wgmlst.tsv"))

@@ -1,28 +1,13 @@
 import json
-import os, re
+import os
+import re
+import subprocess
 from collections import Counter, defaultdict
 from concurrent.futures import ProcessPoolExecutor
+
 import pandas as pd
 from Bio import SeqIO
-import subprocess
-from src.models import logs
-from src.utils import files, seq, docker, cmds, operations, db
-
-
-def parse_filenames(path, ext=".fna"):
-    return [name for name in os.listdir(path) if name.endswith(ext)]
-
-
-def format_contigs(filenames, input_dir, working_dir):
-    namemap = {}
-    for i, oldname in enumerate(filenames, 1):
-        newname = "Genome_{}.fa".format(i)
-        namemap[oldname] = newname
-        with open(files.joinpath(working_dir, newname), "w") as file:
-            for j, contig in enumerate(SeqIO.parse(files.joinpath(input_dir, oldname), "fasta"), 1):
-                seqid = "G_{}::C_{}".format(i, j)
-                SeqIO.write(seq.replace_id(contig, seqid), file, "fasta")
-    return namemap
+from benga.src.utils import files, cmds, operations, db, logs
 
 
 def move_file(annotate_dir, dest_dir, ext):
@@ -165,7 +150,7 @@ def make_schemes(freq, total_isolates):
     db.append_to_sql("loci", schemes)
 
 
-def annotate_configs(input_dir, output_dir, logger=None, threads=8, use_docker=True):
+def annotate_configs(input_dir, output_dir, logger=None, threads=8):
     if not logger:
         lf = logs.LoggerFactory()
         lf.addConsoleHandler()
@@ -173,23 +158,20 @@ def annotate_configs(input_dir, output_dir, logger=None, threads=8, use_docker=T
         logger = lf.create()
 
     logger.info("Formating contigs...")
-    filenames = parse_filenames(input_dir)
-
     genome_dir = files.joinpath(output_dir, "Genomes")
     files.create_if_not_exist(genome_dir)
-    namemap = format_contigs(filenames, input_dir, genome_dir)
+    contighandler = files.ContigHandler()
+    contighandler.new_format(input_dir, genome_dir, replace_ext=False)
+    namemap = contighandler.namemap
     with open(files.joinpath(output_dir, "namemap.json"), "w") as f:
         f.write(json.dumps(namemap))
 
     logger.info("Annotating...")
     annotate_dir = files.joinpath(output_dir, "Annotated")
     files.create_if_not_exist(annotate_dir)
-    if use_docker:
-        docker.prokka(genome_dir, annotate_dir)
-    else:
-        c = [cmds.form_prokka_cmd(x, genome_dir, annotate_dir) for x in namemap.values()]
-        with ProcessPoolExecutor(int(threads / 2)) as executor:
-            executor.map(cmds.execute_cmd, c)
+    c = [cmds.form_prokka_cmd(x, genome_dir, annotate_dir) for x in namemap.keys()]
+    with ProcessPoolExecutor(int(threads / 2)) as executor:
+        executor.map(cmds.execute_cmd, c)
 
     logger.info("Moving protein CDS (.ffn) files...")
     ffn_dir = files.joinpath(output_dir, "FFN")
@@ -205,7 +187,7 @@ def annotate_configs(input_dir, output_dir, logger=None, threads=8, use_docker=T
     create_noncds(output_dir, gff_dir)
 
 
-def make_database(output_dir, logger=None, threads=2, use_docker=True):
+def make_database(output_dir, logger=None, threads=2):
     if not logger:
         lf = logs.LoggerFactory()
         lf.addConsoleHandler()
@@ -215,12 +197,9 @@ def make_database(output_dir, logger=None, threads=2, use_docker=True):
 
     logger.info("Calculating the pan genome...")
     min_identity = 95
-    if use_docker:
-        docker.roary(files.joinpath(output_dir, "GFF"), output_dir, min_identity, threads)
-    else:
-        c = cmds.form_roary_cmd(files.joinpath(output_dir, "GFF"), output_dir, min_identity, threads)
-        logger.info("Run roary with following command: " + c)
-        subprocess.run(c, shell=True)
+    c = cmds.form_roary_cmd(files.joinpath(output_dir, "GFF"), output_dir, min_identity, threads)
+    logger.info("Run roary with following command: " + c)
+    subprocess.run(c, shell=True)
 
     logger.info("Creating database")
     dbname = os.path.basename(output_dir[:-1] if output_dir.endswith("/") else output_dir)

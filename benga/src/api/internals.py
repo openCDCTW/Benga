@@ -1,9 +1,11 @@
 import datetime
-import os
 import json
-from src.utils import db
-from src.algorithms import profiling, phylogeny
-from src.utils import files
+import os
+
+from benga.src.algorithms import profiling, phylogeny
+from benga.src.utils import files
+
+from benga.src.utils import db
 
 PROJECT_HOME = os.getcwd()
 INDIR = os.path.join(PROJECT_HOME, "input")
