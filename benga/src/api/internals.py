@@ -3,9 +3,7 @@ import json
 import os
 
 from benga.src.algorithms import profiling, phylogeny
-from benga.src.utils import files
-
-from benga.src.utils import db
+from benga.src.utils import files, db
 
 PROJECT_HOME = os.getcwd()
 INDIR = os.path.join(PROJECT_HOME, "input")
