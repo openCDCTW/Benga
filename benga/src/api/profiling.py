@@ -8,9 +8,9 @@ from flask import abort, send_file
 from flask_restful import Resource, reqparse
 from werkzeug.datastructures import FileStorage
 
-from src.api import internals
-from src.utils import db, logs
-from src.utils.files import create_if_not_exist
+from benga.src.api import internals
+from benga.src.utils import db, logs
+from benga.src.utils.files import create_if_not_exist
 
 INDIR = "input"
 OUTDIR = "output"

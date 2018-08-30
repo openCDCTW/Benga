@@ -1,7 +1,7 @@
 import os
 import shutil
 from Bio import SeqIO
-from src.utils import seq
+from benga.src.utils import seq
 
 
 class ContigHandler:
