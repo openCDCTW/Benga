@@ -1,4 +1,4 @@
-import abc
+import re
 import functools
 import os
 import shutil
@@ -43,8 +43,8 @@ virulence_genes = ["lpfA", "lpfA_1", "lpfA_2", "lpfA_3", "lpfA_4", "lpfB", "lpfB
 
 
 def identify_loci(args):
-    filename, out_dir = args
-    subprocess.run(cmds.form_prodigal_cmd(filename, out_dir), shell=True)
+    filename, out_dir, model = args
+    subprocess.run(cmds.form_prodigal_cmd(filename, out_dir, model), shell=True)
     genome_id = files.fasta_filename(filename)
     target_file = os.path.join(out_dir, genome_id + ".locus.fna")
     alleles = {operations.make_seqid(rec.seq): (rec.seq, rec.seq.translate(table=11))
@@ -176,7 +176,9 @@ def profiling(output_dir, input_dir, database, threads, occr_level=None, selecte
     ref_len = make_ref_blastpdb(ref_db, database)
 
     logger.info("Identifying loci and allocating alleles...")
-    args = [(os.path.join(query_dir, filename), temp_dir)
+    model = re.search('[a-zA-Z]+\w[a-zA-Z]+', database).group(0)
+    logger.info("Use model is {}".format(model))
+    args = [(os.path.join(query_dir, filename), temp_dir, model)
             for filename in os.listdir(query_dir) if filename.endswith(".fa")]
     with ProcessPoolExecutor(threads) as executor:
         id_allele_list = list(executor.map(identify_loci, args))
