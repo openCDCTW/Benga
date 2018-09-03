@@ -182,7 +182,13 @@ def identify_pairs(df):
     return pairs
 
 
-def collect_high_occurrence_loci(pairs, database):
+def select_drop_loci(df):
+    drop1 = df[df["locus_id"].str.contains("group_")]["locus_id"]
+    drop2 = df[df["locus_id"].str.contains(r"_\d$")]["locus_id"]
+    return set(drop1) | set(drop2)
+
+
+def collect_high_occurrence_loci(pairs, database, drop_by_occur):
     query = "select locus_id, occurrence from loci;"
     occur = db.from_sql(query, database=database)
     drops = set()
@@ -190,7 +196,8 @@ def collect_high_occurrence_loci(pairs, database):
         ocr1 = occur.loc[occur["locus_id"] == id1, "occurrence"].iloc[0]
         ocr2 = occur.loc[occur["locus_id"] == id2, "occurrence"].iloc[0]
         drops.update([id2] if ocr1 >= ocr2 else [id1])
-    filtered_loci = set(occur["locus_id"]) - drops
+    drops2 = select_drop_loci(occur[occur["occurrence"] < drop_by_occur])
+    filtered_loci = set(occur["locus_id"]) - drops - drops2
     return filtered_loci
 
 
@@ -201,7 +208,7 @@ def query_covs(covs, key):
         return np.nan
 
 
-def filter_locus(blastp_out_file, database, ref_length):
+def filter_locus(blastp_out_file, database, ref_length, drop_by_occur):
     blastp_out = pd.read_csv(blastp_out_file, sep="\t", header=None, names=seq.BLAST_COLUMNS)
     blastp_out = blastp_out[blastp_out["pident"] >= 95]
     blastp_out = blastp_out[blastp_out["qseqid"] != blastp_out["sseqid"]]
@@ -212,8 +219,9 @@ def filter_locus(blastp_out_file, database, ref_length):
     blastp_out = blastp_out[(0.75 <= blastp_out["qlen/slen"]) & (blastp_out["qlen/slen"] < 1.25)]
     blastp_out = blastp_out[(0.75 <= blastp_out["qlen/alen"]) & (blastp_out["qlen/alen"] < 1.25)]
     pairs = identify_pairs(blastp_out)
-    filtered_loci = collect_high_occurrence_loci(pairs, database)
+    filtered_loci = collect_high_occurrence_loci(pairs, database, drop_by_occur)
     return filtered_loci
+
 
 
 def extract_database_ref_sequence(old_database, new_database, keep_loci):
@@ -234,7 +242,7 @@ def extract_database_ref_sequence(old_database, new_database, keep_loci):
     db.append_to_sql("pairs", pairs, new_database)
 
 
-def build_locus_library(output_dir, old_database, logger=None):
+def build_locus_library(output_dir, old_database, drop_by_occur, logger=None):
     if not logger:
         lf = logs.LoggerFactory()
         lf.addConsoleHandler()
@@ -247,7 +255,7 @@ def build_locus_library(output_dir, old_database, logger=None):
     db.create_pgadb_relations(new_database)
 
     blastp_out_file, ref_length = reference_self_blastp(output_dir, old_database)
-    filtered_loci = filter_locus(blastp_out_file, old_database, ref_length)
+    filtered_loci = filter_locus(blastp_out_file, old_database, ref_length, drop_by_occur)
     extract_database_ref_sequence(old_database, new_database, filtered_loci)
     os.remove(blastp_out_file)
     return new_database

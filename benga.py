@@ -40,6 +40,13 @@ def parse_args():
     )
 
     arg_parser.add_argument(
+        "--drop_by_occur",
+        type=float,
+        help="Level of occurrence to drop. (necessary for locus_library)",
+        metavar="DROP"
+    )
+
+    arg_parser.add_argument(
         "-t", "--threads",
         type=int,
         default=2,
@@ -79,6 +86,7 @@ def main():
     output_dir = args.output
     database = args.database
     occr_level = args.occr
+    drop_by_occur = args.drop_by_occur
     threads = args.threads
     debug = args.debug
     new_alleles = not args.no_new_alleles
@@ -96,7 +104,7 @@ def main():
         statistics.calculate_loci_coverage(output_dir, output_dir, database=database)
         statistics.calculate_allele_length(output_dir, database=database)
     if args.algorithm == "locus_library":
-        statistics.build_locus_library(output_dir, database)
+        statistics.build_locus_library(output_dir, database, drop_by_occur)
     if args.algorithm == "statistics":
         statistics.calculate_loci_coverage(input_dir, output_dir, database=database)
         statistics.calculate_allele_length(output_dir, database=database)
