@@ -5,7 +5,7 @@ from benga.src.utils import files
 
 DIR_PATH = os.path.dirname(os.path.realpath(__file__))
 BINARIES_PATH = os.path.abspath(os.path.join(DIR_PATH, "..", "..", "..", "binaries", "linux"))
-MODELS = os.path.abspath(os.path.join(DIR_PATH, "..", "..", 'models'))
+MODELS_PATH = os.path.abspath(os.path.join(DIR_PATH, "..", "..", 'models'))
 
 
 def form_prokka_cmd(newname, inpath, outpath):
@@ -24,7 +24,7 @@ def form_roary_cmd(inpath, outpath, ident_min, threads):
 def form_prodigal_cmd(infile, outpath, model):
     filename = files.fasta_filename(infile)
     args = [os.path.join(BINARIES_PATH, "prodigal"), "-c", "-m", "-q", "-g", "11",
-            "-t", os.path.join(MODELS, model + '.trn'),
+            "-t", os.path.join(MODELS_PATH, model + '.trn'),
             "-i", infile,
             "-d", os.path.join(outpath, filename + ".locus.fna"),
             "-o", os.path.join(outpath, filename + ".gbk")]
