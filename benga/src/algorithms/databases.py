@@ -7,7 +7,7 @@ from concurrent.futures import ProcessPoolExecutor
 
 import pandas as pd
 from Bio import SeqIO
-from benga.src.utils import files, cmds, operations, db, logs
+from benga.src.utils import seq, files, cmds, operations, db, logs
 
 
 def move_file(annotate_dir, dest_dir, ext):
@@ -115,6 +115,65 @@ def collect_allele_infos(profiles, ffn_dir):
     return new_profiles, freq
 
 
+def reference_self_blastp(output_dir, freq):
+    ref_recs = [seq.new_record(locus, counter.most_common(1)[0][0].translate(table=11)) for locus, counter in freq.items()]
+    ref_length = {rec.id: len(rec.seq) for rec in ref_recs}
+    ref_faa = files.joinpath(output_dir, "ref_seq.faa")
+    seq.save_records(ref_recs, ref_faa)
+
+    ref_db = files.joinpath(output_dir, "ref_db")
+    seq.compile_blastpdb(ref_faa, ref_db)
+
+    blastp_out_file = files.joinpath(output_dir, "ref_db.blastp.out")
+    seq.query_blastpdb(ref_faa, ref_db, blastp_out_file, seq.BLAST_COLUMNS)
+    return blastp_out_file, ref_length
+
+def identify_pairs(df):
+    sseqids = df["sseqid"].tolist()
+    pairs = []
+    counted = set()
+    for _, row in df.iterrows():
+        if row["qseqid"] in sseqids and not row["qseqid"] in counted:
+            counted.update(row["qseqid"])
+            counted.update(row["sseqid"])
+            pairs.append((row["qseqid"], row["sseqid"]))
+    return pairs
+
+
+def select_drop_loci(df):
+    drop1 = df[df["locus_id"].str.contains("group_")]["locus_id"]
+    drop2 = df[df["locus_id"].str.contains(r"_\d$")]["locus_id"]
+    return set(drop1) | set(drop2)
+
+
+def collect_high_occurrence_loci(pairs, total_isolates, drop_by_occur):
+    occur = db.from_sql("select locus_id, num_isolates from locus_meta;")
+    occur["occurrence"] = list(map(lambda x: round(x / total_isolates * 100, 2), occur["num_isolates"]))
+    drops = set()
+    for id1, id2 in pairs:
+        ocr1 = occur.loc[occur["locus_id"] == id1, "occurrence"].iloc[0]
+        ocr2 = occur.loc[occur["locus_id"] == id2, "occurrence"].iloc[0]
+        drops.update([id2] if ocr1 >= ocr2 else [id1])
+    drops2 = select_drop_loci(occur[occur["occurrence"] < drop_by_occur])
+    filtered_loci = set(occur["locus_id"]) - drops - drops2
+    return filtered_loci
+
+
+def filter_locus(blastp_out_file, ref_length, total_isolates, drop_by_occur):
+    blastp_out = pd.read_csv(blastp_out_file, sep="\t", header=None, names=seq.BLAST_COLUMNS)
+    blastp_out = blastp_out[blastp_out["pident"] >= 95]
+    blastp_out = blastp_out[blastp_out["qseqid"] != blastp_out["sseqid"]]
+    blastp_out["qlen"] = list(map(lambda x: ref_length[x], blastp_out["qseqid"]))
+    blastp_out["slen"] = list(map(lambda x: ref_length[x], blastp_out["sseqid"]))
+    blastp_out["qlen/slen"] = blastp_out["qlen"] / blastp_out["slen"]
+    blastp_out["qlen/alen"] = blastp_out["qlen"] / blastp_out["length"]
+    blastp_out = blastp_out[(0.75 <= blastp_out["qlen/slen"]) & (blastp_out["qlen/slen"] < 1.25)]
+    blastp_out = blastp_out[(0.75 <= blastp_out["qlen/alen"]) & (blastp_out["qlen/alen"] < 1.25)]
+    pairs = identify_pairs(blastp_out)
+    filtered_loci = collect_high_occurrence_loci(pairs, total_isolates, drop_by_occur)
+    return filtered_loci
+
+
 def to_allele_table(data, dbname):
     df = pd.DataFrame(data, columns=["allele_id", "dna_seq", "peptide_seq", "count"])
     df = df.groupby("allele_id").agg({"dna_seq": "first", "peptide_seq": "first", "count": "sum"})
@@ -144,6 +203,7 @@ def save_sequences(freq, dbname):
 def make_schemes(freq, total_isolates):
     refseqs = {locus: operations.make_seqid(counter.most_common(1)[0][0]) for locus, counter in freq.items()}
     schemes = db.from_sql("select locus_id, num_isolates from locus_meta;")
+    schemes = schemes[schemes["locus_id"].isin(refseqs.keys())]
     schemes["occurrence"] = list(map(lambda x: round(x/total_isolates * 100, 2), schemes["num_isolates"]))
     schemes["ref_allele"] = list(map(lambda x: refseqs[x], schemes["locus_id"]))
     schemes = schemes[["locus_id", "occurrence", "ref_allele"]]
@@ -187,7 +247,7 @@ def annotate_configs(input_dir, output_dir, logger=None, threads=8):
     create_noncds(output_dir, gff_dir)
 
 
-def make_database(output_dir, logger=None, threads=2):
+def make_database(output_dir, drop_by_occur, logger=None, threads=2):
     if not logger:
         lf = logs.LoggerFactory()
         lf.addConsoleHandler()
@@ -214,6 +274,17 @@ def make_database(output_dir, logger=None, threads=2):
     ffn_dir = files.joinpath(output_dir, "FFN")
     profile_file = files.joinpath(output_dir, "allele_profiles.tsv")
     profiles, freq = collect_allele_infos(profiles, ffn_dir)
+
+    logger.info("Checking duplicated loci by self-blastp...")
+    blastp_out_file, ref_length = reference_self_blastp(output_dir, freq)
+
+    logger.info("Filter out high identity loci and drop loci which occurrence less than {}...".format(drop_by_occur))
+    filtered_loci = filter_locus(blastp_out_file, ref_length, total_isolates, drop_by_occur)
+    os.remove(blastp_out_file)
+
+    logger.info("Updating and saving profiles...")
+    freq = {l: freq[l] for l in filtered_loci}
+    profiles = profiles[profiles.index.isin(filtered_loci)]
     profiles.to_csv(profile_file, sep="\t")
 
     logger.info("Saving allele sequences...")

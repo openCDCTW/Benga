@@ -12,7 +12,7 @@ def parse_args():
     arg_parser.add_argument(
         "-a", "--algorithm",
         required=True,
-        choices=["make_db", "profiling", "MLST", "virulence", "tree", "setupdb", "statistics", "locus_library"],
+        choices=["make_db", "profiling", "tree", "setupdb", "statistics"],
         help="Execute specified algorithm. (necessary)"
     )
 
@@ -28,7 +28,7 @@ def parse_args():
 
     arg_parser.add_argument(
         "-d", "--database",
-        help="Pan genome allele database for query. (necessary for profiling, locus_library)"
+        help="Pan genome allele database for query. (necessary for profiling)"
     )
 
     arg_parser.add_argument(
@@ -42,7 +42,7 @@ def parse_args():
     arg_parser.add_argument(
         "--drop_by_occur",
         type=float,
-        help="Level of occurrence to drop. (necessary for locus_library)",
+        help="Level of occurrence to drop. (necessary for make_db)",
         metavar="DROP"
     )
 
@@ -100,11 +100,9 @@ def main():
         db.create_profiling_relations()
     if args.algorithm == "make_db":
         databases.annotate_configs(input_dir, output_dir, threads=threads)
-        database = databases.make_database(output_dir, threads=threads)
+        database = databases.make_database(output_dir, drop_by_occur, threads=threads)
         statistics.calculate_loci_coverage(output_dir, output_dir, database=database)
         statistics.calculate_allele_length(output_dir, database=database)
-    if args.algorithm == "locus_library":
-        statistics.build_locus_library(output_dir, database, drop_by_occur)
     if args.algorithm == "statistics":
         statistics.calculate_loci_coverage(input_dir, output_dir, database=database)
         statistics.calculate_allele_length(output_dir, database=database)
