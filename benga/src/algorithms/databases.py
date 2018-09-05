@@ -275,7 +275,7 @@ def make_database(output_dir, drop_by_occur, logger=None, threads=2):
     profile_file = files.joinpath(output_dir, "allele_profiles.tsv")
     profiles, freq = collect_allele_infos(profiles, ffn_dir)
 
-    logger.info("Checking duplicating loci by self-blastp...")
+    logger.info("Checking duplicated loci by self-blastp...")
     blastp_out_file, ref_length = reference_self_blastp(output_dir, freq)
 
     logger.info("Filter out high identity loci and drop loci which occurrence less than {}...".format(drop_by_occur))
