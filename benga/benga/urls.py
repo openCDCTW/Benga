@@ -20,6 +20,9 @@ from rest_framework import routers
 from profiling import views
 
 router = routers.DefaultRouter()
+router.register(r'profiling', views.ProfileViewSet)
+router.register(r'sequence', views.SequenceViewSet)
+router.register(r'uploadbatch', views.UploadBatchViewSet)
 
 urlpatterns = [
     url(r'^', include(router.urls)),
