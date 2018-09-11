@@ -42,6 +42,7 @@ def parse_args():
     arg_parser.add_argument(
         "--drop_by_occur",
         type=float,
+        default=0.0,
         help="Level of occurrence to drop. (necessary for make_db)",
         metavar="DROP"
     )
