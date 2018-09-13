@@ -15,16 +15,23 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path
+from django.conf import settings
 from django.conf.urls import url, include
+from django.conf.urls.static import static
 from rest_framework import routers
 from profiling import views
 
 router = routers.DefaultRouter()
-router.register(r'profiling', views.ProfileViewSet)
-router.register(r'sequence', views.SequenceViewSet)
-router.register(r'uploadbatch', views.UploadBatchViewSet)
 
 urlpatterns = [
     url(r'^', include(router.urls)),
     path('admin/', admin.site.urls),
-]
+    path('upload/', views.UploadBatchList.as_view()),
+    path('upload/<uuid:pk>/', views.UploadBatchDetail.as_view()),
+    path('sequence/', views.SequenceList.as_view()),
+    path('sequence/<uuid:pk>/', views.SequenceDetail.as_view()),
+    path('profile/', views.ProfileList.as_view()),
+    path('profile/<uuid:pk>/', views.ProfileDetail.as_view()),
+    path('dendrogram/', views.DendrogramList.as_view()),
+    path('dendrogram/<uuid:pk>/', views.DendrogramDetail.as_view()),
+] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
