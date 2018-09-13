@@ -129,35 +129,3 @@ def create_pgadb_relations(dbname, user=None, passwd=None):
                        Column("is_paralog", postgresql.BOOLEAN))
     metadata.create_all(engine)
     engine.dispose()
-
-
-def create_profiling_relations(user=None, passwd=None):
-    global DBCONFIG
-    DBCONFIG["database"] = "profiling"
-    if user:
-        DBCONFIG["username"] = user
-    if passwd:
-        DBCONFIG["password"] = passwd
-    engine = create_engine(URL(**DBCONFIG))
-    metadata = MetaData()
-    upload = Table("upload", metadata,
-                   Column("seq_id", postgresql.CHAR(64), primary_key=True, nullable=False),
-                   Column("batch_id", postgresql.CHAR(32), nullable=False),
-                   Column("created", postgresql.TIMESTAMP(timezone=True), nullable=False),
-                   Column("filename", postgresql.TEXT, nullable=False),
-                   Column("file", postgresql.BYTEA, nullable=False))
-    profile = Table("profile", metadata,
-                    Column("id", postgresql.CHAR(32), primary_key=True, nullable=False),
-                    Column("created", postgresql.TIMESTAMP(timezone=True), nullable=False),
-                    Column("file", postgresql.TEXT, nullable=False),
-                    Column("occurrence", postgresql.SMALLINT, nullable=False),
-                    Column("database", postgresql.TEXT, nullable=False))
-    dendrogram = Table("dendrogram", metadata,
-                       Column("id", postgresql.CHAR(32), primary_key=True, nullable=False),
-                       Column("created", postgresql.TIMESTAMP(timezone=True), nullable=False),
-                       Column("png_file", postgresql.TEXT, nullable=False),
-                       Column("pdf_file", postgresql.TEXT, nullable=False),
-                       Column("svg_file", postgresql.TEXT, nullable=False),
-                       Column("newick_file", postgresql.TEXT, nullable=False))
-    metadata.create_all(engine)
-    engine.dispose()

@@ -12,7 +12,7 @@ def parse_args():
     arg_parser.add_argument(
         "-a", "--algorithm",
         required=True,
-        choices=["make_db", "profiling", "tree", "setupdb", "statistics"],
+        choices=["make_db", "profiling", "tree", "statistics"],
         help="Execute specified algorithm. (necessary)"
     )
 
@@ -93,12 +93,6 @@ def main():
     new_alleles = not args.no_new_alleles
     generate_profiles = not args.no_profiles
 
-    if args.algorithm == "setupdb":
-        lf = logs.LoggerFactory()
-        lf.addConsoleHandler()
-        db.load_database_config(logger=lf.create())
-        db.createdb("profiling")
-        db.create_profiling_relations()
     if args.algorithm == "make_db":
         databases.annotate_configs(input_dir, output_dir, threads=threads)
         database = databases.make_database(output_dir, drop_by_occur, threads=threads)
