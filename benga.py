@@ -1,6 +1,7 @@
 import argparse
 import datetime
 import os.path
+import subprocess
 
 from benga.src.algorithms import databases, profiling, phylogeny, statistics
 from benga.src.utils import db, logs
@@ -120,6 +121,8 @@ def main():
         dendro.scipy_tree(os.path.join(output_dir, "{}.pdf".format(filename)))
         dendro.scipy_tree(os.path.join(output_dir, "{}.svg".format(filename)))
         dendro.scipy_tree(os.path.join(output_dir, "{}.png".format(filename)))
+        subprocess.call(['libreoffice', '--headless', '--convert-to', 'emf',  '--outdir', output_dir,
+                         os.path.join(output_dir, "{}.svg".format(filename))])
 
 
 if __name__ == "__main__":
