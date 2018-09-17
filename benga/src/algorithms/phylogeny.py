@@ -60,23 +60,25 @@ def hamming(xs, ys):
     return sum(xs.ne(ys) & ~(xs.isnull() & ys.isnull()))
 
 
-def distance(pair):
-    d = Counter(pair[0] == pair[1])[0]
-    return (pair[0].name, pair[1].name ,d)
+def distance(array_1, array_2, name_1, name_2):
+    d = Counter(array_1 == array_2)[False]
+    return name_1, name_2, d
 
 
-def distance_matrix(profile):
+def distance_matrix_new(profile):
     profile = profile.fillna('0')
-    profile_columns = list(profile.columns)
+    profile = profile.transpose()
+    profile_array = profile.values
+    profile_index = [i for i in range(len(profile.index))]
     pairs = []
-    for i in range(len(profile_columns)):
-        strain_1 = profile_columns.pop(0)
-        pairs.append((profile[strain_1], profile[strain_1]))
-        for strain_2 in profile_columns:
-            pairs.append((profile[strain_1], profile[strain_2]))
-    d_pairs = map(distance, pairs)
+    for i in range(len(profile_index)):
+        index_1 = profile_index.pop(0)
+        pairs.append((profile.index[index_1], profile.index[index_1], 0))
+        for index_2 in profile_index:
+            dis = distance(profile_array[index_1], profile_array[index_2], profile.index[index_1], profile.index[index_2])
+            pairs.append(dis)
     distances = pd.DataFrame()
-    for pair in d_pairs:
+    for pair in pairs:
         distances.loc[pair[0], pair[1]] = distances.loc[pair[1], pair[0]] = pair[2]
     return distances
 
