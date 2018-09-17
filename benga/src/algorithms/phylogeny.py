@@ -61,11 +61,11 @@ def hamming(xs, ys):
 
 
 def distance(array_1, array_2, name_1, name_2):
-    d = Counter(array_1 == array_2)[False]
-    return name_1, name_2, d
+    genome_diff = Counter(array_1 == array_2)[False]
+    return name_1, name_2, genome_diff
 
 
-def distance_matrix_new(profile):
+def distance_matrix(profile):
     profile = profile.fillna('0')
     profile = profile.transpose()
     profile_array = profile.values
@@ -75,8 +75,8 @@ def distance_matrix_new(profile):
         index_1 = profile_index.pop(0)
         pairs.append((profile.index[index_1], profile.index[index_1], 0))
         for index_2 in profile_index:
-            dis = distance(profile_array[index_1], profile_array[index_2], profile.index[index_1], profile.index[index_2])
-            pairs.append(dis)
+            dist = distance(profile_array[index_1], profile_array[index_2], profile.index[index_1], profile.index[index_2])
+            pairs.append(dist)
     distances = pd.DataFrame()
     for pair in pairs:
         distances.loc[pair[0], pair[1]] = distances.loc[pair[1], pair[0]] = pair[2]
