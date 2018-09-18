@@ -1,4 +1,5 @@
 import hashlib
+import os.path
 from rest_framework import serializers
 from profiling.models import UploadBatch, Sequence, Profile, Dendrogram
 
@@ -16,7 +17,8 @@ class SequenceSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         validated_data["filename"] = hashlib.sha256(validated_data["file"].read()).hexdigest()
-        validated_data["file"].name = validated_data["filename"] + ".fa"
+        validated_data["file"].name = os.path.join(validated_data["batch_id"],
+                                                   validated_data["filename"] + ".fa")
         return Sequence.objects.create(**validated_data)
 
 

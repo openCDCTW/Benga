@@ -1,12 +1,14 @@
 numpy
 scipy
 pandas
-pyfunctional
 fastcluster
 matplotlib
 biopython
 ete3
 django
+channels
+channels_redis
+redis
 djangorestframework
 uWSGI
 psycopg2-binary

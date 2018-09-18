@@ -1,13 +1,9 @@
 import os
-
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import seaborn as sns
-
-from benga.src.utils import db, files, logs
-from benga.src.utils import seq
-
+from benga.src.utils import db, logs
 plt.style.use("ggplot")
 
 
