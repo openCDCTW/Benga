@@ -10,7 +10,8 @@ channels
 channels_redis
 redis
 djangorestframework
-uWSGI
+gunicorn
+uvicorn
 psycopg2-binary
 sqlalchemy
 seaborn
