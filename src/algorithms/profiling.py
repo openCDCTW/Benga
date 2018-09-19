@@ -1,15 +1,17 @@
-import re
 import functools
 import os
+import re
 import shutil
 import subprocess
 from collections import Counter
 from concurrent.futures import ProcessPoolExecutor
+
 import pandas as pd
 from Bio import SeqIO
-from benga.src.algorithms.bionumerics import to_bionumerics_format
-from benga.src.utils import files, cmds, operations, logs, seq
-from benga.src.utils.db import load_database_config, from_sql, append_to_sql, to_sql, table_to_sql
+
+from src.algorithms.bionumerics import to_bionumerics_format
+from src.utils import files, cmds, operations, logs, seq
+from src.utils.db import load_database_config, from_sql, append_to_sql, to_sql, table_to_sql
 
 MLST = ["aroC_1", "aroC_2", "aroC_3", "dnaN", "hemD", "hisD", "purE", "sucA_1", "sucA_2", "thrA_2", "thrA_3"]
 virulence_genes = ["lpfA", "lpfA_1", "lpfA_2", "lpfA_3", "lpfA_4", "lpfB", "lpfB_1", "lpfB_2", "lpfC", "lpfC_1",
