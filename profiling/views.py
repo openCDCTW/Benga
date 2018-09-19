@@ -1,4 +1,4 @@
-from rest_framework import viewsets, mixins, generics
+from rest_framework import mixins, generics
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status

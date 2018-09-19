@@ -7,7 +7,8 @@ from concurrent.futures import ProcessPoolExecutor
 
 import pandas as pd
 from Bio import SeqIO
-from benga.src.utils import seq, files, cmds, operations, db, logs
+
+from src.utils import seq, files, cmds, operations, db, logs
 
 
 def move_file(annotate_dir, dest_dir, ext):

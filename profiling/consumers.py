@@ -1,15 +1,21 @@
 from channels.generic.websocket import AsyncWebsocketConsumer
 import json
+import datetime
+import os
+from src.algorithms import profiling, phylogeny
+from src.utils import files, db
+from profiling.models import UploadBatch
+from django.http import Http404
 
 
 class ProfilingConsumer(AsyncWebsocketConsumer):
     async def connect(self):
-        self.room_name = self.scope['url_route']['kwargs']['room_name']
-        self.room_group_name = 'chat_%s' % self.room_name
+        self.batch_id = self.scope['url_route']['kwargs']['pk']
+        self.group_batch_id = 'profiling_{}'.format(self.batch_id)
 
         # Join room group
         await self.channel_layer.group_add(
-            self.room_group_name,
+            self.group_batch_id,
             self.channel_name
         )
 
@@ -18,7 +24,7 @@ class ProfilingConsumer(AsyncWebsocketConsumer):
     async def disconnect(self, close_code):
         # Leave room group
         await self.channel_layer.group_discard(
-            self.room_group_name,
+            self.group_batch_id,
             self.channel_name
         )
 
@@ -29,7 +35,7 @@ class ProfilingConsumer(AsyncWebsocketConsumer):
 
         # Send message to room group
         await self.channel_layer.group_send(
-            self.room_group_name,
+            self.group_batch_id,
             {
                 'type': 'chat_message',
                 'message': message
@@ -44,6 +50,12 @@ class ProfilingConsumer(AsyncWebsocketConsumer):
         await self.send(text_data=json.dumps({
             'message': message
         }))
+
+    def get_object(self, pk):
+        try:
+            return UploadBatch.objects.get(pk=pk)
+        except UploadBatch.DoesNotExist:
+            raise Http404
 
     # async def do_profiling(self, batch_id, database, occr_level):
     #     input_dir = os.path.join(INDIR, batch_id)

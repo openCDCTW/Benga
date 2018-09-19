@@ -3,8 +3,8 @@ import datetime
 import os.path
 import subprocess
 
-from benga.src.algorithms import databases, profiling, phylogeny, statistics
-from benga.src.utils import db, logs
+from benga.src.algorithms import profiling, phylogeny, statistics
+from src.algorithms import databases
 
 
 def parse_args():
