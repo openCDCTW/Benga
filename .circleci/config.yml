@@ -45,6 +45,13 @@ jobs:
           paths:
             - ./venv
           key: v1-dependencies-{{ checksum "requirements.txt" }}
+
+      - run:
+          name: initiate database
+          command: |
+            . venv/bin/activate
+            python manage.py makemigrations
+            python manage.py migrate
         
       # run tests!
       # this example uses Django's built-in test-runner
