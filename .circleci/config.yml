@@ -6,9 +6,8 @@ version: 2
 jobs:
   build:
     branches:
-      branches:
-        only:
-          - develop
+      only:
+        - develop
     docker:
       # specify the version you desire here
       # use `-browsers` prefix for selenium tests, e.g. `3.6.1-browsers`
@@ -41,23 +40,21 @@ jobs:
             . venv/bin/activate
             pip install -r requirements.txt
 
-      - save_cache:
-          paths:
-            - ./venv
-          key: v1-dependencies-{{ checksum "requirements.txt" }}
-
       - run:
           name: initiate database
           command: |
             . venv/bin/activate
             python manage.py makemigrations
             python manage.py migrate
+
+      - save_cache:
+          paths:
+            - ./venv
+          key: v1-dependencies-{{ checksum "requirements.txt" }}
         
-      # run tests!
-      # this example uses Django's built-in test-runner
-      # other common Python testing frameworks include pytest and nose
-      # https://pytest.org
-      # https://nose.readthedocs.io
+  test:
+    steps:
+      - checkout
       - run:
           name: run tests
           command: |
@@ -67,3 +64,9 @@ jobs:
       - store_artifacts:
           path: test-reports
           destination: test-reports
+workflows:
+  version: 2
+  build_and_test:
+    jobs:
+      - build
+      - test
