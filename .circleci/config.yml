@@ -15,11 +15,11 @@ jobs:
       - image: circleci/python:3.6.1
         environment:
           PG_HOST: localhost
-          PG_USER: centrallab
+          PG_USER: circleci
 
       - image: circleci/postgres:9.6.10-alpine-ram
         environment:
-          POSTGRES_USER: centrallab
+          POSTGRES_USER: circleci
           POSTGRES_DB: benga
 
     working_directory: ~/repo
