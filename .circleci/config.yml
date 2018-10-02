@@ -54,8 +54,8 @@ jobs:
           name: run tests
           command: |
             . venv/bin/activate
-            python manage.py test
             mkdir ./test-results
+            python manage.py test > ./test-results/django.txt
 
       - store_artifacts:
           path: test-reports
