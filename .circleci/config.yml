@@ -54,6 +54,7 @@ jobs:
           command: |
             . venv/bin/activate
             python manage.py test
+            mkdir ./test-reports
 
       - store_artifacts:
           path: test-reports
