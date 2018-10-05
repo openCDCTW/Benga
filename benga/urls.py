@@ -16,22 +16,14 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path
 from django.conf import settings
-from django.conf.urls import url, include
+from django.conf.urls import include
 from django.conf.urls.static import static
 from rest_framework import routers
-from profiling import views
 
 router = routers.DefaultRouter()
 
 urlpatterns = [
-    url(r'^', include(router.urls)),
+    path('api/', include(router.urls)),
     path('admin/', admin.site.urls),
-    path('upload/', views.UploadBatchList.as_view(), name="upload-list"),
-    path('upload/<uuid:pk>/', views.UploadBatchDetail.as_view(), name="upload-detail"),
-    path('sequence/', views.SequenceList.as_view(), name="sequence-list"),
-    path('sequence/<uuid:pk>/', views.SequenceDetail.as_view(), name="upload-detail"),
-    path('profile/', views.ProfileList.as_view(), name="profile-list"),
-    path('profile/<uuid:pk>/', views.ProfileDetail.as_view(), name="upload-detail"),
-    path('dendrogram/', views.DendrogramList.as_view(), name="dendrogram-list"),
-    path('dendrogram/<uuid:pk>/', views.DendrogramDetail.as_view(), name="upload-detail"),
+    path('api/profiling/', include("profiling.urls")),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
