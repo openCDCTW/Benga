@@ -1,9 +1,9 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 import DropzoneComponent from 'react-dropzone-component';
-import Menu from './menu.jsx';
-import Options from './Options.jsx'
-import Button from './Buttons.jsx'
+import Header from './header.jsx';
+import Footer from './footer.jsx';
+import Upload from './test.jsx';
 
 // Render
 
@@ -56,25 +56,21 @@ class Main extends React.Component {
 
         return (
             <div>
-                <div className="menu">
-                    <Menu />
+                <div>
+                <Header />
                 </div>
                 <br />
-
-                <div> Genome contig files (in FASTA format): </div>
-                <br/>
+                <br />
                 <DropzoneComponent config={config} eventHandlers={eventHandlers} djsConfig={djsConfig} />
-                
                 <br />
-                <div className="Options">
-                    <Options />
-                </div>
-                <br />
-                
                 <button onClick={this.handlePost.bind(this)}> Upload </button> &nbsp;&nbsp;&nbsp;&nbsp;
                 <button onClick={this.reload}> Reset </button>
+                <br />
+                <br />
+                <div>
+                <Footer />
+                </div>
 
-                
             </div>
         );
     }

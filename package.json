@@ -1,7 +1,7 @@
 {
-  "name": "benga_with_react",
-  "version": "1.0.0",
-  "description": "On job training!!",
+  "name": "Frontend_package",
+  "version": "v0.1.0",
+  "description": "Tools used in frontend",
   "main": "index.js",
   "scripts": {
     "dev": "webpack --mode development ./frontend/src/index.js --output ./frontend/static/frontend/main.js",

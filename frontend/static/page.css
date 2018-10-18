@@ -56,9 +56,8 @@ button:active{
 
 footer {
     height:32px;
-    width:100%;
-    cellpadding: 1;
-    position: absolute;
+    text-align: center;
+    cellpadding: 0;
     color: #FFFFFF;
     background-color:black;
 }
