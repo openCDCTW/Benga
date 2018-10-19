@@ -16,7 +16,6 @@ class ProfilingConsumer(AsyncWebsocketConsumer):
     async def connect(self):
         self.batch_id = self.scope['url_route']['kwargs']['batch_id']
         self.channel_id = 'profiling_{}'.format(self.batch_id)
-        print("connected!")
 
         await self.channel_layer.group_add(
             self.channel_id,
@@ -26,14 +25,12 @@ class ProfilingConsumer(AsyncWebsocketConsumer):
         await self.accept()
 
     async def disconnect(self, close_code):
-        print("disconnected!")
         await self.channel_layer.group_discard(
             self.channel_id,
             self.channel_name
         )
 
     async def receive(self, text_data):
-        print("received!")
         batch = await self.get_object(self.batch_id)
         serializer = UploadBatchSerializer(batch, data={"id": self.batch_id})
         if serializer.is_valid():
@@ -84,6 +81,7 @@ class ProfilingConsumer(AsyncWebsocketConsumer):
         dendro.scipy_tree(svg_filename)
         png_filename = os.path.join(output_dir, "dendrogram.png")
         dendro.scipy_tree(png_filename)
+        # subprocess.call(['libreoffice', '--headless', '--convert-to', 'emf', '--outdir', output_dir, svg_filename])
 
         profile_data = {"id": batch_id, "file": File(open(profile_filename)),
                         "occurrence": occr_level, "database": database}

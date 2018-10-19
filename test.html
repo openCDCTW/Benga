@@ -7,13 +7,13 @@
 <body>
 
 <script>
-socket = new WebSocket("ws://127.0.0.1:8000/ws/profiling/745e26aa-b38f-46fb-abdc-5a1aab366066/");
+socket = new WebSocket("ws://127.0.0.1:8000/ws/profiling/3cc784b2-4026-4516-852e-38705d6667d3/");
 socket.onmessage = function(e) {
     consoe.log(e.data);
 }
 socket.onopen = function() {
 	var data = {
-		"database": "salmonella_enterica",
+		"database": "Salmonella_enterica_new",
 		"occr_level": 95,
 	};
     socket.send(JSON.stringify(data));
