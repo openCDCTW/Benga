@@ -19,10 +19,6 @@ class ProfileSerializer(serializers.ModelSerializer):
         model = Profile
         fields = ('id', 'created', 'file', 'occurrence', 'database')
 
-    def create(self, validated_data):
-        validated_data["file"].name = "cgmlst-" + str(validated_data["id"].id)[0:8] + ".tsv"
-        return Profile.objects.create(**validated_data)
-
 
 class DendrogramSerializer(serializers.ModelSerializer):
     class Meta:

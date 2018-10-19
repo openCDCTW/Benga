@@ -1,15 +1,15 @@
-from channels.generic.websocket import AsyncWebsocketConsumer
-from channels.db import database_sync_to_async
 import json
-import shutil
 import os
-from src.algorithms import profiling, phylogeny
-from src.utils import files
-from profiling.models import UploadBatch
-from profiling.serializers import UploadBatchSerializer, ProfileSerializer, DendrogramSerializer
-from django.http import Http404
+import shutil
+from channels.db import database_sync_to_async
+from channels.exceptions import StopConsumer
+from channels.generic.websocket import AsyncWebsocketConsumer
 from django.conf import settings
 from django.core.files import File
+from profiling.models import UploadBatch
+from profiling.serializers import UploadBatchSerializer, ProfileSerializer, DendrogramSerializer
+from src.algorithms import profiling, phylogeny
+from src.utils import files
 
 
 class ProfilingConsumer(AsyncWebsocketConsumer):
@@ -29,6 +29,7 @@ class ProfilingConsumer(AsyncWebsocketConsumer):
             self.channel_id,
             self.channel_name
         )
+        raise StopConsumer
 
     async def receive(self, text_data):
         batch = await self.get_object(self.batch_id)
@@ -45,8 +46,6 @@ class ProfilingConsumer(AsyncWebsocketConsumer):
                     "occr_level": data_json["occr_level"],
                 }
             )
-        else:
-            pass  # response not found
         await self.close()
 
     @database_sync_to_async
@@ -54,7 +53,7 @@ class ProfilingConsumer(AsyncWebsocketConsumer):
         try:
             return UploadBatch.objects.get(pk=batch_id)
         except UploadBatch.DoesNotExist:
-            raise Http404
+            return self.close()
 
     @database_sync_to_async
     def do_profiling(self, event):

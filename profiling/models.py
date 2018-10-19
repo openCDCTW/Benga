@@ -1,5 +1,5 @@
-import uuid
 import hashlib
+import uuid
 from django.db import models
 
 
@@ -9,23 +9,23 @@ def sequences_path(instance, filename):
 
 
 def profiles_path(instance, filename):
-    return "profiles/{0}/{1}".format(instance.id, "cgmlst-" + str(instance.id)[0:8] + ".tsv")
+    return "profiles/{0}/{1}".format(instance.id, "profile-" + str(instance.id)[0:8] + ".tsv")
 
 
 def dendrograms_png_path(instance, filename):
-    return "dendrograms_png/{0}/{1}".format(instance.id, "cgmlst-" + str(instance.id)[0:8] + ".png")
+    return "dendrograms_png/{0}/{1}".format(instance.id, "dendrogram-" + str(instance.id)[0:8] + ".png")
 
 
 def dendrograms_pdf_path(instance, filename):
-    return "dendrograms_pdf/{0}/{1}".format(instance.id, "cgmlst-" + str(instance.id)[0:8] + ".pdf")
+    return "dendrograms_pdf/{0}/{1}".format(instance.id, "dendrogram-" + str(instance.id)[0:8] + ".pdf")
 
 
 def dendrograms_svg_path(instance, filename):
-    return "dendrograms_svg/{0}/{1}".format(instance.id, "cgmlst-" + str(instance.id)[0:8] + ".svg")
+    return "dendrograms_svg/{0}/{1}".format(instance.id, "dendrogram-" + str(instance.id)[0:8] + ".svg")
 
 
 def dendrograms_newick_path(instance, filename):
-    return "dendrograms_newick/{0}/{1}".format(instance.id, "cgmlst-" + str(instance.id)[0:8] + ".newick")
+    return "dendrograms_newick/{0}/{1}".format(instance.id, "dendrogram-" + str(instance.id)[0:8] + ".newick")
 
 
 class UploadBatch(models.Model):
