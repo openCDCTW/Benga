@@ -1,5 +1,6 @@
 import hashlib
 import os.path
+import datetime
 from rest_framework import serializers
 from profiling.models import UploadBatch, Sequence, Profile, Dendrogram
 
@@ -28,7 +29,7 @@ class ProfileSerializer(serializers.ModelSerializer):
         fields = ('id', 'created', 'file', 'occurrence', 'database')
 
     def create(self, validated_data):
-        validated_data["file"].name = "cgmlst-" + str(validated_data["id"].id) + ".tsv"
+        validated_data["file"].name = "cgmlst-" + str(validated_data["id"].id)[0:8] + ".tsv"
         return Profile.objects.create(**validated_data)
 
 
@@ -38,8 +39,9 @@ class DendrogramSerializer(serializers.ModelSerializer):
         fields = ('id', 'created', 'png_file', 'pdf_file', 'svg_file', 'newick_file')
 
     def create(self, validated_data):
-        validated_data["png_file"].name = "cgmlst-" + str(validated_data["id"].id) + ".png"
-        validated_data["pdf_file"].name = "cgmlst-" + str(validated_data["id"].id) + ".pdf"
-        validated_data["svg_file"].name = "cgmlst-" + str(validated_data["id"].id) + ".svg"
-        validated_data["newick_file"].name = "cgmlst-" + str(validated_data["id"].id) + ".newick"
+        now = datetime.datetime.now()
+        validated_data["png_file"].name = "cgmlst-" + str(validated_data["id"].id)[0:8] + ".png"
+        validated_data["pdf_file"].name = "cgmlst-" + str(validated_data["id"].id)[0:8] + ".pdf"
+        validated_data["svg_file"].name = "cgmlst-" + str(validated_data["id"].id)[0:8] + ".svg"
+        validated_data["newick_file"].name = "cgmlst-" + str(validated_data["id"].id)[0:8] + ".newick"
         return Dendrogram.objects.create(**validated_data)
