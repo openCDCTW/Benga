@@ -1,0 +1,147 @@
+/* React Filepicker Example CSS */
+
+header {
+    cellpadding: 0;
+    text-align: center;
+    height: 64px;
+    background-color: #2E9286;
+}
+
+body {
+    font-family: sans-serif;
+}
+
+h2 a {
+    text-decoration: none;
+    color: #000;
+}
+
+body {
+    background-color: #F2F2F2;
+}
+
+div.example {
+    margin-left: 10px;
+}
+
+div.intro {
+    margin-left: 20px;
+/*    color: #000;*/
+}
+
+#host {
+    width: 1000px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+/*button {
+    background-color: #4CAF50;
+    border: none;
+    font-size: 16px;
+    border-radius: 8px;
+    color: white;
+    padding:6px 14px;
+    text-align: center; 
+    box-shadow: 0 9px #999;
+}
+button:hover{background-color: #3E8E41}
+button:active{
+    background-color: #3E8E41;
+    box-shadow: 0 5px #666;
+    transform: translateY(4px);
+}
+*/
+
+
+footer {
+    height:32px;
+    text-align: center;
+    cellpadding: 0;
+    color: #FFFFFF;
+    background-color:black;
+}
+
+.filepicker.dropzone .dz-preview.dz-image-preview {
+    background: none;
+}
+
+.filepicker.dropzone .dz-preview.dz-image-preview .dz-image {
+    border-radius: 5px;
+}
+
+
+/* Filepicker CSS */
+.filepicker {
+    font-family: sans-serif;
+}
+
+div.filepicker {
+    text-align: center;
+    padding: 5px;
+    background-color: #FFFFFF;
+    border-radius: 5px;
+    min-height: 60px;
+    border: 2px dashed #0B90E2;
+}
+
+/* Icon */
+.filepicker-file-icon
+{
+    position: relative;
+
+    display: inline-block;
+
+    margin: 1.5em 0 2.5em 0;
+    padding-left: 45px;
+
+    color: black;
+}
+.filepicker-file-icon::before
+{
+    position: absolute;
+    top: -7px;
+    left: 0;
+
+    width: 29px; 
+    height: 34px;
+
+
+    content: '';
+
+    border: solid 2px #7F7F7F;
+    border-radius: 2px;
+}
+.filepicker-file-icon::after
+{
+    font-size: 11px;
+    line-height: 1.3;
+
+    position: absolute;
+    top: 9px;
+    left: -4px;
+
+    padding: 0 2px;
+
+    content: 'file';
+    content: attr(data-filetype);
+    text-align: right;
+    letter-spacing: 1px;
+/*    text-transform: uppercase;*/
+
+    color: #fff;
+    background-color: #000;
+}
+.filepicker-file-icon .fileCorner
+{
+    position: absolute;
+    top: -7px;
+    left: 22px;
+
+    width: 0;
+    height: 0;
+
+    border-width: 11px 0 0 11px;
+    border-style: solid;
+    border-color: white transparent transparent #920035;
+}
