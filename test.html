@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+
+<script>
+socket = new WebSocket("ws://127.0.0.1:8000/ws/profiling/3cc784b2-4026-4516-852e-38705d6667d3/");
+socket.onmessage = function(e) {
+    consoe.log(e.data);
+}
+socket.onopen = function() {
+	var data = {
+		"database": "Salmonella_enterica_new",
+		"occr_level": 95,
+	};
+    socket.send(JSON.stringify(data));
+}
+// Call onopen directly if socket is already open
+if (socket.readyState == WebSocket.OPEN) socket.onopen();
+</script>
+
+</body>
+</html>

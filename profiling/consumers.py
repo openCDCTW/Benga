@@ -1,95 +1,102 @@
-from channels.generic.websocket import AsyncWebsocketConsumer
 import json
-import datetime
 import os
-from src.algorithms import profiling, phylogeny
-from src.utils import files, db
+import shutil
+from channels.db import database_sync_to_async
+from channels.exceptions import StopConsumer
+from channels.generic.websocket import AsyncWebsocketConsumer
+from django.conf import settings
+from django.core.files import File
 from profiling.models import UploadBatch
-from django.http import Http404
+from profiling.serializers import UploadBatchSerializer, ProfileSerializer, DendrogramSerializer
+from src.algorithms import profiling, phylogeny
+from src.utils import files
 
 
 class ProfilingConsumer(AsyncWebsocketConsumer):
     async def connect(self):
-        self.batch_id = self.scope['url_route']['kwargs']['pk']
-        self.group_batch_id = 'profiling_{}'.format(self.batch_id)
+        self.batch_id = self.scope['url_route']['kwargs']['batch_id']
+        self.channel_id = 'profiling_{}'.format(self.batch_id)
 
-        # Join room group
         await self.channel_layer.group_add(
-            self.group_batch_id,
+            self.channel_id,
             self.channel_name
         )
 
         await self.accept()
 
     async def disconnect(self, close_code):
-        # Leave room group
         await self.channel_layer.group_discard(
-            self.group_batch_id,
+            self.channel_id,
             self.channel_name
         )
+        raise StopConsumer
 
-    # Receive message from WebSocket
     async def receive(self, text_data):
-        text_data_json = json.loads(text_data)
-        message = text_data_json['message']
+        batch = await self.get_object(self.batch_id)
+        serializer = UploadBatchSerializer(batch, data={"id": self.batch_id})
+        if serializer.is_valid():
+            data_json = json.loads(text_data)
+            self.batch = batch
 
-        # Send message to room group
-        await self.channel_layer.group_send(
-            self.group_batch_id,
-            {
-                'type': 'chat_message',
-                'message': message
-            }
-        )
+            await self.channel_layer.group_send(
+                self.channel_id,
+                {
+                    "type": "do_profiling",  # processing function
+                    "database": data_json["database"],
+                    "occr_level": data_json["occr_level"],
+                }
+            )
+        await self.close()
 
-    # Receive message from room group
-    async def chat_message(self, event):
-        message = event['message']
-
-        # Send message to WebSocket
-        await self.send(text_data=json.dumps({
-            'message': message
-        }))
-
-    def get_object(self, pk):
+    @database_sync_to_async
+    def get_object(self, batch_id):
         try:
-            return UploadBatch.objects.get(pk=pk)
+            return UploadBatch.objects.get(pk=batch_id)
         except UploadBatch.DoesNotExist:
-            raise Http404
+            return self.close()
 
-    # async def do_profiling(self, batch_id, database, occr_level):
-    #     input_dir = os.path.join(INDIR, batch_id)
-    #     files.create_if_not_exist(OUTDIR)
-    #     output_dir = os.path.join(OUTDIR, batch_id)
-    #     files.create_if_not_exist(output_dir)
-    #     profiling.profiling(output_dir, input_dir, database, occr_level=occr_level, threads=2)
-    #     profile_created = datetime.datetime.now()
-    #
-    #     with open(os.path.join(output_dir, "namemap.json"), "r") as file:
-    #         names = json.loads(file.read())
-    #     profile_filename = os.path.join(output_dir,
-    #                                     "cgMLST_{}_{}_{}.tsv".format(database, occr_level, batch_id[0:8]))
-    #     os.rename(os.path.join(output_dir, "wgmlst.tsv"), profile_filename)
-    #     dendro = phylogeny.Dendrogram()
-    #     dendro.make_tree(profile_filename, names)
-    #     dendro_created = datetime.datetime.now()
-    #     newick_filename = os.path.join(output_dir, "dendrogram_{}.newick".format(batch_id[0:8]))
-    #     dendro.to_newick(newick_filename)
-    #     pdf_filename = os.path.join(output_dir, "dendrogram_{}.pdf".format(batch_id[0:8]))
-    #     dendro.scipy_tree(pdf_filename)
-    #     svg_filename = os.path.join(output_dir, "dendrogram_{}.svg".format(batch_id[0:8]))
-    #     dendro.scipy_tree(svg_filename)
-    #     png_filename = os.path.join(output_dir, "dendrogram_{}.png".format(batch_id[0:8]))
-    #     dendro.scipy_tree(png_filename)
-    #
-    #     sql = "INSERT INTO profile (id,created,file,occurrence,database)" \
-    #           "VALUES(:id,:created,:file,:occr,:db);"
-    #     data = {"id": batch_id, "created": profile_created, "file": profile_filename,
-    #             "occr": occr_level, "db": database}
-    #     db.to_sql(sql, data)
-    #
-    #     sql = "INSERT INTO dendrogram (id,created,png_file,pdf_file,svg_file,newick_file)" \
-    #           "VALUES(:id,:created,:png,:pdf,:svg,:new);"
-    #     data = {"id": batch_id, "created": dendro_created, "png": png_filename, "pdf": pdf_filename,
-    #             "svg": svg_filename, "new": newick_filename}
-    #     db.to_sql(sql, data)
+    @database_sync_to_async
+    def do_profiling(self, event):
+        batch = self.batch
+        batch_id = str(batch.id)
+        database = event["database"]
+        occr_level = event["occr_level"]
+
+        input_dir = os.path.join(settings.MEDIA_ROOT, "sequences", batch_id)
+        output_dir = os.path.join(settings.MEDIA_ROOT, "temp", batch_id)
+        files.create_if_not_exist(output_dir)
+
+        profiling.profiling(output_dir, input_dir, database, occr_level=occr_level, threads=2)
+
+        profile_filename = os.path.join(output_dir, "wgmlst.tsv")
+
+        dendro = phylogeny.Dendrogram()
+        dendro.make_tree(profile_filename)
+        newick_filename = os.path.join(output_dir, "dendrogram.newick")
+        dendro.to_newick(newick_filename)
+        pdf_filename = os.path.join(output_dir, "dendrogram.pdf")
+        dendro.scipy_tree(pdf_filename)
+        svg_filename = os.path.join(output_dir, "dendrogram.svg")
+        dendro.scipy_tree(svg_filename)
+        png_filename = os.path.join(output_dir, "dendrogram.png")
+        dendro.scipy_tree(png_filename)
+        # subprocess.call(['libreoffice', '--headless', '--convert-to', 'emf', '--outdir', output_dir, svg_filename])
+
+        profile_data = {"id": batch_id, "file": File(open(profile_filename)),
+                        "occurrence": occr_level, "database": database}
+        serializer = ProfileSerializer(data=profile_data)
+        if serializer.is_valid():
+            serializer.save()
+        else:
+            print(serializer.errors)
+
+        dendrogram_data = {"id": batch_id, "png_file": File(open(png_filename)),
+                           "pdf_file": File(open(pdf_filename)), "svg_file": File(open(svg_filename)),
+                           "newick_file": File(open(newick_filename))}
+        serializer = DendrogramSerializer(data=dendrogram_data)
+        if serializer.is_valid():
+            serializer.save()
+        else:
+            print(serializer.errors)
+
+        shutil.rmtree(output_dir)
