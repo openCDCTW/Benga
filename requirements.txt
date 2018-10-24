@@ -8,9 +8,6 @@ ete3
 django
 celery
 django-celery-results
-channels
-channels_redis
-redis
 djangorestframework
 gunicorn
 uvicorn
