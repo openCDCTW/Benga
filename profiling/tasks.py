@@ -16,9 +16,8 @@ def do_profiling(batch_id, database, occr_level):
     output_dir = os.path.join(settings.MEDIA_ROOT, "temp", batch_id)
     files.create_if_not_exist(output_dir)
 
+    profile_filename = os.path.join(output_dir, "profile.tsv")
     profiling.profiling(output_dir, input_dir, database, occr_level=occr_level, threads=2)
-
-    profile_filename = os.path.join(output_dir, "wgmlst.tsv")
 
     dendro = phylogeny.Dendrogram()
     dendro.make_tree(profile_filename)

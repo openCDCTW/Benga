@@ -108,7 +108,7 @@ def main():
                             debug=debug)
     if args.algorithm == "tree":
         dendro = phylogeny.Dendrogram()
-        dendro.make_tree(os.path.join(input_dir, "wgmlst.tsv"))
+        dendro.make_tree(os.path.join(input_dir, "profile.tsv"))
         date = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M")
         filename = date + "_tree"
         dendro.to_newick(os.path.join(output_dir, "{}.newick".format(filename)))
