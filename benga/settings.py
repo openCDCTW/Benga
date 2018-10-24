@@ -98,7 +98,7 @@ DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
         'NAME': 'benga',
-        'USER': 'circleci',
+        'USER': '',
         'PASSWORD': '',
         'HOST': 'localhost',
     }
