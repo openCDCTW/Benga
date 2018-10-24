@@ -23,4 +23,10 @@ class ProfileSerializer(serializers.ModelSerializer):
 class DendrogramSerializer(serializers.ModelSerializer):
     class Meta:
         model = Dendrogram
-        fields = ('id', 'created', 'png_file', 'pdf_file', 'svg_file', 'newick_file')
+        fields = ('id', 'created', 'png_file', 'pdf_file', 'svg_file', 'emf_file', 'newick_file')
+
+
+class ProfilingSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Profile
+        fields = ('id', 'occurrence', 'database')

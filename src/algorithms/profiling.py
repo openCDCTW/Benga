@@ -4,7 +4,7 @@ import re
 import shutil
 import subprocess
 from collections import Counter
-from concurrent.futures import ProcessPoolExecutor
+from concurrent.futures import ThreadPoolExecutor
 
 import pandas as pd
 from Bio import SeqIO
@@ -182,7 +182,7 @@ def profiling(output_dir, input_dir, database, threads, occr_level=None, selecte
     logger.info("Use model is {}".format(model))
     args = [(os.path.join(query_dir, filename), temp_dir, model)
             for filename in os.listdir(query_dir) if filename.endswith(".fa")]
-    with ProcessPoolExecutor(threads) as executor:
+    with ThreadPoolExecutor(threads) as executor:
         id_allele_list = list(executor.map(identify_loci, args))
 
     if enable_adding_new_alleles:
