@@ -10,22 +10,45 @@ import Upload from './test.jsx';
 class Main extends React.Component {
 
     constructor(props) {
-        super(props);
 
+        super(props);
         // For a full list of possible configurations,
         // please consult http://www.dropzonejs.com/#configuration
+
+        fetch('api/profiling/upload/',{method:'POST'})
+        .then(function(res){
+           return res.json();
+        }).then(function(batch){
+           return getID(batch);
+        });
+
+        var getID=function(data){
+            window.batchid=data.id;
+            console.log(window.batchid);
+        }
+
+        // TODO: poor performnce issue with everytime load the component will
+        // fetch API once.
+
         this.djsConfig = {
             dictDefaultMessage:"Drop files or click to upload files",
             addRemoveLinks: true,
             acceptedFiles: ".fasta,.fa,.fna",
             autoProcessQueue: false,
             parallelUploads:200,
+            init:function(){
+                this.on("sending",function(file,xhr,formData){
+                    formData.append("batch_id",window.batchid);
+                });
+
+                this.on("queuecomplete",function(file){ console.log("upload OK")});
+            }
         };
 
         this.componentConfig = {
             iconFiletypes: ['.fasta','.fna','.fa'],
             showFiletypeIcon: true,
-            postUrl: '/uploadHandler'
+            postUrl: 'api/profiling/sequence/'
         };
 
         this.dropzone = null;
@@ -45,6 +68,7 @@ class Main extends React.Component {
 
     
     render() {
+
         const config = this.componentConfig;
         const djsConfig = this.djsConfig;
 
@@ -70,6 +94,7 @@ class Main extends React.Component {
                 <div>
                 <Footer />
                 </div>
+
 
             </div>
         );
