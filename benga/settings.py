@@ -19,6 +19,12 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/2.0/howto/deployment/checklist/
 
+# CELERY
+CELERY_BROKER_URL = 'amqp://'
+CELERY_ACCEPT_CONTENT = ['json']
+CELERY_RESULT_BACKEND = 'django-db'
+CELERY_TASK_SERIALIZER = 'json'
+
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = 'a(e2^vw&65sh0ef87&8!7px&3eotc7@6vq6q28kfs5=u#sd4h5'
 
@@ -38,9 +44,9 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'rest_framework',
-    'channels',
     'profiling.apps.ProfilingConfig',
 	'frontend',
+    'django_celery_results',
 ]
 
 MIDDLEWARE = [
@@ -92,7 +98,7 @@ DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
         'NAME': 'benga',
-        'USER': 'circleci',
+        'USER': '',
         'PASSWORD': '',
         'HOST': 'localhost',
     }
@@ -123,7 +129,9 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LANGUAGE_CODE = 'en-us'
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = 'Asia/Taipei'
+
+CELERY_TIMEZONE = TIME_ZONE
 
 USE_I18N = True
 

@@ -5,7 +5,8 @@ from rest_framework import status
 from django.http import Http404
 from profiling.models import UploadBatch, Sequence, Profile, Dendrogram
 from profiling.serializers import UploadBatchSerializer, SequenceSerializer,\
-    ProfileSerializer, DendrogramSerializer
+    ProfileSerializer, DendrogramSerializer, ProfilingSerializer
+from profiling.tasks import do_profiling
 
 
 class UploadBatchList(generics.ListCreateAPIView):
@@ -117,3 +118,19 @@ class DendrogramDetail(APIView):
         sequence = self.get_object(pk)
         sequence.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class Profiling(APIView):
+    def get_object(self, batch_id):
+        try:
+            return UploadBatch.objects.get(pk=batch_id)
+        except UploadBatch.DoesNotExist:
+            return Http404
+
+    def post(self, request, format=None):
+        serializer = ProfilingSerializer(data=request.data)
+        if serializer.is_valid():
+            do_profiling.delay(str(serializer.data["id"]), serializer.data["database"],
+                               serializer.data["occurrence"])
+            return Response(serializer.data, status=status.HTTP_202_ACCEPTED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

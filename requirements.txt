@@ -6,9 +6,8 @@ matplotlib
 biopython
 ete3
 django
-channels
-channels_redis
-redis
+celery
+django-celery-results
 djangorestframework
 gunicorn
 uvicorn
