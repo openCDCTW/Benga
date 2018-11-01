@@ -1,13 +1,40 @@
 language: python
+
 os:
   - linux
+
 python:
   - '3.6'
+
+#sudo: required
+
+services:
+  - postgresql
+#  - docker
+
 notifications:
   email: false
+
+env:
+  - DATABASE_NAME = 'benga'
+  - DATABASE_USER = 'postgres'
+  - DATABASE_PASSWORD = ''
+
+#before_install:
+#  - sudo apt-get update
+#  - sudo apt-get install -y rabbitmq-server
+#addons:
+#  apt:
+#    update: true
+
+before_script:
+  - psql -U postgres -c 'create database benga;'
+
 jobs:
   include:
     - stage: "Install dependencies"
       script: pip3 install -r requirements.txt
+    - stage: "Initiate database"
+      script: python3 manage.py makemigrations; python3 manage.py migrate
     - stage: "Tests"
       script: python3 manage.py test
