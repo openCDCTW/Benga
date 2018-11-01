@@ -34,9 +34,8 @@ jobs:
       script:
         - pip3 install -r requirements.txt --upgrade
     - stage: "Initiate database"
-      before_script:
-      - psql -U postgres -c 'create database travis_ci_test;'
       script:
+        - psql -U postgres -c 'create database travis_ci_test;'
         - python3 manage.py makemigrations
         - python3 manage.py migrate
     - stage: "Test"
