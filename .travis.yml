@@ -28,6 +28,9 @@ addons:
     - postgresql-9.6
     - postgresql-client-9.6
 
+before_script:
+  - psql -U postgres -c 'create database travis_ci_test;'
+
 jobs:
   include:
     - stage: "Install dependencies"
@@ -35,7 +38,6 @@ jobs:
         - pip3 install -r requirements.txt --upgrade
     - stage: "Initiate database"
       script:
-        - psql -U postgres -c 'create database travis_ci_test;'
         - python3 manage.py makemigrations
         - python3 manage.py migrate
     - stage: "Test"
