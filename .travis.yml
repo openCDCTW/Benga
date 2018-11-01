@@ -28,16 +28,11 @@ addons:
     - postgresql-10
     - postgresql-client-10
 
-jobs:
-  include:
-    - stage: "Install dependencies"
-      script:
-        - pip3 install -r requirements.txt --upgrade
-    - stage: "Initiate database"
-      script:
-        - psql -U postgres -c 'create database travis_ci_test;'
-        - python3 manage.py makemigrations
-        - python3 manage.py migrate
-    - stage: "Test"
-      script:
-        - python3 manage.py test
+before_script:
+  - psql -U postgres -c 'create database travis_ci_test;'
+
+script:
+  - pip3 install -r requirements.txt --upgrade
+  - python3 manage.py makemigrations
+  - python3 manage.py migrate
+  - python3 manage.py test
