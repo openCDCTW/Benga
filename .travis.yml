@@ -10,7 +10,7 @@ sudo: required
 
 services:
   - postgresql
-#  - rabbitmq
+  - rabbitmq
 #  - docker
 
 notifications:
@@ -24,8 +24,7 @@ before_script:
   - psql -U postgres -c 'create database travis_ci_test;'
 
 script:
-  - sudo apt remove python3-numpy python3-scipy
-  - pip3 install -r requirements.txt
+  - pip3 install -r requirements.txt --upgrade
   - python3 manage.py makemigrations
   - python3 manage.py migrate
   - python3 manage.py test
