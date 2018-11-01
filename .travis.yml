@@ -10,22 +10,16 @@ python:
 
 services:
   - postgresql
+  - rabbitmq
 #  - docker
 
 notifications:
   email: false
 
 env:
-  - DATABASE_NAME = 'benga'
-  - DATABASE_USER = 'postgres'
-  - DATABASE_PASSWORD = ''
-
-#before_install:
-#  - sudo apt-get update
-#  - sudo apt-get install -y rabbitmq-server
-#addons:
-#  apt:
-#    update: true
+  - DATABASE_NAME="benga"
+  - DATABASE_USER="postgres"
+  - DATABASE_PASSWORD=""
 
 before_script:
   - psql -U postgres -c 'create database benga;'
