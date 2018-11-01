@@ -20,11 +20,26 @@ env:
   global:
     DJANGO_SETTINGS_MODULE="benga.test_settings"
 
+addons:
+  postgresql: "10"
+  apt:
+    update: true
+    packages:
+    - postgresql-10
+    - postgresql-client-10
+
 before_script:
   - psql -U postgres -c 'create database travis_ci_test;'
 
-script:
-  - pip3 install -r requirements.txt --upgrade
-  - python3 manage.py makemigrations
-  - python3 manage.py migrate
-  - python3 manage.py test
+jobs:
+  include:
+    - stage: "Install dependencies"
+      script:
+        - pip3 install -r requirements.txt --upgrade
+    - stage: "Initiate database"
+      script:
+        - python3 manage.py makemigrations
+        - python3 manage.py migrate
+    - stage: "Test"
+      script:
+        - python3 manage.py test
