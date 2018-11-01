@@ -6,23 +6,22 @@ os:
 python:
   - '3.6'
 
-#sudo: required
+sudo: required
 
 services:
   - postgresql
-  - rabbitmq
+#  - rabbitmq
 #  - docker
 
 notifications:
   email: false
 
 env:
-  - DATABASE_NAME="benga"
-  - DATABASE_USER="postgres"
-  - DATABASE_PASSWORD=""
+  global:
+    DJANGO_SETTINGS_MODULE="benga.test_settings"
 
 before_script:
-  - psql -U postgres -c 'create database benga;'
+  - psql -U postgres -c 'create database travis_ci_test;'
 
 jobs:
   include:
