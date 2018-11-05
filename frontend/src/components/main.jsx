@@ -3,7 +3,7 @@ import ReactDOM from 'react-dom';
 import DropzoneComponent from 'react-dropzone-component';
 import Header from './header.jsx';
 import Footer from './footer.jsx';
-import Upload from './test.jsx';
+import Options from './Options.jsx';
 
 // Render
 
@@ -12,8 +12,6 @@ class Main extends React.Component {
     constructor(props) {
 
         super(props);
-        // For a full list of possible configurations,
-        // please consult http://www.dropzonejs.com/#configuration
 
         fetch('api/profiling/upload/',{method:'POST'})
         .then(function(res){
@@ -24,8 +22,8 @@ class Main extends React.Component {
 
         var getID=function(data){
             window.batchid=data.id;
-            console.log(window.batchid);
-        }
+        };
+
 
         // TODO: poor performnce issue with everytime load the component will
         // fetch API once.
@@ -41,9 +39,21 @@ class Main extends React.Component {
                     formData.append("batch_id",window.batchid);
                 });
 
-                this.on("queuecomplete",function(file){ console.log("upload OK")});
+                this.on("queuecomplete",function(){
+
+                    var scheme = {};
+                    scheme.occurrence = document.scheme.occurrence.value;
+                    scheme.database = document.scheme.database.value;
+                    scheme.id = window.batchid;
+
+                    fetch('api/profiling/profiling/',{
+                        method:'POST',
+                        headers:new Headers({'content-type':'application/json'}),
+                        body:JSON.stringify(scheme)
+                    });
+                });
             }
-        };
+        }
 
         this.componentConfig = {
             iconFiletypes: ['.fasta','.fna','.fa'],
@@ -52,10 +62,6 @@ class Main extends React.Component {
         };
 
         this.dropzone = null;
-    }
-
-    handleFileAdded(file) {
-        console.log(file);
     }
 
     handlePost() {
@@ -75,7 +81,6 @@ class Main extends React.Component {
         // For a list of all possible events (there are many), see README.md!
         const eventHandlers = {
             init: dz => this.dropzone = dz,
-            addedfile: this.handleFileAdded.bind(this)
         }
 
         return (
@@ -86,6 +91,8 @@ class Main extends React.Component {
                 <br />
                 <br />
                 <DropzoneComponent config={config} eventHandlers={eventHandlers} djsConfig={djsConfig} />
+                <br />
+                <Options />
                 <br />
                 <button onClick={this.handlePost.bind(this)}> Upload </button> &nbsp;&nbsp;&nbsp;&nbsp;
                 <button onClick={this.reload}> Reset </button>
