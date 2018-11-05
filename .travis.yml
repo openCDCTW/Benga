@@ -1,0 +1,38 @@
+language: python
+
+os:
+  - linux
+
+python:
+  - '3.6'
+
+sudo: required
+
+services:
+  - postgresql
+  - rabbitmq
+#  - docker
+
+notifications:
+  email: false
+
+env:
+  global:
+    DJANGO_SETTINGS_MODULE="benga.test_settings"
+
+addons:
+  postgresql: "9.6"
+  apt:
+    update: true
+    packages:
+    - postgresql-9.6
+    - postgresql-client-9.6
+
+before_script:
+  - psql -U postgres -c 'create database travis_ci_test;'
+
+script:
+  - pip3 install -r requirements.txt --upgrade
+  - python3 manage.py makemigrations
+  - python3 manage.py migrate
+  - python3 manage.py test
