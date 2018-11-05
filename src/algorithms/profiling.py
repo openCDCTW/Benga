@@ -44,7 +44,7 @@ virulence_genes = ["lpfA", "lpfA_1", "lpfA_2", "lpfA_3", "lpfA_4", "lpfB", "lpfB
 # class BatchGeneSelector(BatchSelector):
 
 
-def identify_loci(args):
+def identify_alleles(args):
     filename, out_dir, model = args
     subprocess.run(cmds.form_prodigal_cmd(filename, out_dir, model), shell=True)
     genome_id = files.fasta_filename(filename)
@@ -164,6 +164,9 @@ def profiling(output_dir, input_dir, database, threads, occr_level=None, selecte
     contighandler.new_format(input_dir, query_dir, replace_ext=True)
     namemap = contighandler.namemap
 
+    model = re.search('[a-zA-Z]+\w[a-zA-Z]+', database).group(0)
+    logger.info("Used model: {}".format(model))
+
     logger.info("Selecting loci by specified scheme {}%...".format(occr_level))
     if selected_loci:
         selected_loci = set(selected_loci)
@@ -178,12 +181,10 @@ def profiling(output_dir, input_dir, database, threads, occr_level=None, selecte
     ref_len = make_ref_blastpdb(ref_db, database)
 
     logger.info("Identifying loci and allocating alleles...")
-    model = re.search('[a-zA-Z]+\w[a-zA-Z]+', database).group(0)
-    logger.info("Use model is {}".format(model))
     args = [(os.path.join(query_dir, filename), temp_dir, model)
             for filename in os.listdir(query_dir) if filename.endswith(".fa")]
     with ThreadPoolExecutor(threads) as executor:
-        id_allele_list = list(executor.map(identify_loci, args))
+        id_allele_list = list(executor.map(identify_alleles, args))
 
     if enable_adding_new_alleles:
         logger.info("Adding new alleles to database...")
