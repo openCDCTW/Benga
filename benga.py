@@ -2,9 +2,7 @@ import argparse
 import datetime
 import os.path
 import subprocess
-
-from benga.src.algorithms import profiling, phylogeny, statistics
-from src.algorithms import databases
+from src.algorithms import databases, profiling, phylogeny, statistics
 
 
 def parse_args():

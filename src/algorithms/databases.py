@@ -9,6 +9,7 @@ import pandas as pd
 from Bio import SeqIO
 
 from src.utils import seq, files, cmds, operations, db, logs
+from src.utils.alleles import filter_duplicates
 
 
 def move_file(annotate_dir, dest_dir, ext):
@@ -129,6 +130,7 @@ def reference_self_blastp(output_dir, freq):
     seq.query_blastpdb(ref_faa, ref_db, blastp_out_file, seq.BLAST_COLUMNS)
     return blastp_out_file, ref_length
 
+
 def identify_pairs(df):
     sseqids = df["sseqid"].tolist()
     pairs = []
@@ -161,15 +163,7 @@ def collect_high_occurrence_loci(pairs, total_isolates, drop_by_occur):
 
 
 def filter_locus(blastp_out_file, ref_length, total_isolates, drop_by_occur):
-    blastp_out = pd.read_csv(blastp_out_file, sep="\t", header=None, names=seq.BLAST_COLUMNS)
-    blastp_out = blastp_out[blastp_out["pident"] >= 95]
-    blastp_out = blastp_out[blastp_out["qseqid"] != blastp_out["sseqid"]]
-    blastp_out["qlen"] = list(map(lambda x: ref_length[x], blastp_out["qseqid"]))
-    blastp_out["slen"] = list(map(lambda x: ref_length[x], blastp_out["sseqid"]))
-    blastp_out["qlen/slen"] = blastp_out["qlen"] / blastp_out["slen"]
-    blastp_out["qlen/alen"] = blastp_out["qlen"] / blastp_out["length"]
-    blastp_out = blastp_out[(0.75 <= blastp_out["qlen/slen"]) & (blastp_out["qlen/slen"] < 1.25)]
-    blastp_out = blastp_out[(0.75 <= blastp_out["qlen/alen"]) & (blastp_out["qlen/alen"] < 1.25)]
+    blastp_out = filter_duplicates(blastp_out_file, ref_length, ref_length, identity=95)
     pairs = identify_pairs(blastp_out)
     filtered_loci = collect_high_occurrence_loci(pairs, total_isolates, drop_by_occur)
     return filtered_loci
