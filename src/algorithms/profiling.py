@@ -12,6 +12,7 @@ from Bio import SeqIO
 from src.algorithms.bionumerics import to_bionumerics_format
 from src.utils import files, cmds, operations, logs, seq
 from src.utils.db import load_database_config, from_sql, append_to_sql, to_sql, table_to_sql
+from src.utils.alleles import filter_duplicates
 
 MLST = ["aroC_1", "aroC_2", "aroC_3", "dnaN", "hemD", "hisD", "purE", "sucA_1", "sucA_2", "thrA_2", "thrA_3"]
 virulence_genes = ["lpfA", "lpfA_1", "lpfA_2", "lpfA_3", "lpfA_4", "lpfB", "lpfB_1", "lpfB_2", "lpfC", "lpfC_1",
@@ -98,11 +99,7 @@ def make_ref_blastpdb(ref_db_file, database):
     return ref_len
 
 
-def blast_for_new_alleles(candidates, alleles, ref_db, temp_dir, ref_len, identity=95):
-    '''
-    blastp for locus with 95% identity, E-value < 1e-6,
-    75% <= qlen/slen < 125%, 75% <= qlen/alen < 125%.
-    '''
+def blast_for_new_alleles(candidates, alleles, ref_db, temp_dir, ref_len):
     filename = "new_allele_candidates"
     candidate_file = os.path.join(temp_dir, filename + ".fasta")
     recs = [seq.new_record(cand, alleles[cand][1], seqtype="protein") for cand in candidates]
@@ -112,14 +109,7 @@ def blast_for_new_alleles(candidates, alleles, ref_db, temp_dir, ref_len, identi
     blastp_out_file = files.joinpath(temp_dir, "{}.blastp.out".format(filename))
     seq.query_blastpdb(candidate_file, ref_db, blastp_out_file, seq.BLAST_COLUMNS)
 
-    blastp_out = pd.read_csv(blastp_out_file, sep="\t", header=None, names=seq.BLAST_COLUMNS)
-    blastp_out = blastp_out[blastp_out["pident"] >= identity]
-    blastp_out["qlen"] = list(map(lambda x: allele_len[x], blastp_out["qseqid"]))
-    blastp_out["slen"] = list(map(lambda x: ref_len[x], blastp_out["sseqid"]))
-    blastp_out["qlen/slen"] = blastp_out["qlen"] / blastp_out["slen"]
-    blastp_out["qlen/alen"] = blastp_out["qlen"] / blastp_out["length"]
-    blastp_out = blastp_out[(0.75 <= blastp_out["qlen/slen"]) & (blastp_out["qlen/slen"] < 1.25)]
-    blastp_out = blastp_out[(0.75 <= blastp_out["qlen/alen"]) & (blastp_out["qlen/alen"] < 1.25)]
+    blastp_out = filter_duplicates(blastp_out_file, allele_len, ref_len, identity=95)
     blastp_out = blastp_out.drop_duplicates("qseqid")
     new_allele_pairs = [(row["qseqid"], row["sseqid"]) for _, row in blastp_out.iterrows()]
     return new_allele_pairs
