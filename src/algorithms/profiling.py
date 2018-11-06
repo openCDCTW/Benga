@@ -11,7 +11,7 @@ from Bio import SeqIO
 
 from src.algorithms.bionumerics import to_bionumerics_format
 from src.utils import files, cmds, operations, logs, seq
-from src.utils.db import load_database_config, from_sql, append_to_sql, to_sql, table_to_sql
+from src.utils.db import load_database_config, from_sql, table_to_sql, to_sql
 from src.utils.alleles import filter_duplicates
 
 MLST = ["aroC_1", "aroC_2", "aroC_3", "dnaN", "hemD", "hisD", "purE", "sucA_1", "sucA_2", "thrA_2", "thrA_3"]
@@ -56,7 +56,7 @@ def identify_alleles(args):
 
 
 def update_allele_counts(counter, database):
-    table_to_sql("batch_add_counts", counter, database=database)
+    table_to_sql("batch_add_counts", counter, database=database, append=False)
     query = "update alleles " \
             "set count = alleles.count + ba.count " \
             "from batch_add_counts as ba " \
@@ -123,9 +123,9 @@ def update_database(new_allele_pairs, alleles):
         count = 0
         collect.append((allele_id, dna, peptide, count))
     collect = pd.DataFrame(collect, columns=["allele_id", "dna_seq", "peptide_seq", "count"]).drop_duplicates()
-    append_to_sql("alleles", collect)
+    table_to_sql("alleles", collect)
     pairs = pd.DataFrame(new_allele_pairs, columns=["allele_id", "locus_id"]).drop_duplicates()
-    append_to_sql("pairs", pairs)
+    table_to_sql("pairs", pairs)
     return pairs
 
 

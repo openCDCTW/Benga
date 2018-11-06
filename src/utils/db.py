@@ -1,29 +1,23 @@
-import json
 import subprocess
-import psycopg2
 import pandas as pd
 from sqlalchemy import create_engine, MetaData, Table, Column, ForeignKey
 from sqlalchemy.engine.url import URL
 from sqlalchemy.dialects import postgresql
+from django.conf import settings
 
 DBCONFIG = {}
 
 
-def load_database_config(filename="database.config", logger=None):
+def load_database_config(logger=None):
     global DBCONFIG
-    with open(filename, "r") as file:
-        DBCONFIG = json.loads(file.read())
     DBCONFIG["drivername"] = "postgresql+psycopg2"
-    if "host" not in DBCONFIG.keys():
-        DBCONFIG["host"] = "localhost"
-    if "port" not in DBCONFIG.keys():
-        DBCONFIG["port"] = 5432
+    DBCONFIG["host"] = settings.DATABASES['default']['HOST']
+    DBCONFIG["port"] = settings.DATABASES['default']['PORT']
+    DBCONFIG["username"] = settings.DATABASES['default']['USER']
+    DBCONFIG["password"] = settings.DATABASES['default']['PASSWORD']
     logger.info("Read database configuration successfully from {}!".format(filename))
     logger.info("Database: {}:{}".format(DBCONFIG["host"], DBCONFIG["port"]))
-    if "password" in DBCONFIG.keys():
-        logger.info("Login database as USER {} with PASSWORD ******".format(DBCONFIG["username"]))
-    else:
-        raise Exception("Passwrod for {} is not available in {}!".format(DBCONFIG["username"], filename))
+    logger.info("Login database as USER {} with PASSWORD ******".format(DBCONFIG["username"]))
 
 
 def from_sql(query, database=None):
@@ -37,19 +31,6 @@ def from_sql(query, database=None):
     return t
 
 
-def query_filepath(query, database=None):
-    global DBCONFIG
-    if database:
-        DBCONFIG["database"] = database
-    with psycopg2.connect(dbname=DBCONFIG["database"], user=DBCONFIG["username"],
-                          password=DBCONFIG["password"], host=DBCONFIG["host"],
-                          port=DBCONFIG["port"]) as conn:
-        with conn.cursor() as cur:
-            cur.execute(query)
-            filepath = cur.fetchone()[0].tobytes().decode("utf-8")
-    return filepath
-
-
 def to_sql(sql, args={}, database=None):
     global DBCONFIG
     if database:
@@ -60,35 +41,14 @@ def to_sql(sql, args={}, database=None):
     engine.dispose()
 
 
-def file_to_sql(sql, args, database=None):
+def table_to_sql(table, df, database=None, append=True):
     global DBCONFIG
     if database:
         DBCONFIG["database"] = database
-    with psycopg2.connect(dbname=DBCONFIG["database"], user=DBCONFIG["username"],
-                          password=DBCONFIG["password"], host=DBCONFIG["host"],
-                          port=DBCONFIG["port"]) as conn:
-        with conn.cursor() as cur:
-            cur.execute(sql, args)
-            conn.commit()
-
-
-def append_to_sql(table, df, database=None):
-    global DBCONFIG
-    if database:
-        DBCONFIG["database"] = database
+    if_exists = "append" if append else "fail"
     engine = create_engine(URL(**DBCONFIG))
     with engine.connect() as conn:
-        df.to_sql(table, conn, index=False, chunksize=3000, if_exists="append")
-    engine.dispose()
-
-
-def table_to_sql(table, df, database=None):
-    global DBCONFIG
-    if database:
-        DBCONFIG["database"] = database
-    engine = create_engine(URL(**DBCONFIG))
-    with engine.connect() as conn:
-        df.to_sql(table, conn, index=False, chunksize=3000)
+        df.to_sql(table, conn, index=False, chunksize=3000, if_exists=if_exists)
     engine.dispose()
 
 
@@ -96,13 +56,9 @@ def createdb(dbname):
     subprocess.run(["createdb", dbname])
 
 
-def create_pgadb_relations(dbname, user=None, passwd=None):
+def create_pgadb_relations(dbname):
     global DBCONFIG
     DBCONFIG["database"] = dbname
-    if user:
-        DBCONFIG["username"] = user
-    if passwd:
-        DBCONFIG["password"] = passwd
     engine = create_engine(URL(**DBCONFIG))
     metadata = MetaData()
     loci = Table("loci", metadata,
