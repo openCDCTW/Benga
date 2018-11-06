@@ -58,9 +58,9 @@ def statistics(input_dir, output_dir, database):
 def profiling(input_dir, output_dir, database, threads, occrrence, not_extend, no_profiles,
               debug):
     """Make profiles with fasta files in INPUT_DIR against DATABASE, and then output to OUTPUT_DIR."""
-    # profiling.profiling(output_dir, input_dir, database, threads=threads, occr_level=occrrence,
-    #                     enable_adding_new_alleles=(not not_extend), generate_profiles=(not no_profiles),
-    #                     debug=debug)
+    profiling.profiling(output_dir, input_dir, database, threads=threads, occr_level=occrrence,
+                        enable_adding_new_alleles=(not not_extend), generate_profiles=(not no_profiles),
+                        debug=debug)
 
 
 @main.command("tree", short_help="Plot dendrogram",
