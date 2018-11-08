@@ -11,7 +11,7 @@ sudo: required
 services:
   - postgresql
   - rabbitmq
-#  - docker
+  - docker
 
 notifications:
   email: false
@@ -25,6 +25,7 @@ addons:
   apt:
     update: true
     packages:
+    - docker-ce
     - postgresql-9.6
     - postgresql-client-9.6
 
@@ -36,3 +37,4 @@ script:
   - python3 manage.py makemigrations
   - python3 manage.py migrate
   - python3 manage.py test
+  - python3 test/test_cli.py
