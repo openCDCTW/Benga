@@ -1,6 +1,6 @@
 from click.testing import CliRunner
 import unittest
-from context import Benga
+import Benga
 
 
 class CliTest(unittest.TestCase):
