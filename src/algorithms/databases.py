@@ -90,7 +90,7 @@ def save_locus_metadata(matrix, dbname, select_col=None, repeat_tol=1.2):
     meta = matrix.copy()
     meta["is_paralog"] = [x > repeat_tol for x in meta[avg]]
     meta = meta.reset_index()[select_col]
-    db.append_to_sql("locus_meta", meta, dbname)
+    db.table_to_sql("locus_meta", meta, dbname)
 
 
 def collect_allele_infos(profiles, ffn_dir):
@@ -173,12 +173,12 @@ def to_allele_table(data, dbname):
     df = pd.DataFrame(data, columns=["allele_id", "dna_seq", "peptide_seq", "count"])
     df = df.groupby("allele_id").agg({"dna_seq": "first", "peptide_seq": "first", "count": "sum"})
     df.reset_index(inplace=True)
-    db.append_to_sql("alleles", df, dbname)
+    db.table_to_sql("alleles", df, dbname)
 
 
 def to_pair_table(data, dbname):
     df = pd.DataFrame(data, columns=["allele_id", "locus_id"])
-    db.append_to_sql("pairs", df, dbname)
+    db.table_to_sql("pairs", df, dbname)
 
 
 def save_sequences(freq, dbname):
@@ -202,7 +202,7 @@ def make_schemes(freq, total_isolates):
     schemes["occurrence"] = list(map(lambda x: round(x/total_isolates * 100, 2), schemes["num_isolates"]))
     schemes["ref_allele"] = list(map(lambda x: refseqs[x], schemes["locus_id"]))
     schemes = schemes[["locus_id", "occurrence", "ref_allele"]]
-    db.append_to_sql("loci", schemes)
+    db.table_to_sql("loci", schemes)
 
 
 def annotate_configs(input_dir, output_dir, logger=None, threads=8):

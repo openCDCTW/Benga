@@ -11,7 +11,7 @@ sudo: required
 services:
   - postgresql
   - rabbitmq
-#  - docker
+  - docker
 
 notifications:
   email: false
@@ -25,6 +25,7 @@ addons:
   apt:
     update: true
     packages:
+    - docker-ce
     - postgresql-9.6
     - postgresql-client-9.6
 
