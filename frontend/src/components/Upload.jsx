@@ -1,13 +1,12 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 import DropzoneComponent from 'react-dropzone-component';
-import Header from './header.jsx';
-import Footer from './footer.jsx';
+import { Link } from 'react-router-dom';
 import Options from './Options.jsx';
 
 // Render
 
-class Main extends React.Component {
+class Upload extends React.Component {
 
     constructor(props) {
 
@@ -39,19 +38,6 @@ class Main extends React.Component {
                     formData.append("batch_id",window.batchid);
                 });
 
-                this.on("queuecomplete",function(){
-
-                    var scheme = {};
-                    scheme.occurrence = document.scheme.occurrence.value;
-                    scheme.database = document.scheme.database.value;
-                    scheme.id = window.batchid;
-
-                    fetch('api/profiling/profiling/',{
-                        method:'POST',
-                        headers:new Headers({'content-type':'application/json'}),
-                        body:JSON.stringify(scheme)
-                    });
-                });
             }
         }
 
@@ -66,6 +52,18 @@ class Main extends React.Component {
 
     handlePost() {
         this.dropzone.processQueue();
+    }
+
+    submit(){
+        var scheme = {};
+        scheme.occurrence = document.scheme.occurrence.value;
+        scheme.database = document.scheme.database.value;
+        scheme.id = window.batchid;
+        fetch('api/profiling/profiling/',{
+            method:'POST',
+            headers:new Headers({'content-type':'application/json'}),
+            body:JSON.stringify(scheme)
+        });
     }
 
     reload(){
@@ -85,27 +83,25 @@ class Main extends React.Component {
 
         return (
             <div>
-                <div>
-                <Header />
-                </div>
                 <br />
                 <br />
                 <DropzoneComponent config={config} eventHandlers={eventHandlers} djsConfig={djsConfig} />
                 <br />
+                <button type="button" onClick={this.handlePost.bind(this)}>Upload</button>
+                <br />
+                <br />
                 <Options />
                 <br />
-                <button onClick={this.handlePost.bind(this)}> Upload </button> &nbsp;&nbsp;&nbsp;&nbsp;
+                <Link to="/profiling">
+                <button type="submit" onClick={this.submit.bind(this)}>Submit</button>
+                </Link>
+                &nbsp;&nbsp;&nbsp;&nbsp;
                 <button onClick={this.reload}> Reset </button>
                 <br />
                 <br />
-                <div>
-                <Footer />
-                </div>
-
-
             </div>
         );
     }
 }
 
-ReactDOM.render(<Main /> ,document.getElementById('host'));
+export default Upload;

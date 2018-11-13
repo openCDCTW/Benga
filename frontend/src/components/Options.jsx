@@ -10,11 +10,8 @@ export default class Options extends React.Component {
         		<div>
                 <label>Scheme: &nbsp;&nbsp;</label>
                     <select name="occurrence">
-                    <option value="95">95</option>
-                    <option value="90">90</option>
-                    <option value="85">85</option>
-                    <option value="80">80</option>
-                    <option value="50">50</option>
+                    <option value="95">Core gene</option>
+                    <option value="0">Whole gene</option>
                     </select>
                 </div>
                 <br />
