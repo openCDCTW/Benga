@@ -93,7 +93,7 @@ def save_locus_metadata(matrix, dbname, select_col=None, repeat_tol=1.2):
     db.table_to_sql("locus_meta", meta, dbname)
 
 
-def collect_allele_infos(profiles, ffn_dir):
+def collect_allele_info(profiles, ffn_dir):
     freq = defaultdict(Counter)
     new_profiles = []
     for subject, profile in profiles.iteritems():
@@ -134,11 +134,11 @@ def reference_self_blastp(output_dir, freq):
 def identify_pairs(df):
     sseqids = df["sseqid"].tolist()
     pairs = []
-    counted = set()
+    existed = set()
     for _, row in df.iterrows():
-        if row["qseqid"] in sseqids and not row["qseqid"] in counted:
-            counted.update(row["qseqid"])
-            counted.update(row["sseqid"])
+        if row["qseqid"] in sseqids and not row["qseqid"] in existed:
+            existed.update(row["qseqid"])
+            existed.update(row["sseqid"])
             pairs.append((row["qseqid"], row["sseqid"]))
     return pairs
 
@@ -181,22 +181,22 @@ def to_pair_table(data, dbname):
     db.table_to_sql("pairs", df, dbname)
 
 
-def save_sequences(freq, dbname):
+def save_sequences(freq, refseqs, dbname):
     alleles = []
     pairs = []
     for locus, counter in freq.items():
-        for allele, count in counter.items():
-            dna_seq = str(allele)
-            pept_seq = str(allele.translate(table=11))
-            allele_id = operations.make_seqid(dna_seq)
-            alleles.append((allele_id, dna_seq, pept_seq, count))
-            pairs.append((allele_id, locus))
+        allele = refseqs[locus]
+        count = 0
+        dna_seq = str(allele)
+        pept_seq = str(allele.translate(table=11))
+        allele_id = operations.make_seqid(dna_seq)
+        alleles.append((allele_id, dna_seq, pept_seq, count))
+        pairs.append((allele_id, locus))
     to_allele_table(alleles, dbname)
     to_pair_table(pairs, dbname)
 
 
-def make_schemes(freq, total_isolates):
-    refseqs = {locus: operations.make_seqid(counter.most_common(1)[0][0]) for locus, counter in freq.items()}
+def make_schemes(refseqs, total_isolates):
     schemes = db.from_sql("select locus_id, num_isolates from locus_meta;")
     schemes = schemes[schemes["locus_id"].isin(refseqs.keys())]
     schemes["occurrence"] = list(map(lambda x: round(x/total_isolates * 100, 2), schemes["num_isolates"]))
@@ -268,7 +268,7 @@ def make_database(output_dir, drop_by_occur, logger=None, threads=2):
     logger.info("Collecting allele profiles and making allele frequencies and reference sequence...")
     ffn_dir = files.joinpath(output_dir, "FFN")
     profile_file = files.joinpath(output_dir, "allele_profiles.tsv")
-    profiles, freq = collect_allele_infos(profiles, ffn_dir)
+    profiles, freq = collect_allele_info(profiles, ffn_dir)
 
     logger.info("Checking duplicated loci by self-blastp...")
     blastp_out_file, ref_length = reference_self_blastp(output_dir, freq)
@@ -283,9 +283,10 @@ def make_database(output_dir, drop_by_occur, logger=None, threads=2):
     profiles.to_csv(profile_file, sep="\t")
 
     logger.info("Saving allele sequences...")
-    save_sequences(freq, dbname)
+    refseqs = {locus: operations.make_seqid(counter.most_common(1)[0][0]) for locus, counter in freq.items()}
+    save_sequences(freq, refseqs, dbname)
 
     logger.info("Making dynamic schemes...")
-    make_schemes(freq, total_isolates)
+    make_schemes(refseqs, total_isolates)
     logger.info("Done!!")
     return dbname
