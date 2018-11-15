@@ -12,7 +12,7 @@ class Upload extends React.Component {
 
         super(props);
 
-        fetch('api/profiling/upload/',{method:'POST'})
+        fetch('api/profiling/upload/', {method:'POST'})
         .then(function(res){
            return res.json();
         }).then(function(batch){
@@ -20,7 +20,7 @@ class Upload extends React.Component {
         });
 
         var getID=function(data){
-            window.batchid=data.id;
+            window.batchid = data.id;
         };
 
 
@@ -34,8 +34,8 @@ class Upload extends React.Component {
             autoProcessQueue: false,
             parallelUploads:200,
             init:function(){
-                this.on("sending",function(file,xhr,formData){
-                    formData.append("batch_id",window.batchid);
+                this.on("sending", function(file,xhr,formData){
+                    formData.append("batch_id", window.batchid);
                 });
 
             }

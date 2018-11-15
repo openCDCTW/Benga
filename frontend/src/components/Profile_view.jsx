@@ -7,13 +7,13 @@ export default class Profile_view extends React.Component {
 	constructor(props) {
 		super(props);
 		this.state = {};
-		this.query_profile_result=this.query_profile_result.bind(this);
+		this.query_profile_result = this.query_profile_result.bind(this);
 	};
 
 	query_profile_result(){
 
 		if(this.state.profile_result_Url == undefined){
-			fetch('api/profiling/profile/'+window.batchid,{method:'GET'})
+			fetch('api/profiling/profile/'+window.batchid, {method:'GET'})
 			.then(response => response.json())
 			.then(result => this.setState(state=>({profile_result_Url:result.file})));
 		}else{
