@@ -7,13 +7,6 @@ export default class Options extends React.Component {
     render(){
         return (
         	<form name="scheme">
-        		<div>
-                <label>Scheme: &nbsp;&nbsp;</label>
-                    <select name="occurrence">
-                    <option value="95">Core gene</option>
-                    <option value="0">Whole gene</option>
-                    </select>
-                </div>
                 <br />
                 <div>
                 <label>Database:&nbsp;&nbsp;</label>

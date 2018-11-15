@@ -56,10 +56,10 @@ class Upload extends React.Component {
 
     submit(){
         var scheme = {};
-        scheme.occurrence = document.scheme.occurrence.value;
+        scheme.occurrence = "95";
         scheme.database = document.scheme.database.value;
         scheme.id = window.batchid;
-        fetch('api/profiling/profiling/',{
+        fetch('api/profiling/profiling/', {
             method:'POST',
             headers:new Headers({'content-type':'application/json'}),
             body:JSON.stringify(scheme)
@@ -92,7 +92,7 @@ class Upload extends React.Component {
                 <br />
                 <Options />
                 <br />
-                <Link to="/profiling">
+                <Link to="/profile_view">
                 <button type="submit" onClick={this.submit.bind(this)}>Submit</button>
                 </Link>
                 &nbsp;&nbsp;&nbsp;&nbsp;

@@ -2,27 +2,23 @@ import React from 'react';
 import ReactDOM from 'react-dom';
 import { BrowserRouter as Router, Route } from "react-router-dom";
 import Header from './Header.jsx';
+import Navigation from './Navigation.jsx';
 import Footer from './Footer.jsx';
 import Upload from './Upload.jsx';
-import Output from './Output.jsx'
-
-// Render
+import Profile_view from './Profile_view.jsx';
+import Dendrogram_view from './Dendrogram_view.jsx'
 
 class Main extends React.Component {
 
-
     render() {
         return(
-            // Router：在最外層的路由組件
             <Router>
-                {/* Router底下只能有一個child */}
                 <div>
-                    {/* Route：路由的配對組件 */}
-                    {/* path是要與此路由配對的路徑、exact是指是否要路徑完成匹配、component是指render的組件 */}
-
                     <Header />
+                    <Navigation />
                     <Route path="/" exact component={Upload} />
-                    <Route path="/profiling" component={Output} />
+                    <Route path="/profile_view" component={Profile_view} />
+                    <Route path="/dendrogram_view" component={Dendrogram_view} />
                     <Footer />
                 </div>
             </Router>
