@@ -6,7 +6,7 @@ import shutil
 from django.core.files import File
 from src.algorithms import profiling
 from src.utils import files
-from profiling.serializers import ProfileSerializer, DendrogramSerializer
+from profiling.serializers import ProfileSerializer
 
 
 @shared_task
