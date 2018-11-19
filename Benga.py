@@ -2,6 +2,7 @@ import click
 import datetime
 import os.path
 import subprocess
+import pandas as pd
 from src.algorithms import databases, profiling, phylogeny, statistics
 
 
@@ -69,8 +70,9 @@ def profiling(input_dir, output_dir, database, threads, occrrence, not_extend, n
 @click.argument('output_dir', type=click.Path(exists=True))
 def tree(input_dir, output_dir):
     """Plot dendrogram with profile.tsv file in INPUT_DIR, and output to OUTPUT_DIR."""
+    profiles = pd.read_csv(os.path.join(input_dir, "profile.tsv"), sep="\t", index_col=0)
     dendro = phylogeny.Dendrogram()
-    dendro.make_tree(os.path.join(input_dir, "profile.tsv"))
+    dendro.make_tree(profiles)
     date = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M")
     filename = date + "_tree"
     dendro.to_newick(os.path.join(output_dir, "{}.newick".format(filename)))

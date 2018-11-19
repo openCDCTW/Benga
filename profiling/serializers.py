@@ -1,10 +1,10 @@
 from rest_framework import serializers
-from profiling.models import UploadBatch, Sequence, Profile, Dendrogram
+from profiling.models import Batch, Sequence, Profile
 
 
-class UploadBatchSerializer(serializers.ModelSerializer):
+class BatchSerializer(serializers.ModelSerializer):
     class Meta:
-        model = UploadBatch
+        model = Batch
         fields = ('id', 'created')
 
 
@@ -18,12 +18,6 @@ class ProfileSerializer(serializers.ModelSerializer):
     class Meta:
         model = Profile
         fields = ('id', 'created', 'file', 'occurrence', 'database')
-
-
-class DendrogramSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Dendrogram
-        fields = ('id', 'created', 'png_file', 'pdf_file', 'svg_file', 'emf_file', 'newick_file')
 
 
 class ProfilingSerializer(serializers.ModelSerializer):
