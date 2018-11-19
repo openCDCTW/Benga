@@ -46,7 +46,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'profiling.apps.ProfilingConfig',
     'dendrogram.apps.DendrogramConfig',
-	'frontend',
+    'frontend',
     'django_celery_results',
 ]
 
