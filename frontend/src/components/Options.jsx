@@ -7,16 +7,6 @@ export default class Options extends React.Component {
     render(){
         return (
         	<form name="scheme">
-        		<div>
-                <label>Scheme: &nbsp;&nbsp;</label>
-                    <select name="occurrence">
-                    <option value="95">95</option>
-                    <option value="90">90</option>
-                    <option value="85">85</option>
-                    <option value="80">80</option>
-                    <option value="50">50</option>
-                    </select>
-                </div>
                 <br />
                 <div>
                 <label>Database:&nbsp;&nbsp;</label>

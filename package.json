@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "webpack --mode development ./frontend/src/index.js --output ./frontend/static/frontend/main.js",
     "build": "webpack --mode production ./frontend/src/index.js --output ./frontend/static/frontend/main.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "celery": "celery -A benga worker --loglevel=info"
   },
   "author": "ysc",
   "license": "ISC",
@@ -24,6 +25,8 @@
     "babel-preset-es2015": "^6.24.1",
     "prop-types": "^15.6.2",
     "react": "^16.5.2",
-    "react-dom": "^16.5.2"
+    "react-dom": "^16.5.2",
+    "react-router": "^4.3.1",
+    "react-router-dom": "^4.3.1"
   }
 }
