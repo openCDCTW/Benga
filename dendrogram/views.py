@@ -1,12 +1,12 @@
-from rest_framework import mixins, generics
-from rest_framework.views import APIView
-from rest_framework.response import Response
-from rest_framework import status
 from django.http import Http404
-from profiling.models import Batch, Sequence, Profile
-from profiling.serializers import BatchSerializer, SequenceSerializer,\
-    ProfileSerializer, ProfilingSerializer
-from profiling.tasks import do_profiling
+from rest_framework import generics, status
+from rest_framework import mixins
+from rest_framework.response import Response
+from rest_framework.views import APIView
+
+from dendrogram.models import Batch, Profile, Dendrogram
+from dendrogram.serializers import BatchSerializer, ProfileSerializer, DendrogramSerializer, PlotingSerializer
+from dendrogram.tasks import plot_dendrogram
 
 
 class BatchList(generics.ListCreateAPIView):
@@ -25,37 +25,6 @@ class BatchDetail(mixins.RetrieveModelMixin,
 
     def delete(self, request, *args, **kwargs):
         return self.destroy(request, *args, **kwargs)
-
-
-class SequenceList(generics.ListCreateAPIView):
-    queryset = Sequence.objects.all()
-    serializer_class = SequenceSerializer
-
-
-class SequenceDetail(APIView):
-    def get_object(self, pk):
-        try:
-            return Sequence.objects.get(pk=pk)
-        except Sequence.DoesNotExist:
-            raise Http404
-
-    def get(self, request, pk, format=None):
-        sequence = self.get_object(pk)
-        serializer = SequenceSerializer(sequence)
-        return Response(serializer.data)
-
-    def put(self, request, pk, format=None):
-        sequence = self.get_object(pk)
-        serializer = SequenceSerializer(sequence, data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-    def delete(self, request, pk, format=None):
-        sequence = self.get_object(pk)
-        sequence.delete()
-        return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 class ProfileList(generics.ListCreateAPIView):
@@ -89,11 +58,41 @@ class ProfileDetail(APIView):
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
-class Profiling(APIView):
-    def post(self, request, format=None):
-        serializer = ProfilingSerializer(data=request.data)
+class DendrogramList(generics.ListCreateAPIView):
+    queryset = Dendrogram.objects.all()
+    serializer_class = DendrogramSerializer
+
+
+class DendrogramDetail(APIView):
+    def get_object(self, pk):
+        try:
+            return Dendrogram.objects.get(pk=pk)
+        except Profile.DoesNotExist:
+            raise Http404
+
+    def get(self, request, pk, format=None):
+        sequence = self.get_object(pk)
+        serializer = DendrogramSerializer(sequence)
+        return Response(serializer.data)
+
+    def put(self, request, pk, format=None):
+        sequence = self.get_object(pk)
+        serializer = DendrogramSerializer(sequence, data=request.data)
         if serializer.is_valid():
-            do_profiling.delay(str(serializer.data["id"]), serializer.data["database"],
-                               serializer.data["occurrence"])
+            serializer.save()
+            return Response(serializer.data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def delete(self, request, pk, format=None):
+        sequence = self.get_object(pk)
+        sequence.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class Plotting(APIView):
+    def post(self, request, format=None):
+        serializer = PlotingSerializer(data=request.data)
+        if serializer.is_valid():
+            plot_dendrogram.delay(str(serializer.data["id"]))
             return Response(serializer.data, status=status.HTTP_202_ACCEPTED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

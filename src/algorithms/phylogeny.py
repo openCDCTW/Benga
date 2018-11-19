@@ -44,8 +44,7 @@ class Dendrogram:
                              leaf_font_size=10, above_threshold_color="#808080")
         fig.savefig(file, dpi=dpi, bbox_inches='tight', pad_inches=1)
 
-    def make_tree(self, profile_file):
-        profiles = pd.read_csv(profile_file, sep="\t", index_col=0)
+    def make_tree(self, profiles):
         self._nodes = list(profiles.columns)
         distances = distance_matrix(profiles)
         self._linkage = fastcluster.average(squareform(distances))
