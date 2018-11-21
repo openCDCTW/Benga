@@ -1,3 +1,4 @@
+import os
 import subprocess
 import pandas as pd
 from sqlalchemy import create_engine, MetaData, Table, Column, ForeignKey
@@ -10,6 +11,7 @@ DBCONFIG = {}
 
 def load_database_config(logger=None):
     global DBCONFIG
+    os.environ.setdefault("DJANGO_SETTINGS_MODULE", "benga.settings")
     DBCONFIG["drivername"] = "postgresql+psycopg2"
     DBCONFIG["host"] = settings.DATABASES['default']['HOST']
     DBCONFIG["port"] = settings.DATABASES['default']['PORT']
