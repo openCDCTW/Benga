@@ -11,7 +11,7 @@ from profiling.serializers import ProfileSerializer
 
 @shared_task
 def do_profiling(batch_id, database, occr_level):
-    input_dir = os.path.join(settings.MEDIA_ROOT, "sequences", batch_id)
+    input_dir = os.path.join(settings.MEDIA_ROOT, "uploaded_sequences", batch_id)
     output_dir = os.path.join(settings.MEDIA_ROOT, "temp", batch_id)
     files.create_if_not_exist(output_dir)
 

@@ -15,7 +15,6 @@ def load_database_config(logger=None):
     DBCONFIG["port"] = settings.DATABASES['default']['PORT']
     DBCONFIG["username"] = settings.DATABASES['default']['USER']
     DBCONFIG["password"] = settings.DATABASES['default']['PASSWORD']
-    logger.info("Read database configuration successfully from {}!".format(filename))
     logger.info("Database: {}:{}".format(DBCONFIG["host"], DBCONFIG["port"]))
     logger.info("Login database as USER {} with PASSWORD ******".format(DBCONFIG["username"]))
 
