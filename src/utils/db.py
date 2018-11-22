@@ -1,3 +1,4 @@
+import os
 import subprocess
 import pandas as pd
 from sqlalchemy import create_engine, MetaData, Table, Column, ForeignKey
@@ -10,12 +11,12 @@ DBCONFIG = {}
 
 def load_database_config(logger=None):
     global DBCONFIG
+    os.environ.setdefault("DJANGO_SETTINGS_MODULE", "benga.settings")
     DBCONFIG["drivername"] = "postgresql+psycopg2"
     DBCONFIG["host"] = settings.DATABASES['default']['HOST']
     DBCONFIG["port"] = settings.DATABASES['default']['PORT']
     DBCONFIG["username"] = settings.DATABASES['default']['USER']
     DBCONFIG["password"] = settings.DATABASES['default']['PASSWORD']
-    logger.info("Read database configuration successfully from {}!".format(filename))
     logger.info("Database: {}:{}".format(DBCONFIG["host"], DBCONFIG["port"]))
     logger.info("Login database as USER {} with PASSWORD ******".format(DBCONFIG["username"]))
 
