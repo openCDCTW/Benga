@@ -17,7 +17,7 @@ class SequenceSerializer(serializers.ModelSerializer):
 class ProfileSerializer(serializers.ModelSerializer):
     class Meta:
         model = Profile
-        fields = ('id', 'created', 'file', 'occurrence', 'database')
+        fields = ('id', 'created', 'file', 'zip', 'occurrence', 'database')
 
 
 class ProfilingSerializer(serializers.ModelSerializer):
