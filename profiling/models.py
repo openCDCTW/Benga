@@ -3,7 +3,7 @@ from django.db import models
 
 
 def sequences_path(instance, filename):
-    return "uploaded_sequences/{0}/{1}".format(instance.batch_id.id, instance.file.name)
+    return "uploads/{0}/{1}".format(instance.batch_id.id, instance.file.name)
 
 
 def profiles_path(instance, filename):

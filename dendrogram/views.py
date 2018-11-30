@@ -1,30 +1,11 @@
 from django.http import Http404
 from rest_framework import generics, status
-from rest_framework import mixins
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from dendrogram.models import Batch, Profile, Dendrogram
-from dendrogram.serializers import BatchSerializer, ProfileSerializer, DendrogramSerializer, PlotingSerializer
+from dendrogram.models import Profile, Dendrogram
+from dendrogram.serializers import ProfileSerializer, DendrogramSerializer, PlotingSerializer
 from dendrogram.tasks import plot_dendrogram
-
-
-class BatchList(generics.ListCreateAPIView):
-    queryset = Batch.objects.all()
-    serializer_class = BatchSerializer
-
-
-class BatchDetail(mixins.RetrieveModelMixin,
-                  mixins.DestroyModelMixin,
-                  generics.GenericAPIView):
-    queryset = Batch.objects.all()
-    serializer_class = BatchSerializer
-
-    def get(self, request, *args, **kwargs):
-        return self.retrieve(request, *args, **kwargs)
-
-    def delete(self, request, *args, **kwargs):
-        return self.destroy(request, *args, **kwargs)
 
 
 class ProfileList(generics.ListCreateAPIView):
@@ -93,6 +74,6 @@ class Plotting(APIView):
     def post(self, request, format=None):
         serializer = PlotingSerializer(data=request.data)
         if serializer.is_valid():
-            plot_dendrogram.delay(str(serializer.data["id"]))
+            plot_dendrogram.s(str(serializer.data["id"]))
             return Response(serializer.data, status=status.HTTP_202_ACCEPTED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

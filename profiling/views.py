@@ -6,7 +6,7 @@ from django.http import Http404
 from profiling.models import Batch, Sequence, Profile
 from profiling.serializers import BatchSerializer, SequenceSerializer,\
     ProfileSerializer, ProfilingSerializer
-from profiling.tasks import do_profiling
+from profiling.tasks import do_profiling, profile_and_tree
 
 
 class BatchList(generics.ListCreateAPIView):
@@ -93,7 +93,17 @@ class Profiling(APIView):
     def post(self, request, format=None):
         serializer = ProfilingSerializer(data=request.data)
         if serializer.is_valid():
-            do_profiling.delay(str(serializer.data["id"]), serializer.data["database"],
+            do_profiling.s(str(serializer.data["id"]), serializer.data["database"],
+                           serializer.data["occurrence"])
+            return Response(serializer.data, status=status.HTTP_202_ACCEPTED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class ProfilingTree(APIView):
+    def post(self, request, format=None):
+        serializer = ProfilingSerializer(data=request.data)
+        if serializer.is_valid():
+            profile_and_tree.s(str(serializer.data["id"]), serializer.data["database"],
                                serializer.data["occurrence"])
             return Response(serializer.data, status=status.HTTP_202_ACCEPTED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

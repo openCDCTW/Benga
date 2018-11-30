@@ -29,8 +29,7 @@ def zip_folder(filepath):
     return filename
 
 
-@shared_task
-def do_profiling(batch_id, database, input_dir, occr_level, output_dir):
+def profile(batch_id, database, input_dir, occr_level, output_dir):
     profile_filename = os.path.join(output_dir, "profile.tsv")
     profiling.profiling(output_dir, input_dir, database, occr_level=occr_level, threads=2)
 
@@ -39,7 +38,10 @@ def do_profiling(batch_id, database, input_dir, occr_level, output_dir):
     files.create_if_not_exist(profile_dir)
     separate_profiles(profile_filename, profile_dir)
     zip_filename = zip_folder(profile_dir)
+    return profile_filename, zip_filename
 
+
+def save(batch_id, database, occr_level, profile_filename, zip_filename):
     profile_data = {"id": batch_id, "file": File(open(profile_filename, "rb")),
                     "zip": File(open(zip_filename, "rb")),
                     "occurrence": occr_level, "database": database}
@@ -48,5 +50,31 @@ def do_profiling(batch_id, database, input_dir, occr_level, output_dir):
         serializer.save()
     else:
         print(serializer.errors)
+
+
+@shared_task
+def do_profiling(batch_id, database, occr_level):
+    input_dir = os.path.join(settings.MEDIA_ROOT, "uploads", batch_id)
+    output_dir = os.path.join(settings.MEDIA_ROOT, "temp", batch_id)
+    files.create_if_not_exist(output_dir)
+
+    profile_filename, zip_filename = profile(batch_id, database, input_dir, occr_level, output_dir)
+    save(batch_id, database, occr_level, profile_filename, zip_filename)
+    shutil.rmtree(output_dir)
+
+
+@shared_task
+def profile_and_tree(batch_id, database, occr_level):
+    input_dir = os.path.join(settings.MEDIA_ROOT, "uploads", batch_id)
+    output_dir = os.path.join(settings.MEDIA_ROOT, "temp", batch_id)
+    files.create_if_not_exist(output_dir)
+
+    # profile
+    profile_filename, zip_filename = profile(batch_id, database, input_dir, occr_level, output_dir)
+    save(batch_id, database, occr_level, profile_filename, zip_filename)
+
+    # plot dendrogram
+    emf_filename, newick_filename, pdf_filename, png_filename, svg_filename = tree.plot(output_dir, output_dir)
+    tree.save(batch_id, emf_filename, newick_filename, pdf_filename, png_filename, svg_filename)
 
     shutil.rmtree(output_dir)

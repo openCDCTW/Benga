@@ -1,11 +1,5 @@
 from rest_framework import serializers
-from dendrogram.models import Batch, Profile, Dendrogram
-
-
-class BatchSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Batch
-        fields = ('id', 'created')
+from dendrogram.models import Profile, Dendrogram
 
 
 class ProfileSerializer(serializers.ModelSerializer):
