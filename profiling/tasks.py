@@ -19,7 +19,7 @@ def separate_profiles(profile, profile_dir):
         df[[col]].to_csv(os.path.join(profile_dir, str(col) + ".tsv"), sep="\t")
 
 
-def zip_dir(filepath):
+def zip_folder(filepath):
     filename = filepath + '.zip'
     with zipfile.ZipFile(filename, mode='w', compression=zipfile.ZIP_LZMA) as zip:
         for root, folders, files in os.walk(filepath):
@@ -28,18 +28,13 @@ def zip_dir(filepath):
     return filename
 
 
-@shared_task
-def do_profiling(batch_id, database, occr_level):
-    input_dir = os.path.join(settings.MEDIA_ROOT, "uploaded_sequences", batch_id)
-    output_dir = os.path.join(settings.MEDIA_ROOT, "temp", batch_id)
-    files.create_if_not_exist(output_dir)
-
+def profile(batch_id, database, input_dir, occr_level, output_dir):
     profile_filename = os.path.join(output_dir, "profile.tsv")
     profiling.profiling(output_dir, input_dir, database, occr_level=occr_level, threads=2)
 
     # Separate individual profiles and zip
     profile_dir = os.path.join(output_dir, batch_id)
-    files.create_if_not_exist(output_dir)
+    files.create_if_not_exist(profile_dir)
     separate_profiles(profile_filename, profile_dir)
     zip_filename = zip_dir(profile_dir)
 
