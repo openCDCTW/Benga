@@ -34,7 +34,7 @@ def dendrograms_newick_path(instance, filename):
 
 class Profile(models.Model):
     id = models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, null=False, auto_created=True)
-    batch_id = models.ForeignKey(Batch, on_delete=models.CASCADE)
+    batch_id = models.ForeignKey(Batch, on_delete=models.CASCADE, related_name='+')
     file = models.FileField(upload_to=profiles_path, null=False)
 
 
