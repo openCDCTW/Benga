@@ -30,18 +30,18 @@ addons:
     - postgresql-client-9.6
 
 stages:
-  - "install"
   - "setup database"
   - "test"
 
+install:
+  - pip3 install -r requirements.txt --upgrade
+
+before_script:
+  - psql -U postgres -c 'create database travis_ci_test;'
+
 jobs:
   include:
-    - stage: "install"
-      install:
-        - pip3 install -r requirements.txt --upgrade
     - stage: "setup database"
-      before_script:
-        - psql -U postgres -c 'create database travis_ci_test;'
       script:
         - python3 manage.py makemigrations
         - python3 manage.py migrate
