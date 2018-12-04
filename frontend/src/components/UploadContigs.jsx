@@ -64,38 +64,47 @@ class Upload_contigs extends React.Component {
         
         let fileCheck = this.dropzone.files.length;
 
-        if(fileCheck >= 5 && window.databaseName == ""){
-            alert('Please choose a database !');
-        }else if(fileCheck < 5){
+        if(fileCheck < 5){
             alert('Please upload at least 5 files');
-        }else if( fileCheck >= 5 && window.databaseName != "" ){
-            this.dropzone.processQueue();
-            this.setState(state => ({ upload_confirm: true , to: '/profile_view' ,
-                switch: true }));
+            return ;
         }
+
+        if(window.databaseName == ""){
+            alert('Please choose a database !');
+            return ;
+        }
+
+
+        this.dropzone.processQueue();
+        this.setState(state => ({ upload_confirm: true , to: '/profile_view' ,
+            switch: true }));
+
     }
 
     submit(){
 
 
-        if (this.state.upload_confirm == false ){
+        if (this.state.upload_confirm == false){
             alert('Please upload files first! (At least 5 files)');
-        }else{
-            var scheme = {};
-            scheme.occurrence = "95";
-            scheme.database = window.databaseName;
-            scheme.id = window.batchid;
-            fetch('api/profiling/profiling/', {
-                method:'POST',
-                headers: new Headers({'content-type': 'application/json'}),
-                body: JSON.stringify(scheme)
-            });
+            return ;
+        }
 
-        };
+        var scheme = {};
+        scheme.occurrence = "95";
+        scheme.database = window.databaseName;
+        scheme.id = window.batchid;
+        fetch('api/profiling/profiling/', {
+            method:'POST',
+            headers: new Headers({'content-type': 'application/json'}),
+            body: JSON.stringify(scheme)
+        });
+
     }
 
     remove(){
+        
         this.dropzone.removeAllFiles();
+        
         this.setState(state => ({ to: '/', upload_confirm: false, switch: false }));
         fetch('api/profiling/upload/', {method:'POST'})
         .then(function(res){
@@ -121,18 +130,16 @@ class Upload_contigs extends React.Component {
                 <Navigation value={0}/>
                 <br />
                 <br />
+                <DropzoneComponent config={config} eventHandlers={eventHandlers} 
+                    djsConfig={djsConfig} />
+                <br />
+                <br />
                 <div style={{ display:'flex', justifyContent:'center', alignItems:'center'}}>
                 <font> NOTICE: Please use &nbsp;
                     <a href="http://cab.spbu.ru/software/spades/" target="_blank">SPAdes</a>
                     &nbsp; to assembly before upload. 
                 </font>
                 </div>
-                <br />
-                <br />
-                <DropzoneComponent config={config} eventHandlers={eventHandlers} 
-                    djsConfig={djsConfig} />
-                <br />
-                <br />
                 <br />
                 <div style={{ display:'flex', justifyContent:'center', alignItems:'center'}}>
                     <Button variant="contained" color="default" onClick={this.handlePost.bind(this)}>
@@ -165,9 +172,6 @@ class Upload_contigs extends React.Component {
                 <br />
                 <br />
                 </div>
-                <br />
-                <br />
-                <br />
                 <br />
             </div>
             );

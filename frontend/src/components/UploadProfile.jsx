@@ -58,31 +58,36 @@ class Upload_profile extends React.Component {
 
         let fileCheck = this.dropzone.files.length;
 
-        if(fileCheck >= 5){
-            this.dropzone.processQueue();
-            this.setState(state => ({ to: '/dendrogram_view', upload_confirm: true}));
-        }else if(fileCheck < 5){
+        if(fileCheck < 5){
             alert('Please upload at least 5 files');
+            return ;
         }
+
+        this.dropzone.processQueue();
+        this.setState(state => ({ to: '/dendrogram_view', upload_confirm: true}));
+    
     }
 
     submit(){
 
         if (this.state.upload_confirm == false ){
             alert('Please upload files first! (At least 5 files)');
-        }else{
-            var scheme = {};
-            scheme.id = window.batchid;
-            fetch('api/dendrogram/plot/', {
-                method:'POST',
-                headers: new Headers({'content-type': 'application/json'}),
-                body: JSON.stringify(scheme)
-            });
+            return ;
         }
+
+        var scheme = {};
+        scheme.id = window.batchid;
+        fetch('api/dendrogram/plot/', {
+            method:'POST',
+            headers: new Headers({'content-type': 'application/json'}),
+            body: JSON.stringify(scheme)
+        });
     }
 
     remove(){
+
         this.dropzone.removeAllFiles();
+        
         this.setState(state => ({ to: '/upload_profile', upload_confirm: false}));
         fetch('api/dendrogram/upload/', {method:'POST'})
         .then(function(res){
