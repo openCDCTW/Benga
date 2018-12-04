@@ -1,7 +1,5 @@
-/* React Filepicker Example CSS */
 
 header {
-    cellpadding: 0;
     text-align: center;
     height: 64px;
     background-color: #2E9286;
@@ -57,9 +55,7 @@ button:active{
 footer {
     height:32px;
     text-align: center;
-    cellpadding: 0;
-    color: #FFFFFF;
-    background-color:black;
+    color: #333333;
 }
 
 .filepicker.dropzone .dz-preview.dz-image-preview {

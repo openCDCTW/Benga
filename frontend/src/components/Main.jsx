@@ -2,11 +2,11 @@ import React from 'react';
 import ReactDOM from 'react-dom';
 import { BrowserRouter as Router, Route } from "react-router-dom";
 import Header from './Header.jsx';
-import Navigation from './Navigation.jsx';
 import Footer from './Footer.jsx';
-import Upload from './Upload.jsx';
-import Profile_view from './Profile_view.jsx';
-import Dendrogram_view from './Dendrogram_view.jsx'
+import upload_contigs from './UploadContigs.jsx';
+import Profile_view from './ProfileView.jsx';
+import Upload_profile from './UploadProfile.jsx';
+import Dendrogram_view from './DendrogramView.jsx';
 
 class Main extends React.Component {
 
@@ -15,9 +15,9 @@ class Main extends React.Component {
             <Router>
                 <div>
                     <Header />
-                    <Navigation />
-                    <Route path="/" exact component={Upload} />
+                    <Route path="/" exact component={upload_contigs} />
                     <Route path="/profile_view" component={Profile_view} />
+                    <Route path="/upload_profile" component={Upload_profile} />
                     <Route path="/dendrogram_view" component={Dendrogram_view} />
                     <Footer />
                 </div>
