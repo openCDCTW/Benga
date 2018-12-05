@@ -1,9 +1,10 @@
 import uuid
 from django.db import models
+from profiling.models import Batch
 
 
 def profiles_path(instance, filename):
-    return "uploaded_profiles/{0}/{1}".format(str(instance.batch_id.id), filename)
+    return "uploads/{0}/{1}".format(str(instance.batch_id.id), filename)
 
 
 def dendrograms_png_path(instance, filename):
@@ -31,14 +32,9 @@ def dendrograms_newick_path(instance, filename):
                                                "dendrogram-" + str(instance.id.id)[0:8] + ".newick")
 
 
-class Batch(models.Model):
-    id = models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, null=False, auto_created=True)
-    created = models.DateTimeField(auto_now_add=True)
-
-
 class Profile(models.Model):
     id = models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, null=False, auto_created=True)
-    batch_id = models.ForeignKey(Batch, on_delete=models.CASCADE)
+    batch_id = models.ForeignKey(Batch, on_delete=models.CASCADE, related_name='+')
     file = models.FileField(upload_to=profiles_path, null=False)
 
 

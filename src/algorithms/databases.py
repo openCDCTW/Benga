@@ -283,7 +283,7 @@ def make_database(output_dir, drop_by_occur, logger=None, threads=2):
     profiles.to_csv(profile_file, sep="\t")
 
     logger.info("Saving allele sequences...")
-    refseqs = {locus: operations.make_seqid(counter.most_common(1)[0][0]) for locus, counter in freq.items()}
+    refseqs = {locus: counter.most_common(1)[0][0] for locus, counter in freq.items()}
     save_sequences(freq, refseqs, dbname)
 
     logger.info("Making dynamic schemes...")
