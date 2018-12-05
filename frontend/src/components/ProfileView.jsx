@@ -40,56 +40,56 @@ export default class Profile_view extends React.Component {
 
     		return(
     			<div>
-                    <Paper square>
-                        <Tabs value={false} centered>
-                            <Tab label=" " disabled/>
-                        </Tabs>
-                    </Paper>
-                    <br />
-                    <br />
-                    <br />
-                    <div style={{ display:'flex', justifyContent:'center', alignItems:'center'}}>
-                        <font> Please hold on ... </font>
-                    </div>
-                    <br />
-                    <div style={{ display:'flex', justifyContent:'center', alignItems:'center'}}>
-                        <img src="https://svgshare.com/i/9N5.svg" />
-                    </div>
-                    <br />
-                    <br />
-                    <br />
-    			</div>
+			    <Paper square>
+				<Tabs value={false} centered>
+				    <Tab label=" " disabled/>
+				</Tabs>
+			    </Paper>
+			    <br />
+			    <br />
+			    <br />
+			    <div style={{ display:'flex', justifyContent:'center', alignItems:'center'}}>
+				<font> Please hold on ... </font>
+			    </div>
+			    <br />
+			    <div style={{ display:'flex', justifyContent:'center', alignItems:'center'}}>
+				<img src="https://svgshare.com/i/9N5.svg" />
+			    </div>
+			    <br />
+			    <br />
+			    <br />
+			</div>
     			);
     	
     	}else{
     		return (
-    				<div id="url">
-                        <Paper square>
-                            <Tabs centered>
-                                <Tab label=" "/>
-                            </Tabs>
-                        </Paper>
-    					<br />
-                        <div style={{ display:'flex', justifyContent:'center', alignItems:'center'}}>
-                            <a download href={this.state.profile_result_Url} 
-                             style={{ textDecoration:'none' }}>
-                                <Button variant="contained" color="default">
-                                Download all profiles 
-                                &nbsp;&nbsp;
-                                <DownloadIcon />
-                                </Button>
-                            </a>
-                        </div>
-    					<br />
-    					<br />
-                        <Link to="/" style={{ textDecoration:'none' }}>
-                            <Button variant="contained" color="default">
-                                <ReplyIcon />
-                                &nbsp;&nbsp;
-                                Back
-                            </Button>
-                        </Link>
-    				</div>
+    			<div id="url">
+				<Paper square>
+				    <Tabs centered>
+					<Tab label=" "/>
+				    </Tabs>
+				</Paper>
+    				<br />
+				<div style={{ display:'flex', justifyContent:'center', alignItems:'center'}}>
+				    <a download href={this.state.profile_result_Url} 
+				     style={{ textDecoration:'none' }}>
+					<Button variant="contained" color="default">
+					Download all profiles 
+					&nbsp;&nbsp;
+					<DownloadIcon />
+					</Button>
+				    </a>
+				</div>
+    				<br />
+    				<br />
+				<Link to="/" style={{ textDecoration:'none' }}>
+				    <Button variant="contained" color="default">
+					<ReplyIcon />
+					&nbsp;&nbsp;
+					Back
+				    </Button>
+				</Link>
+    			</div>
         	);
     	}
         
