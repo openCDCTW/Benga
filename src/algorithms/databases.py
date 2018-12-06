@@ -200,7 +200,7 @@ def make_schemes(refseqs, total_isolates):
     schemes = db.from_sql("select locus_id, num_isolates from locus_meta;")
     schemes = schemes[schemes["locus_id"].isin(refseqs.keys())]
     schemes["occurrence"] = list(map(lambda x: round(x/total_isolates * 100, 2), schemes["num_isolates"]))
-    schemes["ref_allele"] = list(map(lambda x: refseqs[x], schemes["locus_id"]))
+    schemes["ref_allele"] = list(map(lambda x: str(refseqs[x]), schemes["locus_id"]))
     schemes = schemes[["locus_id", "occurrence", "ref_allele"]]
     db.table_to_sql("loci", schemes)
 

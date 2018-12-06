@@ -74,6 +74,6 @@ class Plotting(APIView):
     def post(self, request, format=None):
         serializer = PlotingSerializer(data=request.data)
         if serializer.is_valid():
-            plot_dendrogram.s(str(serializer.data["id"]))
+            plot_dendrogram.delay(str(serializer.data["id"]))
             return Response(serializer.data, status=status.HTTP_202_ACCEPTED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
