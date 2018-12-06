@@ -93,8 +93,8 @@ class Profiling(APIView):
     def post(self, request, format=None):
         serializer = ProfilingSerializer(data=request.data)
         if serializer.is_valid():
-            do_profiling.s(str(serializer.data["id"]), serializer.data["database"],
-                           serializer.data["occurrence"])
+            do_profiling.delay(str(serializer.data["id"]), serializer.data["database"],
+                               serializer.data["occurrence"])
             return Response(serializer.data, status=status.HTTP_202_ACCEPTED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -103,7 +103,7 @@ class ProfilingTree(APIView):
     def post(self, request, format=None):
         serializer = ProfilingSerializer(data=request.data)
         if serializer.is_valid():
-            profile_and_tree.s(str(serializer.data["id"]), serializer.data["database"],
-                               serializer.data["occurrence"])
+            profile_and_tree.delay(str(serializer.data["id"]), serializer.data["database"],
+                                   serializer.data["occurrence"])
             return Response(serializer.data, status=status.HTTP_202_ACCEPTED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
