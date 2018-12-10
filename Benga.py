@@ -35,7 +35,7 @@ def makedb(input_dir, output_dir, drop_by_occur, threads):
 @click.argument('database', type=str)
 @click.argument('input_dir', type=click.Path(exists=True))
 @click.argument('output_dir', type=click.Path(exists=True))
-def statistics(input_dir, output_dir, database):
+def stats(input_dir, output_dir, database):
     """Plot statistics of DATABASE and profile from INPUT_DIR, and then output to OUTPUT_DIR."""
     statistics.calculate_loci_coverage(input_dir, output_dir, database=database)
     statistics.calculate_allele_length(output_dir, database=database)
@@ -56,8 +56,7 @@ def statistics(input_dir, output_dir, database):
 @click.argument('database', type=str)
 @click.argument('input_dir', type=click.Path(exists=True))
 @click.argument('output_dir', type=click.Path(exists=True))
-def profiling(input_dir, output_dir, database, threads, occrrence, not_extend, no_profiles,
-              debug):
+def profile(input_dir, output_dir, database, threads, occrrence, not_extend, no_profiles, debug):
     """Make profiles with fasta files in INPUT_DIR against DATABASE, and then output to OUTPUT_DIR."""
     profiling.profiling(output_dir, input_dir, database, threads=threads, occr_level=occrrence,
                         enable_adding_new_alleles=(not not_extend), generate_profiles=(not no_profiles),

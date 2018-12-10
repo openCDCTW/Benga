@@ -68,7 +68,7 @@ def filter_rRNA(matrix):
 
 
 def extract_profiles(roary_matrix_file, dbname, metadata_cols=13):
-    matrix = pd.read_csv(roary_matrix_file)
+    matrix = pd.read_csv(roary_matrix_file, low_memory=False)
     matrix["Gene"] = matrix["Gene"].str.replace("/", "_")
     matrix["Gene"] = matrix["Gene"].str.replace(" ", "_")
     rename_cols = {"Gene": "locus_id", "No. isolates": "num_isolates", "No. sequences": "num_sequences",
