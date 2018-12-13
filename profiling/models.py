@@ -31,6 +31,6 @@ class Profile(models.Model):
     id = models.OneToOneField(Batch, on_delete=models.CASCADE, primary_key=True)
     created = models.DateTimeField(auto_now_add=True)
     file = models.FileField(upload_to=profiles_path, null=False)
-    zip = models.FileField(upload_to=zip_path, null=False)
+    zip = models.FileField(upload_to=zip_path, null=False, max_length=250)
     occurrence = models.SmallIntegerField(null=False)
     database = models.TextField(null=False)
