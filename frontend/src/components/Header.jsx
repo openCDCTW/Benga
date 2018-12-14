@@ -16,5 +16,3 @@ export default class Header extends React.Component {
         );
     }
 }
-
-// <font size="3" color="white">Bacterial Epidemiology NGs Analysis</font>
