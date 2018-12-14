@@ -15,17 +15,6 @@ class Upload_profile extends React.Component {
 
         super(props);
 
-        fetch('api/dendrogram/upload/', {method:'POST'})
-        .then(function(res){
-           return res.json();
-        }).then(function(batch){
-           return getID(batch);
-        });
-
-        var getID=function(data){
-            window.batchid = data.id;
-        };
-
         this.state = {
             to: "/upload_profile",
             upload_confirm: false,
@@ -89,7 +78,7 @@ class Upload_profile extends React.Component {
         this.dropzone.removeAllFiles();
         
         this.setState(state => ({ to: '/upload_profile', upload_confirm: false}));
-        fetch('api/dendrogram/upload/', {method:'POST'})
+        fetch('api/profiling/upload/', {method:'POST'})
         .then(function(res){
            return res.json();
         }).then(function(batch){

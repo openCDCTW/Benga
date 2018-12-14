@@ -10,49 +10,44 @@ import ReplyIcon from '@material-ui/icons/Reply';
 import DownloadIcon from '@material-ui/icons/CloudDownload';
 
 
-export default class Profile_view extends React.Component {
+export default class QueryData extends React.Component {
 
 	constructor(props) {
 		super(props);
 
-        let fileName_str="", i=0, j=0;
-        for (i; i < window.fileName.length; i++){
-            if(i < window.fileName.length-1){
-                fileName_str += window.fileName[i] + ", "
-            }else{
-                fileName_str += window.fileName[i]
-            }
-        };
-
-        this.state = { fileName :fileName_str};
-		this.query_profile_result = this.query_profile_result.bind(this);
+        this.state = {};
+		this.query_profile = this.query_profile.bind(this);
+        this.query_dendrogram = this.query_dendrogram.bind(this);
     }
 
-	query_profile_result(){
+	query_profile(){
 
-		if(this.state.profile_result_all == undefined){
-			fetch('api/profiling/profile/' + window.batchid, { method:'GET'})
-			.then(response => response.json())
-			.then(result => this.setState(state => ({
+        fetch('api/profiling/profile/' + window.queryID, { method:'GET'})
+            .then(response => response.json())
+            .then(result => this.setState(state => ({
                 profile_result_all: result.file,
-                profile_result_zip: result.zip })));
-            fetch('api/dendrogram/dendrogram/' + window.batchid, { method: 'GET'})
+                profile_result_zip: result.zip,})));
+	}
+
+    query_dendrogram(){
+
+        fetch('api/dendrogram/dendrogram/' + window.queryID, { method: 'GET'})
             .then(response => response.json())
             .then(result => this.setState(state => ({
                 png_file: result.png_file, 
                 pdf_file: result.pdf_file,
                 svg_file: result.svg_file, 
                 emf_file: result.emf_file, 
-                newick_file: result.newick_file })));
-		}else{
-			clearInterval(this.interval);
-		}
+                newick_file: result.newick_file, })));
+    }
 
-	}
+    cleanID(){
+        window.queryID = "";
+    }
 
 	componentDidMount(){
-		this.query_profile_result();
-		this.interval = setInterval(this.query_profile_result, 60000);
+		this.query_profile();
+        this.query_dendrogram();
 	}
 
     render() {
@@ -68,29 +63,24 @@ export default class Profile_view extends React.Component {
                     </Paper>
                     <br />
                     <br />
-                    <div style={{ display:'flex', justifyContent:'center', alignItems:'center'}}>
-                        <font size="4">Upload Infomation</font>
-                    </div>
-                    <br />
-                    <div style={{ display:'flex', justifyContent:'center', alignItems:'center'}}>
-                        <font size="4">Your batch ID : {window.batchid}</font>
-                    </div>
-                    <div style={{ display:'flex', justifyContent:'center', alignItems:'center'}}>
-                        <font size="4">Database : {window.databaseName}</font>
-                    </div>
-                    <div style={{ display:'flex', justifyContent:'center', alignItems:'center'}}>
-                        <font size="4">File name : {this.state.fileName}</font>
-                    </div>
                     <br />
                     <br />
                     <div style={{ display:'flex', justifyContent:'center', alignItems:'center'}}>
-                        <font size="4"> Please hold on ... </font>
+                        <font size="4"> Data not found. </font>
                     </div>
                     <br />
-                    <div style={{ display:'flex', justifyContent:'center', alignItems:'center'}}>
-                        <img src="https://svgshare.com/i/9N5.svg" />
-                    </div>
                     <br />
+                    <br />
+                    <br />
+                    <div style={{ display:'flex', justifyContent:'center', alignItems:'center' }}>
+                        <Link to="/" style={{ textDecoration:'none' }}>
+                                <Button variant="contained" color="default">
+                                    <ReplyIcon />
+                                    &nbsp;&nbsp;
+                                    Back
+                                </Button>
+                        </Link>
+                    </div>
                     <br />
                     <br />
     			</div>
@@ -106,19 +96,19 @@ export default class Profile_view extends React.Component {
                         </Paper>
     					<br />
                         <div style={{ display:'flex', justifyContent:'center', alignItems:'center'}}>
-                            <a download href={this.state.profile_result_zip} 
+                            <a download href={this.state.profile_result_all} 
                              style={{ textDecoration:'none' }}>
                                 <Button variant="contained" color="default">
-                                Download profiles (.zip)
+                                Download profiles (.tsv)
                                 &nbsp;&nbsp;
                                 <DownloadIcon />
                                 </Button>
                             </a>
                             &nbsp;&nbsp;&nbsp;&nbsp;
-                            <a download href={this.state.profile_result_all} 
+                            <a download href={this.state.profile_result_zip} 
                              style={{ textDecoration:'none' }}>
                                 <Button variant="contained" color="default">
-                                Download profiles (.tsv)
+                                Download profiles (.zip)
                                 &nbsp;&nbsp;
                                 <DownloadIcon />
                                 </Button>
@@ -130,10 +120,13 @@ export default class Profile_view extends React.Component {
                             <img src={this.state.svg_file} />
                         </div>
                         <br />
+                        <div style={{ display:'flex', justifyContent:'center', alignItems:'center'}}>
+                            <font size="4">Download Dendrogram</font>
+                        </div>
+                        <br />
                         <br />
                         <div style={{ display:'flex', justifyContent:'center', alignItems:'center'}}>
-                            <font>Download</font> 
-                            &nbsp;&nbsp;&nbsp;&nbsp;
+                            
                             <a download href={this.state.png_file} style={{ textDecoration:'none' }}>
                                 <Button variant="contained" color="default">
                                 Png 
@@ -166,9 +159,9 @@ export default class Profile_view extends React.Component {
                         </div>
                         <br />
                         <br />
-                        <div style={{ display:'flex', justifyContent:'center', alignItems:'center'}}>
+                        <div style={{ display:'flex', justifyContent:'center', alignItems:'center' }}>
                             <Link to="/" style={{ textDecoration:'none' }}>
-                                <Button variant="contained" color="default">
+                                <Button variant="contained" color="default" onClick={this.cleanID.bind(this)}>
                                     <ReplyIcon />
                                     &nbsp;&nbsp;
                                     Back
@@ -178,8 +171,7 @@ export default class Profile_view extends React.Component {
                         <br />
                         <br />
     				</div>
-        	);
-    	}
-        
+                );
+            }
     }
 }

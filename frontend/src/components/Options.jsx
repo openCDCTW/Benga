@@ -14,8 +14,8 @@ const styles = theme => ({
     flexWrap: 'wrap',
   },
   formControl: {
-    margin: theme.spacing.unit,
-    minWidth: 120,
+    margin: theme.spacing.unit * 5,
+    minWidth: 240,
   },
   selectEmpty: {
     marginTop: theme.spacing.unit * 2,

@@ -8,10 +8,13 @@ export default class Header extends React.Component {
         return (
             <header>
             <div>
-                <font size="5" color="white">BENGA</font><br />
-                <font size="3" color="white">Bacterial Epidemiology NGs Analysis</font>
+                <br />
+                <font size="5" color="white">Bacterial cgMLST</font>
+                <br />
             </div>
             </header>
         );
     }
 }
+
+// <font size="3" color="white">Bacterial Epidemiology NGs Analysis</font>
