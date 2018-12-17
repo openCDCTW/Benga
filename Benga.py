@@ -67,7 +67,9 @@ def profile(input_dir, output_dir, database, threads, occrrence, not_extend, no_
               context_settings=CONTEXT_SETTINGS)
 @click.argument('input_dir', type=click.Path(exists=True))
 @click.argument('output_dir', type=click.Path(exists=True))
-def tree(input_dir, output_dir):
+@click.option('--node-annotate', default=False, is_flag=True,
+              help=" Annotating the distances on dendrogram node [Default: Enable]")
+def tree(input_dir, output_dir, node_annotate):
     """Plot dendrogram with profile.tsv file in INPUT_DIR, and output to OUTPUT_DIR."""
     profiles = pd.read_csv(os.path.join(input_dir, "profile.tsv"), sep="\t", index_col=0)
     dendro = phylogeny.Dendrogram()
@@ -75,9 +77,9 @@ def tree(input_dir, output_dir):
     date = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M")
     filename = date + "_tree"
     dendro.to_newick(os.path.join(output_dir, "{}.newick".format(filename)))
-    dendro.scipy_tree(os.path.join(output_dir, "{}.pdf".format(filename)))
-    dendro.scipy_tree(os.path.join(output_dir, "{}.svg".format(filename)))
-    dendro.scipy_tree(os.path.join(output_dir, "{}.png".format(filename)))
+    dendro.scipy_tree(os.path.join(output_dir, "{}.pdf".format(filename)), node_annotate)
+    dendro.scipy_tree(os.path.join(output_dir, "{}.svg".format(filename)), node_annotate)
+    dendro.scipy_tree(os.path.join(output_dir, "{}.png".format(filename)), node_annotate)
     subprocess.call(['libreoffice', '--headless', '--convert-to', 'emf', '--outdir', output_dir,
                      os.path.join(output_dir, "{}.svg".format(filename))])
 

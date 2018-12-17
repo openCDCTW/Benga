@@ -7,6 +7,7 @@ import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 from collections import Counter
+from matplotlib.ticker import MaxNLocator
 
 
 class Dendrogram:
@@ -33,15 +34,21 @@ class Dendrogram:
     def render_on(self, file, w=900, h=1200, units="px", dpi=300, *args):
         self.ete_tree.render(file, w=w, h=h, units=units, dpi=dpi, *args)
 
-    def scipy_tree(self, file, w=8, dpi=300):
+    def scipy_tree(self, file, node_annotate, w=8, dpi=300):
         plt.style.use("ggplot")
         fig, ax = plt.subplots(1, 1, figsize=(w, int(len(self._nodes)*0.3)))
         ax.grid(False)
-        ax.tick_params(axis='x', bottom='off', top='off', labelbottom='off')
         ax.patch.set_facecolor('none')
+        ax.xaxis.set_major_locator(MaxNLocator(integer=True))
         plt.rcParams['svg.fonttype'] = 'none'
-        hierarchy.dendrogram(self._linkage, labels=self._nodes, orientation="left",
-                             leaf_font_size=10, above_threshold_color="#808080")
+        tree = hierarchy.dendrogram(self._linkage, labels=self._nodes, orientation="left",
+                                    leaf_font_size=10, above_threshold_color="#808080")
+        if node_annotate:
+            for i, d, in zip(tree['icoord'], tree['dcoord']):
+                x = 0.5 * sum(i[1:3])
+                y = d[1]
+                plt.annotate(int(y), (y, x), xytext=(-2, 8), textcoords='offset points', va='top', ha='right',
+                             fontsize=8)
         fig.savefig(file, dpi=dpi, bbox_inches='tight', pad_inches=1)
 
     def make_tree(self, profiles):
