@@ -34,7 +34,7 @@ class Dendrogram:
     def render_on(self, file, w=900, h=1200, units="px", dpi=300, *args):
         self.ete_tree.render(file, w=w, h=h, units=units, dpi=dpi, *args)
 
-    def scipy_tree(self, file, node_annotate, w=8, dpi=300):
+    def scipy_tree(self, file, distance_annotate, w=8, dpi=300):
         plt.style.use("ggplot")
         fig, ax = plt.subplots(1, 1, figsize=(w, int(len(self._nodes)*0.3)))
         ax.grid(False)
@@ -43,7 +43,7 @@ class Dendrogram:
         plt.rcParams['svg.fonttype'] = 'none'
         tree = hierarchy.dendrogram(self._linkage, labels=self._nodes, orientation="left",
                                     leaf_font_size=10, above_threshold_color="#808080")
-        if node_annotate:
+        if distance_annotate:
             for i, d, in zip(tree['icoord'], tree['dcoord']):
                 x = 0.5 * sum(i[1:3])
                 y = d[1]
@@ -54,7 +54,7 @@ class Dendrogram:
     def make_tree(self, profiles):
         self._nodes = list(profiles.columns)
         distances = distance_matrix(profiles)
-        self._linkage = fastcluster.average(squareform(distances))
+        self._linkage = fastcluster.single(squareform(distances))
         self._tree = hierarchy.to_tree(self._linkage, False)
 
     def to_newick(self, file):
