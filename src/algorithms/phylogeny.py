@@ -47,8 +47,8 @@ class Dendrogram:
             for i, d, in zip(tree['icoord'], tree['dcoord']):
                 x = 0.5 * sum(i[1:3])
                 y = d[1]
-                plt.annotate(int(y), (y, x), xytext=(-2, 8), textcoords='offset points', va='top', ha='right',
-                             fontsize=8)
+                plt.annotate(int(y), (y, x), xytext=(-2, 8), textcoords='offset points',
+                             va='top', ha='right', fontsize=8)
         fig.savefig(file, dpi=dpi, bbox_inches='tight', pad_inches=1)
 
     def make_tree(self, profiles):
