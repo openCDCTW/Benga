@@ -62,25 +62,15 @@ export default class Example extends React.Component {
 	            <div style={{ display:'flex', justifyContent:'center', alignItems:'center'}}>
 	            	<font size="4">Download </font> 
 	            	&nbsp;&nbsp;&nbsp;&nbsp;
-	            	<Button variant="contained" color="default">
-	                    Png 
-	                </Button>
+	            	<Button variant="contained" color="default">Png</Button>
 	                &nbsp;&nbsp;&nbsp;&nbsp;
-	                <Button variant="contained" color="default">
-	                    Pdf
-	                </Button>
+	                <Button variant="contained" color="default">Pdf</Button>
 	                &nbsp;&nbsp;&nbsp;&nbsp;
-	                <Button variant="contained" color="default">
-	                	Svg
-	                </Button>
+	                <Button variant="contained" color="default">Svg</Button>
 	                &nbsp;&nbsp;&nbsp;&nbsp;
-	                <Button variant="contained" color="default">
-	                	emf
-	                </Button>
+	                <Button variant="contained" color="default">emf</Button>
 	                &nbsp;&nbsp;&nbsp;&nbsp;
-	                <Button variant="contained" color="default">
-	                	newick
-	                </Button>
+	                <Button variant="contained" color="default">newick</Button>
 	            </div>
 	            <br />
 	            <br />
