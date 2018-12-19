@@ -21,7 +21,7 @@ export default class Example extends React.Component {
     }
 
 	query_demo(){
-		fetch('api/dendrogram/dendrogram/44a9aa35-cfd4-45ac-b7e6-23c7181bf8a0/', { method: 'GET'})
+		fetch('api/dendrogram/dendrogram/c327bb9e-2dea-4fe3-baee-88d0bcf4d93a/', { method: 'GET'})
             .then(response => response.json())
             .then(result => this.setState(state => ({
                 svg_file: result.svg_file })));

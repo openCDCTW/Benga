@@ -24,6 +24,7 @@ export default class Profile_view extends React.Component {
             }
         };
 
+
         this.state = { fileName :fileName_str};
 		this.query_profile_result = this.query_profile_result.bind(this);
     }
@@ -68,24 +69,22 @@ export default class Profile_view extends React.Component {
                     </Paper>
                     <br />
                     <br />
+                    <br />
+                    <br />
                     <div style={{ display:'flex', justifyContent:'center', alignItems:'center'}}>
-                        <font size="4">Upload Infomation</font>
+                        <font size="6">Your batch ID : {window.batchid}</font>
                     </div>
                     <br />
                     <div style={{ display:'flex', justifyContent:'center', alignItems:'center'}}>
-                        <font size="4">Your batch ID : {window.batchid}</font>
-                    </div>
-                    <div style={{ display:'flex', justifyContent:'center', alignItems:'center'}}>
                         <font size="4">Database : {window.databaseName}</font>
                     </div>
+                    <br />
                     <div style={{ display:'flex', justifyContent:'center', alignItems:'center'}}>
                         <font size="4">File name : {this.state.fileName}</font>
                     </div>
                     <br />
                     <br />
-                    <div style={{ display:'flex', justifyContent:'center', alignItems:'center'}}>
-                        <font size="4"> Please hold on ... </font>
-                    </div>
+                    <br />
                     <br />
                     <div style={{ display:'flex', justifyContent:'center', alignItems:'center'}}>
                         <img src="https://svgshare.com/i/9N5.svg" />
