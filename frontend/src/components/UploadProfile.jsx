@@ -15,17 +15,6 @@ class Upload_profile extends React.Component {
 
         super(props);
 
-        fetch('api/dendrogram/upload/', {method:'POST'})
-        .then(function(res){
-           return res.json();
-        }).then(function(batch){
-           return getID(batch);
-        });
-
-        var getID=function(data){
-            window.batchid = data.id;
-        };
-
         this.state = {
             to: "/upload_profile",
             upload_confirm: false,
@@ -89,7 +78,7 @@ class Upload_profile extends React.Component {
         this.dropzone.removeAllFiles();
         
         this.setState(state => ({ to: '/upload_profile', upload_confirm: false}));
-        fetch('api/dendrogram/upload/', {method:'POST'})
+        fetch('api/profiling/upload/', {method:'POST'})
         .then(function(res){
            return res.json();
         }).then(function(batch){
@@ -113,7 +102,19 @@ class Upload_profile extends React.Component {
                 <Navigation value={1}/>
                 <br />
                 <br />
-                <DropzoneComponent config={config} eventHandlers={eventHandlers} djsConfig={djsConfig} />
+                <div style={{ width:'97%', display:'flex', justifyContent:'flex-end', 
+                alignItems:'flex-end'}}>
+                    <Button variant="contained" color="secondary" onClick={this.remove.bind(this)}>
+                        Remove all files
+                        &nbsp;&nbsp;
+                        <DeleteIcon />
+                    </Button>
+                </div>
+                <br />
+                <div style = {{ display:'flex', justifyContent:'center', alignItems:'center' }}>
+                    <DropzoneComponent config={config} eventHandlers={eventHandlers} 
+                    djsConfig={djsConfig} />
+                </div>
                 <br />
                 <br />
                 <br />
@@ -122,12 +123,6 @@ class Upload_profile extends React.Component {
                         Upload
                         &nbsp;&nbsp;
                         <CloudUploadIcon />
-                    </Button>
-                    &nbsp;&nbsp;&nbsp;&nbsp;
-                    <Button variant="contained" color="secondary" onClick={this.remove.bind(this)}>
-                        Remove all files
-                        &nbsp;&nbsp;
-                        <DeleteIcon />
                     </Button>
                     &nbsp;&nbsp;&nbsp;&nbsp;
                     <Link to={this.state.to} style={{ textDecoration:'none' }}>

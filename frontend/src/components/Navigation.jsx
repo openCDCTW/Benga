@@ -17,6 +17,7 @@ export default class Navigation extends React.Component {
                 <Tabs value={this.props.value} indicatorColor="primary" textColor="primary" centered>
                     <Tab label="Profile" component={Link} to="/" />
                     <Tab label="Dendrogram" component={Link} to="/upload_profile" />
+                    <Tab label="Example" component={Link} to="/demo" />
                 </Tabs>
             </Paper>
         );

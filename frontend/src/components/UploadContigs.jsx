@@ -9,6 +9,12 @@ import { withStyle } from '@material-ui/core/styles';
 import CloudUploadIcon from '@material-ui/icons/CloudUpload';
 import Icon from '@material-ui/core/Icon';
 import DeleteIcon from '@material-ui/icons/Delete';
+import ReplyIcon from '@material-ui/icons/Reply';
+import DownloadIcon from '@material-ui/icons/CloudDownload';
+import SearchBar from './SearchBar.jsx';
+import Paper from '@material-ui/core/Paper';
+import Tabs from '@material-ui/core/Tabs';
+import Tab from '@material-ui/core/Tab';
 
 class Upload_contigs extends React.Component {
 
@@ -30,7 +36,9 @@ class Upload_contigs extends React.Component {
 
         // TODO: poor performnce issue with everytime load the component will
         // fetch API once.
+
         window.databaseName = "";
+        window.fileName = [];
 
         this.state = {
             to: "/",
@@ -47,6 +55,9 @@ class Upload_contigs extends React.Component {
             init:function(){
                 this.on("sending", function(file, xhr, formData){
                     formData.append("batch_id", window.batchid);
+                });
+                this.on("success", function(file){
+                    window.fileName.push(file.name);
                 });
             }
         }
@@ -78,7 +89,6 @@ class Upload_contigs extends React.Component {
         this.dropzone.processQueue();
         this.setState(state => ({ upload_confirm: true , to: '/profile_view' ,
             switch: true }));
-
     }
 
     submit(){
@@ -93,7 +103,7 @@ class Upload_contigs extends React.Component {
         scheme.occurrence = "95";
         scheme.database = window.databaseName;
         scheme.id = window.batchid;
-        fetch('api/profiling/profiling/', {
+        fetch('api/profiling/profiling-tree/', {
             method:'POST',
             headers: new Headers({'content-type': 'application/json'}),
             body: JSON.stringify(scheme)
@@ -104,7 +114,6 @@ class Upload_contigs extends React.Component {
     remove(){
         
         this.dropzone.removeAllFiles();
-        
         this.setState(state => ({ to: '/', upload_confirm: false, switch: false }));
         fetch('api/profiling/upload/', {method:'POST'})
         .then(function(res){
@@ -117,6 +126,35 @@ class Upload_contigs extends React.Component {
             window.batchid = data.id;
         };
     }
+
+    query(){
+
+        window.querybyID = this.state.querybyID;
+
+        fetch('api/profiling/profile/' + window.querybyID, { method:'GET'})
+        .then(response => response.json())
+        .catch(error => alert("Data not found"));
+
+        fetch('api/profiling/profile/' + window.querybyID, { method:'GET'})
+            .then(response => response.json())
+            .then(result => this.setState(state => ({
+                profile_result_all: result.file,
+                profile_result_zip: result.zip,})));
+
+        fetch('api/dendrogram/dendrogram/' + window.querybyID, { method: 'GET'})
+            .then(response => response.json())
+            .then(result => this.setState(state => ({
+                png_file: result.png_file, 
+                pdf_file: result.pdf_file,
+                svg_file: result.svg_file, 
+                emf_file: result.emf_file, 
+                newick_file: result.newick_file, })));
+    }
+
+    back(){
+        window.location.reload();
+    }
+
     
     render() {
 
@@ -125,20 +163,47 @@ class Upload_contigs extends React.Component {
         const eventHandlers = {
             init: dz => this.dropzone = dz,}
 
-        return (
+        if(this.state.profile_result_all == undefined){
+            return (
             <div>
                 <Navigation value={0}/>
                 <br />
+                <div style={{ display:'flex', justifyContent:'center', alignItems:'center'}}>
+                    <SearchBar
+                        onChange = {(value) => this.setState({ querybyID: value })}
+                        onRequestSearch={this.query.bind(this)}
+                        placeholder = {"Input batch ID here to query data"}
+                        style = {{
+                            width: '90%',
+                            margin: '0 auto',
+                        }}
+                    />
+                </div>
                 <br />
-                <DropzoneComponent config={config} eventHandlers={eventHandlers} 
-                    djsConfig={djsConfig} />
+                <div style={{ width:'97%', display:'flex', justifyContent:'flex-end', 
+                alignItems:'flex-end'}}>
+                    <Button variant="contained" color="secondary" onClick={this.remove.bind(this)}>
+                            Remove all files
+                            &nbsp;&nbsp;
+                            <DeleteIcon />
+                    </Button>
+                </div>
+                <br />
+                <div style = {{ display:'flex', justifyContent:'center', alignItems:'center' }}>
+                    <DropzoneComponent config={config} eventHandlers={eventHandlers} 
+                        djsConfig={djsConfig} />
+                </div>
                 <br />
                 <br />
                 <div style={{ display:'flex', justifyContent:'center', alignItems:'center'}}>
-                <font> NOTICE: Please use &nbsp;
-                    <a href="http://cab.spbu.ru/software/spades/" target="_blank">SPAdes</a>
-                    &nbsp; to assembly before upload. 
-                </font>
+                    <font> SUGGESTION: Please use &nbsp;
+                        <a href="http://cab.spbu.ru/software/spades/" target="_blank">SPAdes</a>
+                        &nbsp; to assembly before upload. 
+                    </font>
+                </div>
+                <br />
+                <div style={{ display:'flex', justifyContent:'center', alignItems:'center'}}>
+                    <Options switch={this.state.switch} />
                 </div>
                 <br />
                 <div style={{ display:'flex', justifyContent:'center', alignItems:'center'}}>
@@ -148,33 +213,109 @@ class Upload_contigs extends React.Component {
                         <CloudUploadIcon />
                     </Button>
                     &nbsp;&nbsp;&nbsp;&nbsp;
-                    <Button variant="contained" color="secondary" onClick={this.remove.bind(this)}>
-                        Remove all files
-                        &nbsp;&nbsp;
-                        <DeleteIcon />
-                    </Button>
+                    <Link to={this.state.to} style={{ textDecoration:'none' }}>
+                        <Button variant="contained" color="primary" onClick={this.submit.bind(this)}>
+                            profiling
+                            &nbsp;&nbsp;
+                            <Icon>send</Icon>
+                        </Button>
+                    </Link>
                 </div>
                 <br />
                 <br />
-                <div style={{ display:'flex', justifyContent:'center', alignItems:'center'}}>
-                <Options switch={this.state.switch} />
-                </div>
                 <br />
                 <br />
-                <div style={{ display:'flex', justifyContent:'center', alignItems:'center'}}>
-                <Link to={this.state.to} style={{ textDecoration:'none' }}>
-                    <Button variant="contained" color="primary" onClick={this.submit.bind(this)}>
-                        profiling
-                        &nbsp;&nbsp;
-                        <Icon>send</Icon>
-                    </Button>
-                </Link>
-                <br />
-                <br />
-                </div>
                 <br />
             </div>
             );
+        }else{
+            return (
+                    <div>
+                        <Paper square>
+                            <Tabs centered>
+                                <Tab label=" "/>
+                            </Tabs>
+                        </Paper>
+                        <br />
+                        <div style={{ display:'flex', justifyContent:'center', alignItems:'center'}}>
+                            <a download href={this.state.profile_result_all} 
+                             style={{ textDecoration:'none' }}>
+                                <Button variant="contained" color="default">
+                                Download profiles (.tsv)
+                                &nbsp;&nbsp;
+                                <DownloadIcon />
+                                </Button>
+                            </a>
+                            &nbsp;&nbsp;&nbsp;&nbsp;
+                            <a download href={this.state.profile_result_zip} 
+                             style={{ textDecoration:'none' }}>
+                                <Button variant="contained" color="default">
+                                Download profiles (.zip)
+                                &nbsp;&nbsp;
+                                <DownloadIcon />
+                                </Button>
+                            </a>
+                        </div>
+                        <br />
+                        <br />
+                        <div style={{ display:'flex', justifyContent:'center', alignItems:'center'}}>
+                            <img src={this.state.svg_file} />
+                        </div>
+                        <br />
+                        <div style={{ display:'flex', justifyContent:'center', alignItems:'center'}}>
+                            <font size="4">Download Dendrogram</font>
+                        </div>
+                        <br />
+                        <br />
+                        <div style={{ display:'flex', justifyContent:'center', alignItems:'center'}}>
+                            
+                            <a download href={this.state.png_file} style={{ textDecoration:'none' }}>
+                                <Button variant="contained" color="default">
+                                Png 
+                                </Button>
+                            </a>
+                            &nbsp;&nbsp;&nbsp;&nbsp;
+                            <a download href={this.state.pdf_file} style={{ textDecoration:'none' }}>
+                                <Button variant="contained" color="default">
+                                Pdf
+                                </Button>
+                            </a>
+                            &nbsp;&nbsp;&nbsp;&nbsp;
+                            <a download href={this.state.svg_file} style={{ textDecoration:'none' }}>
+                                <Button variant="contained" color="default">
+                                Svg
+                                </Button>
+                            </a>
+                            &nbsp;&nbsp;&nbsp;&nbsp;
+                            <a download href={this.state.emf_file} style={{ textDecoration:'none' }}>
+                                <Button variant="contained" color="default">
+                                emf
+                                </Button>
+                            </a>
+                            &nbsp;&nbsp;&nbsp;&nbsp;
+                            <a download href={this.state.newick_file} style={{ textDecoration:'none' }}>
+                                <Button variant="contained" color="default">
+                                newick
+                                </Button>
+                            </a>
+                        </div>
+                        <br />
+                        <br />
+                        <div style={{ display:'flex', justifyContent:'center', alignItems:'center' }}>
+                            <Link to="/" style={{ textDecoration:'none' }}>
+                                <Button variant="contained" color="default" onClick={this.back.bind(this)}>
+                                    <ReplyIcon />
+                                    &nbsp;&nbsp;
+                                    Back
+                                </Button>
+                            </Link>
+                        </div>
+                        <br />
+                        <br />
+                    </div>
+                );
+        }
+        
     }
 }
 

@@ -47,92 +47,79 @@ export default class Dendrogram_view extends React.Component {
 
     		return(
     			<div>
-    				<Paper square>
-                        <Tabs value={false} centered>
-                            <Tab label=" " disabled/>
-                        </Tabs>
-                    </Paper>
-                    <br />
-                    <br />
-                    <br />
-                    <div style={{ display:'flex', justifyContent:'center', alignItems:'center'}}>
-                        <font> Please hold on ... </font>
-                    </div>
-                    <br />
-                    <div style={{ display:'flex', justifyContent:'center', alignItems:'center'}}>
-                        <img src="https://svgshare.com/i/9N5.svg" />
-                    </div>
-                    <br />
-                    <br />
-                    <br />
-                </div>
-    		);
+				<Paper square>
+					<Tabs value={false} centered>
+						<Tab label=" " disabled/>
+					</Tabs>
+				</Paper>
+				<br />
+				<br />
+				<br />
+				<div style={{ display:'flex', justifyContent:'center', alignItems:'center'}}>
+					<font> Please hold on ... </font>
+				</div>
+				<br />
+				<div style={{ display:'flex', justifyContent:'center', alignItems:'center'}}>
+					<img src="https://svgshare.com/i/9N5.svg" />
+				</div>
+				<br />
+				<br />
+				<br />
+			</div>
+		);
     	
     	}else{
     		return (
-    				<div id="url">
-    					<Paper square>
-                        	<Tabs value={false} centered>
-                            	<Tab label=" " disabled/>
-                        	</Tabs>
-                    	</Paper>
-                        <div style={{ display:'flex', justifyContent:'center', alignItems:'center'}}>
-                            <img src={this.state.svg_file} />
-                        </div>
-    					<div style={{ display:'flex', justifyContent:'center', alignItems:'center'}}>
-                            <font>Download Dendrogram</font>
-                        </div>
-
-                        <div style={{ display:'flex', justifyContent:'center', alignItems:'center'}}>
-        					
-                            <a download href={this.state.png_file} style={{ textDecoration:'none' }}>
-                                <Button variant="contained" color="default">
-                                Png 
-                                </Button>
-                            </a>
-                            &nbsp;&nbsp;&nbsp;&nbsp;
-        					<a download href={this.state.pdf_file} style={{ textDecoration:'none' }}>
-                                <Button variant="contained" color="default">
-                                Pdf
-                                </Button>
-                            </a>
-                            &nbsp;&nbsp;&nbsp;&nbsp;
-                            <a download href={this.state.svg_file} style={{ textDecoration:'none' }}>
-                                <Button variant="contained" color="default">
-                                Svg
-                                </Button>
-                            </a>
-                            &nbsp;&nbsp;&nbsp;&nbsp;
-                            <a download href={this.state.emf_file} style={{ textDecoration:'none' }}>
-                                <Button variant="contained" color="default">
-                                emf
-                                </Button>
-                            </a>
-                            &nbsp;&nbsp;&nbsp;&nbsp;
-                            <a download href={this.state.newick_file} style={{ textDecoration:'none' }}>
-                                <Button variant="contained" color="default">
-                                newick
-                                </Button>
-                            </a>
-                        </div>
-                        <br />
-                        <br />
-    					<br />
-    					<br />
-    					<Link to="/upload_profile" style={{ textDecoration:'none' }}>
-                            <Button variant="contained" color="default">
-                                <ReplyIcon />
-                                &nbsp;&nbsp;
-                                Back
-                            </Button>
-                        </Link>
-                        <br />
-    					<br />
-                        <br />
-                        <br />
-    				</div>
-        	);
-    	}
-        
+			<div id="url">
+				<Paper square>
+					<Tabs value={false} centered>
+						<Tab label=" " disabled/>
+					</Tabs>
+				</Paper>
+				<div style={{ display:'flex', justifyContent:'center', alignItems:'center'}}>
+					<img src={this.state.svg_file} />
+				</div>
+				<div style={{ display:'flex', justifyContent:'center', alignItems:'center'}}>
+					<font>Download Dendrogram</font>
+				</div>
+				<div style={{ display:'flex', justifyContent:'center', alignItems:'center'}}>
+					<a download href={this.state.png_file} style={{ textDecoration:'none' }}>
+						<Button variant="contained" color="default">Png</Button>
+					</a>
+					&nbsp;&nbsp;&nbsp;&nbsp;
+					<a download href={this.state.pdf_file} style={{ textDecoration:'none' }}>
+						<Button variant="contained" color="default">Pdf</Button>
+					</a>
+					&nbsp;&nbsp;&nbsp;&nbsp;
+					<a download href={this.state.svg_file} style={{ textDecoration:'none' }}>
+						<Button variant="contained" color="default">Svg</Button>
+					</a>
+					&nbsp;&nbsp;&nbsp;&nbsp;
+					<a download href={this.state.emf_file} style={{ textDecoration:'none' }}>
+						<Button variant="contained" color="default">emf</Button>
+					</a>
+					&nbsp;&nbsp;&nbsp;&nbsp;
+					<a download href={this.state.newick_file} style={{ textDecoration:'none' }}>
+						<Button variant="contained" color="default">newick</Button>
+					</a>
+				</div>
+				<br />
+				<br />
+				<br />
+				<br />
+				<Link to="/upload_profile" style={{ textDecoration:'none' }}>
+					<Button variant="contained" color="default">
+						<ReplyIcon />
+						&nbsp;&nbsp;
+						Back
+					</Button>
+				</Link>
+				<br />
+				<br />
+				<br />
+				<br />
+			</div>
+		);
+	}
     }
 }
