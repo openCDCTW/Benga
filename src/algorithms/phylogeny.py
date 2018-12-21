@@ -34,7 +34,7 @@ class Dendrogram:
     def render_on(self, file, w=900, h=1200, units="px", dpi=300, *args):
         self.ete_tree.render(file, w=w, h=h, units=units, dpi=dpi, *args)
 
-    def scipy_tree(self, file, distance_annotate, w=8, dpi=300):
+    def scipy_tree(self, file, distance_annotate=True, w=8, dpi=300):
         plt.style.use("ggplot")
         fig, ax = plt.subplots(1, 1, figsize=(w, int(len(self._nodes)*0.3)))
         ax.grid(False)
@@ -42,7 +42,7 @@ class Dendrogram:
         ax.xaxis.set_major_locator(MaxNLocator(integer=True))
         plt.rcParams['svg.fonttype'] = 'none'
         tree = hierarchy.dendrogram(self._linkage, labels=self._nodes, orientation="left",
-                                    leaf_font_size=10, above_threshold_color="#808080")
+                                    leaf_font_size=10, above_threshold_color="#808080", color_threshold=0)
         if distance_annotate:
             for i, d, in zip(tree['icoord'], tree['dcoord']):
                 x = 0.5 * sum(i[1:3])
