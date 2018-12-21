@@ -25,7 +25,7 @@ def zip_folder(filepath):
     with zipfile.ZipFile(filename, mode='w', compression=zipfile.ZIP_LZMA) as zip:
         for root, folders, files in os.walk(filepath):
             for f in files:
-                zip.write(root, f)
+                zip.write(os.path.join(root, f), f)
     return filename
 
 
