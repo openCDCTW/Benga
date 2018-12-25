@@ -33,4 +33,4 @@ before_script:
 
 script:
   - docker run --env-file env.list \
-      a504082002/benga /bin/sh -c "cd /benga; python3 manage.py test"
+      a504082002/benga /bin/sh -c "cd /benga; python3 manage.py makemigrations; python3 manage.py migrate; python3 manage.py test"
