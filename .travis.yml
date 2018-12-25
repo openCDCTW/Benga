@@ -16,10 +16,6 @@ services:
 notifications:
   email: false
 
-env:
-  global:
-    DJANGO_SETTINGS_MODULE="benga.test_settings"
-
 addons:
   postgresql: "9.6"
   apt:
@@ -29,19 +25,12 @@ addons:
     - postgresql-9.6
     - postgresql-client-9.6
 
-stages:
-  - "Backend test"
-
-install:
-  - pip3 install -r requirements.txt --upgrade
+before_install:
+  - docker pull a504082002/benga
 
 before_script:
   - psql -U postgres -c 'create database travis_ci_test;'
 
-jobs:
-  include:
-    - stage: "Backend test"
-      script:
-        - python3 manage.py makemigrations
-        - python3 manage.py migrate
-        - python3 manage.py test
+script:
+  - docker run --env-file env.list \
+      a504082002/benga /bin/sh -c "cd /benga; python3 manage.py test"
