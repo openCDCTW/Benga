@@ -26,7 +26,7 @@ addons:
     - postgresql-client-9.6
 
 before_install:
-  - docker pull a504082002/benga
+  - docker pull a504082002/benga:dev
 
 before_script:
   - psql -U postgres -c 'create database travis_ci_test;'
