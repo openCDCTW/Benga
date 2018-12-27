@@ -22,5 +22,12 @@ class TrackedResults(models.Model):
 
 
 class Tracking(models.Model):
+    ALLELE_DB_CHOICES = (
+        ("Vibrio_cholerae", "Vibrio cholerae"),
+    )
+    PROFILE_DB_CHOICES = (
+        ("vibrio-profiles", "Vibrio cholerae"),
+    )
     id = models.OneToOneField(Sequence, on_delete=models.CASCADE, primary_key=True)
-    database = models.TextField(null=False)
+    allele_db = models.CharField(max_length=100, choices=ALLELE_DB_CHOICES, null=False)
+    profile_db = models.CharField(max_length=100, choices=PROFILE_DB_CHOICES, null=False)
