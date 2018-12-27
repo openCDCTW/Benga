@@ -1,4 +1,4 @@
-FROM a504082002/seqtool
+FROM a504082002/biopython-mkl
 MAINTAINER Yueh-Hua Tu <a504082002@gmail.com>
 
 # Copy project
