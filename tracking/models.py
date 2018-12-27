@@ -18,7 +18,7 @@ class Sequence(models.Model):
 
 class TrackedResults(models.Model):
     id = models.OneToOneField(Sequence, on_delete=models.CASCADE, primary_key=True)
-    json = models.FileField(upload_to=result_path, null=False)
+    json = models.FileField(upload_to=result_path, null=False, max_length=250)
 
 
 class Tracking(models.Model):
