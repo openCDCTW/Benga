@@ -53,5 +53,4 @@ class TrackedResultsTests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(response.data.keys(), {"id", "json"},
                          "Recieved object does not contain 'id' and 'json' field.")
-        self.assertEqual(response.data["id"], self.seqid, "Inconsistent in 'id' field.")
-
+        self.assertEqual(str(response.data["id"]), self.seqid, "Inconsistent in 'id' field.")

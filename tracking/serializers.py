@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from tracking.models import Sequence, TrackedResults
+from tracking.models import Sequence, TrackedResults, Tracking
 
 
 class SequenceSerializer(serializers.ModelSerializer):
@@ -16,5 +16,5 @@ class TrackedResultsSerializer(serializers.ModelSerializer):
 
 class TrackingSerializer(serializers.ModelSerializer):
     class Meta:
-        model = TrackedResults
-        fields = ('id', 'database')
+        model = Tracking
+        fields = ('id', 'allele_db', 'profile_db')

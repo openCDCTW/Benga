@@ -75,6 +75,7 @@ class Tracking(APIView):
     def post(self, request, format=None):
         serializer = TrackingSerializer(data=request.data)
         if serializer.is_valid():
-            profile_and_track.delay(str(serializer.data["id"]), str(serializer.data["database"]), 95)
+            profile_and_track.delay(str(serializer.data["id"]), str(serializer.data["allele_db"]), 95,
+                                    str(serializer.data["profile_db"]))
             return Response(serializer.data, status=status.HTTP_202_ACCEPTED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

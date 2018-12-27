@@ -48,17 +48,17 @@ def track(query_profile, database):
 
 
 @shared_task
-def profile_and_track(id, database, occr_level):
+def profile_and_track(id, allele_db, occr_level, profile_db):
     input_dir = os.path.join(settings.MEDIA_ROOT, "tracking", id)
     output_dir = os.path.join(settings.MEDIA_ROOT, "temp", id)
     files.create_if_not_exist(output_dir)
 
     profile_filename = os.path.join(output_dir, "profile.tsv")
-    profiling.profiling(output_dir, input_dir, database, occr_level=occr_level, threads=2)
+    profiling.profiling(output_dir, input_dir, allele_db, occr_level=occr_level, threads=2)
 
     query_profile = pd.read_csv(profile_filename, sep="\t", index_col=0)
     query_profile = query_profile[query_profile.columns[0]]
-    track = nosql.get_dbtrack(database)
+    track = nosql.get_dbtrack(profile_db)
     distances = distance_against_all(query_profile, track)
     results = add_metadata(distances, track)
 
