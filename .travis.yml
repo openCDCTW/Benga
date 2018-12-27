@@ -32,4 +32,4 @@ before_script:
   - psql -U postgres -c 'create database travis_ci_test;'
 
 script:
-  - docker run --env-file env.list -p 5432:5432 a504082002/benga:dev /bin/sh -c "cd /benga; python3 manage.py makemigrations; python3 manage.py migrate; python3 manage.py test"
+  - docker run --env-file env.list -p 127.0.0.1:5432:5432 a504082002/benga:dev /bin/sh -c "cd /benga; python3 manage.py makemigrations; python3 manage.py migrate; python3 manage.py test"
