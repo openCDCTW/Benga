@@ -28,4 +28,5 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/profiling/', include("profiling.urls")),
     path('api/dendrogram/', include("dendrogram.urls")),
+    path('api/tracking/', include("tracking.urls")),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

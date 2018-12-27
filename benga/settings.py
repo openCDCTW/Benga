@@ -26,7 +26,7 @@ CELERY_RESULT_BACKEND = 'django-db'
 CELERY_TASK_SERIALIZER = 'json'
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'a(e2^vw&65sh0ef87&8!7px&3eotc7@6vq6q28kfs5=u#sd4h5'
+SECRET_KEY = os.environ['SECRET_KEY']
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
@@ -44,10 +44,11 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'rest_framework',
+    'django_celery_results',
     'profiling.apps.ProfilingConfig',
     'dendrogram.apps.DendrogramConfig',
-    'frontend',
-    'django_celery_results',
+    'frontend.apps.FrontendConfig',
+    'tracking.apps.TrackingConfig',
 ]
 
 MIDDLEWARE = [
@@ -101,6 +102,14 @@ DATABASES = {
         'NAME': os.environ['DATABASE_NAME'],
         'USER': os.environ['DATABASE_USER'],
         'PASSWORD': os.environ['DATABASE_PASSWORD'],
+        'HOST': '0.0.0.0',
+        'PORT': 5432
+    }
+}
+
+
+NOSQLS = {
+    'mongodb': {
         'HOST': 'localhost',
         'PORT': 5432
     }

@@ -1,8 +1,11 @@
-FROM a504082002/seqtool-python3
-MAINTAINER a504082002 <a504082002@gmail.com>
+FROM a504082002/seqtool
+MAINTAINER Yueh-Hua Tu <a504082002@gmail.com>
 
-RUN mkdir /program
-ADD src /program
+# Copy project
+WORKDIR /benga
+COPY . /benga
 
-CMD ["/bin/bash"]
+# Install dependencies
+RUN pip install --trusted-host pypi.python.org -r requirements.txt --upgrade
 
+CMD ["/bin/sh"]
