@@ -7,7 +7,7 @@ def sequences_path(instance, filename):
 
 
 def result_path(instance, filename):
-    return "tracked_results/{0}/{1}".format(instance.id, instance.json.name)
+    return "tracked_results/{0}/{1}".format(instance.id, filename)
 
 
 class Sequence(models.Model):
