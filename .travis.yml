@@ -25,6 +25,10 @@ addons:
     - postgresql-9.6
     - postgresql-client-9.6
 
+env:
+  global:
+    - secure: cTn6O5aTpHUxrS0p/OTBUoJocml19SYFQKsKDkxl06oQ4mviyUYlam0TOJK8NSlU3awyjo26JqciCSV7Z67jRRoK7vAJLDbvDSTgKwbvyV4ErKU0Wp3OvE5bDmDqvJsydVxbOplPsOKPAHiUi/ADXhSOEDTLKoubCrWkWiwG7WDuFDUl5oaespc8GugyKNSPXoS8uF3lvSQNllYocCQNN4/xg1wsI5R9OZogKqiMI+YXvhHG/Xq9/tUNrq7nQ/KGEyZaCfKVlDl/zW3sDAn2s2k5s1I6LjIxj8n2ZtxU48tUKDp0jLnKMf/vr96JhEeSc74cYmACU9NQkuQ7Gns2Kw1RuEW9iciRmOlO2u/EYYl6wHiwuV2MkqEZQm4a7+Q/iP1fBaxZjSRn7lC2TeylHtrXPY5pmyScJ6XkRzziE9giPJsw5zHLpQ+E72kfxub7KJ2iAX1CXYXm6jceCZrbCz6wDqmdQoYBxV/Rb715S5z3+emnXJG4OpHpxR+YIjhifY7Be9LuxOLl0nkHifNqHJ6jAixJjihVkseeMnJErL3c9mwvUf92fRboTIRElcbz4pV3nLB7RVgdarQw/vp4mIm7YbtdbaoSUE2pk2r+8g5od4bCkojfghWjAZG89WVCj/X3wgp8Gk0GMYb/8jijVWWTwO21UrCEGbxXSgwfILg=
+
 before_install:
   - docker pull a504082002/benga:dev
 
@@ -32,4 +36,4 @@ before_script:
   - psql -U postgres -c 'create database travis_ci_test;'
 
 script:
-  - docker run --env-file env.list -p 127.0.0.1:5432:5432 a504082002/benga:dev /bin/sh -c "cd /benga; python3 manage.py makemigrations; python3 manage.py migrate; python3 manage.py test"
+  - docker run --env-file env.list a504082002/benga:dev /bin/sh -c "cd /benga; python3 manage.py makemigrations; python3 manage.py migrate; python3 manage.py test"
