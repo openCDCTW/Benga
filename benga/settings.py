@@ -44,10 +44,11 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'rest_framework',
+    'django_celery_results',
     'profiling.apps.ProfilingConfig',
     'dendrogram.apps.DendrogramConfig',
-    'frontend',
-    'django_celery_results',
+    'frontend.apps.FrontendConfig',
+    'tracking.apps.TrackingConfig',
 ]
 
 MIDDLEWARE = [
@@ -101,6 +102,14 @@ DATABASES = {
         'NAME': os.environ['DATABASE_NAME'],
         'USER': os.environ['DATABASE_USER'],
         'PASSWORD': os.environ['DATABASE_PASSWORD'],
+        'HOST': 'localhost',
+        'PORT': 5432
+    }
+}
+
+
+NOSQLS = {
+    'mongodb': {
         'HOST': 'localhost',
         'PORT': 5432
     }

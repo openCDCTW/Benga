@@ -8,5 +8,5 @@ app = Celery("benga")
 
 app.config_from_object("django.conf:settings")
 
-app.autodiscover_tasks(["profiling"])
+app.autodiscover_tasks(["profiling", "dendrogram", "tracking"])
 
