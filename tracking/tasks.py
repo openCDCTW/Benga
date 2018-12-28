@@ -13,9 +13,11 @@ from tracking.serializers import TrackedResultsSerializer
 
 def distance_against_all(query_profile, track):
     distances = pd.Series()
+    df = pd.DataFrame()
+    df["query_profile"] = query_profile
     for profile in track.find():
-        ref_profile = pd.Series(data=profile["profile"])
-        distances.at[profile['BioSample']] = Counter(query_profile == ref_profile)[0]
+        df["ref_profile"] = pd.Series(data=profile["profile"])
+        distances.at[profile['BioSample']] = Counter(df["query_profile"] == df["ref_profile"])[0]
     return distances
 
 
