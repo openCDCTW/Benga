@@ -48,23 +48,23 @@ class Options extends React.Component {
           <form className={classes.root} autoComplete="off">
             <FormControl required className={classes.formControl} disabled={this.props.switch}>
               <InputLabel htmlFor="database-required">Database</InputLabel>
-              <Select
-                value={this.state.database}
-                onChange={this.handleChange}
-                name="database"
-                inputProps={{
-                  id: 'database-required',
-                }}
-                className={classes.selectEmpty}
-                >
-                <MenuItem value="">
-                  <em>Choose Database</em>
-                </MenuItem>
-                <MenuItem value={'Salmonella_enterica'}>Salmonella_enterica</MenuItem>
-                <MenuItem value={'Vibrio_cholerae'}>Vibrio cholerae</MenuItem>
-                <MenuItem value={'Listeria_monocytogenes'}>Listeria monocytogenes</MenuItem>
-                <MenuItem value={'Campylobacter_jejuni'}>Campylobacter jejuni</MenuItem>
-              </Select>
+                <Select
+                  value={this.state.database}
+                  onChange={this.handleChange}
+                  name="database"
+                  inputProps={{
+                    id: 'database-required',
+                  }}
+                  className={classes.selectEmpty}
+                  >
+                  <MenuItem value="">
+                    <em>Choose Database</em>
+                  </MenuItem>
+                  <MenuItem value={'Salmonella_enterica'}>Salmonella_enterica</MenuItem>
+                  <MenuItem value={'Vibrio_cholerae'}>Vibrio cholerae</MenuItem>
+                  <MenuItem value={'Listeria_monocytogenes'}>Listeria monocytogenes</MenuItem>
+                  <MenuItem value={'Campylobacter_jejuni'}>Campylobacter jejuni</MenuItem>
+                </Select>
               <FormHelperText>Required</FormHelperText>
             </FormControl>
           </form>
