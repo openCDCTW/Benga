@@ -27,7 +27,6 @@ div.example {
 
 div.intro {
     margin-left: 20px;
-/*    color: #000;*/
 }
 
 #host {
@@ -35,24 +34,6 @@ div.intro {
     margin-left: auto;
     margin-right: auto;
 }
-
-/*button {
-    background-color: #4CAF50;
-    border: none;
-    font-size: 16px;
-    border-radius: 8px;
-    color: white;
-    padding:6px 14px;
-    text-align: center; 
-    box-shadow: 0 9px #999;
-}
-button:hover{background-color: #3E8E41}
-button:active{
-    background-color: #3E8E41;
-    box-shadow: 0 5px #666;
-    transform: translateY(4px);
-}
-*/
 
 
 footer {
