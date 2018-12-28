@@ -10,6 +10,8 @@ services:
       - /home/a504082002/Projects/Benga/pgdata:/var/lib/postgresql/data
     ports:
       - "5432:5432"
+    networks:
+      - backend
 
   mongo:
     image: mongo:4.0.5-xenial
@@ -18,6 +20,8 @@ services:
       - /home/a504082002/Projects/Benga/mongodata:/data/db
     ports:
       - "27017:27017"
+    networks:
+      - backend
 
   rabbitmq:
     image: rabbitmq:3.7-management-alpine
@@ -26,26 +30,34 @@ services:
     ports:
       - "5672:5672"
       - "15672:15672"
+    networks:
+      - backend
 
   celery:
-    image: a504082002/benga:dev
+    image: a504082002/benga:celery
     env_file: envs/web.env
-    command:
-      - celery -A benga worker -l info
+    command: bash -c "python manage.py makemigrations && export CELERY_BROKER_URL='amqp://celery:password123@localhost:5672/my_vhost' && celery -A benga worker -l info"
     depends_on:
       - rabbitmq
       - postgres
+    networks:
+      - backend
+    links:
+      - rabbitmq
+      - postgres
 
-#  web:
-#    image: a504082002/benga:dev
-#    env_file: envs/web.env
-#    command:
-#     - sh -c "cd /proj; python3 manage.py makemigrations; python3 manage.py migrate; python3 manage.py runserver 8000"
-#    volumes:
-#      - "/home/a504082002/Projects/Benga:/proj"
-#    depends_on:
-#      - postgres
-#      - mongo
-#      - rabbitmq
-#    ports:
-#      - "8000:8000"
+  web:
+    image: a504082002/benga:dev
+    env_file: envs/web.env
+    command: bash -c "python3 manage.py makemigrations; python3 manage.py migrate; python3 manage.py runserver 8000"
+    depends_on:
+      - postgres
+      - mongo
+      - rabbitmq
+    networks:
+      - backend
+    ports:
+      - "8000:8000"
+
+networks:
+  backend:
