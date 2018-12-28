@@ -1,0 +1,51 @@
+version: "3"
+services:
+
+  postgres:
+    image: postgres:9.6-alpine
+    restart: always
+    environment:
+      POSTGRES_PASSWORD: password
+    volumes:
+      - /home/a504082002/Projects/Benga/pgdata:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+
+  mongo:
+    image: mongo:4.0.5-xenial
+    restart: always
+    volumes:
+      - /home/a504082002/Projects/Benga/mongodata:/data/db
+    ports:
+      - "27017:27017"
+
+  rabbitmq:
+    image: rabbitmq:3.7-management-alpine
+    restart: always
+    env_file: envs/rabbitmq.env
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+
+  celery:
+    image: a504082002/benga:dev
+    env_file: envs/web.env
+    command:
+      - celery -A benga worker -l info
+    depends_on:
+      - rabbitmq
+      - postgres
+
+#  web:
+#    image: a504082002/benga:dev
+#    env_file: envs/web.env
+#    command:
+#     - sh -c "cd /proj; python3 manage.py makemigrations; python3 manage.py migrate; python3 manage.py runserver 8000"
+#    volumes:
+#      - "/home/a504082002/Projects/Benga:/proj"
+#    depends_on:
+#      - postgres
+#      - mongo
+#      - rabbitmq
+#    ports:
+#      - "8000:8000"
