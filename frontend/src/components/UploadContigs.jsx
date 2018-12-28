@@ -5,7 +5,7 @@ import DropzoneComponent from 'react-dropzone-component';
 import { Link } from 'react-router-dom';
 import Options from './Options.jsx';
 import Button from '@material-ui/core/Button';
-import { withStyle } from '@material-ui/core/styles';
+import { withStyles } from '@material-ui/core/styles';
 import CloudUploadIcon from '@material-ui/icons/CloudUpload';
 import Icon from '@material-ui/core/Icon';
 import DeleteIcon from '@material-ui/icons/Delete';
@@ -15,6 +15,18 @@ import SearchBar from './SearchBar.jsx';
 import Paper from '@material-ui/core/Paper';
 import Tabs from '@material-ui/core/Tabs';
 import Tab from '@material-ui/core/Tab';
+import green from '@material-ui/core/colors/green';
+// import { Scrollbars } from 'react-custom-scrollbars';
+
+const styles = theme => ({
+    cssRoot:{
+        color: theme.palette.getContrastText(green[600]),
+        backgroundColor: green[500],
+        '&:hover': {
+            backgroundColor:green[600],
+        },
+    }
+})
 
 class Upload_contigs extends React.Component {
 
@@ -58,6 +70,8 @@ class Upload_contigs extends React.Component {
                 });
                 this.on("success", function(file){
                     window.fileName.push(file.name);
+                    file._removeLink.remove();
+                    delete file._removeLink;
                 });
             }
         }
@@ -129,19 +143,17 @@ class Upload_contigs extends React.Component {
 
     query(){
 
-        window.querybyID = this.state.querybyID;
-
-        fetch('api/profiling/profile/' + window.querybyID, { method:'GET'})
+        fetch('api/profiling/profile/' + this.state.querybyID, { method:'GET'})
         .then(response => response.json())
         .catch(error => alert("Data not found"));
 
-        fetch('api/profiling/profile/' + window.querybyID, { method:'GET'})
+        fetch('api/profiling/profile/' + this.state.querybyID, { method:'GET'})
             .then(response => response.json())
             .then(result => this.setState(state => ({
                 profile_result_all: result.file,
                 profile_result_zip: result.zip,})));
 
-        fetch('api/dendrogram/dendrogram/' + window.querybyID, { method: 'GET'})
+        fetch('api/dendrogram/dendrogram/' + this.state.querybyID, { method: 'GET'})
             .then(response => response.json())
             .then(result => this.setState(state => ({
                 png_file: result.png_file, 
@@ -149,6 +161,10 @@ class Upload_contigs extends React.Component {
                 svg_file: result.svg_file, 
                 emf_file: result.emf_file, 
                 newick_file: result.newick_file, })));
+    }
+
+    upload_samaple(){
+        
     }
 
     back(){
@@ -162,6 +178,7 @@ class Upload_contigs extends React.Component {
         const djsConfig = this.djsConfig;
         const eventHandlers = {
             init: dz => this.dropzone = dz,}
+        const { classes } = this.props;
 
         if(this.state.profile_result_all == undefined){
             return (
@@ -207,7 +224,8 @@ class Upload_contigs extends React.Component {
                 </div>
                 <br />
                 <div style={{ display:'flex', justifyContent:'center', alignItems:'center'}}>
-                    <Button variant="contained" color="default" onClick={this.handlePost.bind(this)}>
+                    <Button variant="contained" className ={classes.cssRoot} 
+                     onClick={this.handlePost.bind(this)}>
                         Upload
                         &nbsp;&nbsp;
                         <CloudUploadIcon />
@@ -222,6 +240,14 @@ class Upload_contigs extends React.Component {
                     </Link>
                 </div>
                 <br />
+                <div style={{ display:'flex', justifyContent:'center', alignItems:'center'}}>
+                    <Button variant="contained" color="default" 
+                     onClick={this.upload_samaple.bind(this)}>
+                        Upload sample data
+                        &nbsp;&nbsp;
+                        <CloudUploadIcon />
+                    </Button>
+                </div>
                 <br />
                 <br />
                 <br />
@@ -320,4 +346,4 @@ class Upload_contigs extends React.Component {
 }
 
 
-export default Upload_contigs;
+export default withStyles(styles)(Upload_contigs);
