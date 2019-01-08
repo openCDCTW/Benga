@@ -36,4 +36,4 @@ before_script:
   - psql -U postgres -c 'create database travis_ci_test;'
 
 script:
-  - docker run --env-file envs/web.env a504082002/benga:dev /bin/sh -c "cd /benga; python3 manage.py makemigrations; python3 manage.py migrate; python3 manage.py test"
+  - docker run -e SECRET_KEY=${SECRET_KEY}--env-file envs/web.env a504082002/benga:dev /bin/sh -c "cd /benga; python3 manage.py makemigrations; python3 manage.py migrate; python3 manage.py test"
