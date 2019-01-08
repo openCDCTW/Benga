@@ -6,7 +6,7 @@ from rest_framework.test import APIClient
 from django.conf import settings
 
 
-TESTDATA_ROOT = os.path.join(settings.BASE_DIR, 'testdata')
+TESTDATA_ROOT = os.path.join(settings.BASE_DIR, 'test', 'data')
 
 
 class SequenceTests(APITestCase):
