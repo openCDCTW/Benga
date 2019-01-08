@@ -1,3 +1,5 @@
+#!/usr/bin/env bash
+
 # Start empty mongodb
 docker run --name some-mongo -d -p 27017:27017 -v /home/a504082002/Projects/Benga/mongodata:/data/db mongo:4.0.5-xenial
 
@@ -20,7 +22,7 @@ docker run \
  --link some-mongo:mongo \
  -v /data/mongo/backup:/backup \
  mongo:4.0.5-xenial \
- bash -c ‘mongodump --out /backup --host $MONGO_PORT_27017_TCP_ADDR’
+ bash -c 'mongodump --out /backup --host $MONGO_PORT_27017_TCP_ADDR'
 
 # Download the dump
 scp -r USER@REMOTE:/data/mongo/backup ./backup

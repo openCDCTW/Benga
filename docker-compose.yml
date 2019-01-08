@@ -5,9 +5,9 @@ services:
     image: postgres:9.6-alpine
     restart: always
     environment:
-      POSTGRES_PASSWORD: password
+      POSTGRES_PASSWORD: c!_test
     volumes:
-      - /home/a504082002/Projects/Benga/pgdata:/var/lib/postgresql/data
+      - ./test/data/pgdata:/var/lib/postgresql/data
     ports:
       - "5432:5432"
 
@@ -15,7 +15,7 @@ services:
     image: mongo:4.0.5-xenial
     restart: always
     volumes:
-      - /home/a504082002/Projects/Benga/mongodata:/data/db
+      - ./test/data/mongodata:/data/db
     ports:
       - "27017:27017"
 
@@ -30,7 +30,7 @@ services:
   celery:
     image: a504082002/benga:celery
     env_file: envs/web.env
-    command: bash -c "python manage.py makemigrations; python3 manage.py migrate; export CELERY_BROKER_URL='amqp://celery:password123@192.168.30.240:5672/my_vhost'; celery -A benga worker -l info"
+    command: bash -c "python3 manage.py migrate; export CELERY_BROKER_URL='amqp://celery:TEjcuCTK5SctrAca@127.0.0.1:5672/my_vhost'; celery -A benga worker -l info"
     depends_on:
       - rabbitmq
       - postgres
@@ -38,7 +38,9 @@ services:
   web:
     image: a504082002/benga:dev
     env_file: envs/web.env
-    command: bash -c "python3 manage.py makemigrations; python3 manage.py migrate; bash run.sh"
+    command: bash -c "cd /proj; python3 manage.py makemigrations; python3 manage.py migrate; bash run.sh"
+    volumes:
+      - .:/proj
     depends_on:
       - postgres
       - mongo
