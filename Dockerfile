@@ -10,8 +10,7 @@ RUN pip install --trusted-host pypi.python.org -r requirements.txt --upgrade
 
 # Install frontend dependencies
 RUN curl -o- https://raw.githubusercontent.com/creationix/nvm/v0.33.11/install.sh | bash && \
-    sh "$NVM_DIR/nvm.sh" && \
-    sh "$NVM_DIR/bash_completion" && \
+    sh /root/.bashrc && \
     nvm install v10.13.0 && \
     npm install
 
