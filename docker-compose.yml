@@ -8,23 +8,18 @@ services:
       POSTGRES_PASSWORD: c!_test
     volumes:
       - ./test/data/pgdata:/var/lib/postgresql/data
-    ports:
-      - "5432:5432"
 
   mongo:
     image: mongo:4.0.5-xenial
     restart: always
     volumes:
       - ./test/data/mongodata:/data/db
-    ports:
-      - "27017:27017"
 
   rabbitmq:
     image: rabbitmq:3.7-management-alpine
     restart: always
     env_file: envs/rabbitmq.env
     ports:
-      - "5672:5672"
       - "15672:15672"
 
   celery:
