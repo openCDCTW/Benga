@@ -30,17 +30,17 @@ services:
   celery:
     image: a504082002/benga:celery
     env_file: envs/web.env
-    command: bash -c "python3 manage.py migrate; export CELERY_BROKER_URL='amqp://celery:TEjcuCTK5SctrAca@127.0.0.1:5672/my_vhost'; celery -A benga worker -l info"
+    command: bash -c "python3 manage.py migrate; celery -A benga worker -l info"
     depends_on:
       - rabbitmq
       - postgres
 
   web:
     image: a504082002/benga:dev
+    environment:
+      SECRET_KEY: ${SECRET_KEY}
     env_file: envs/web.env
-    command: bash -c "cd /proj; python3 manage.py makemigrations; python3 manage.py migrate; bash run.sh"
-    volumes:
-      - .:/proj
+    command: bash -c "python3 manage.py makemigrations; python3 manage.py migrate; python3 manage.py test"
     depends_on:
       - postgres
       - mongo
