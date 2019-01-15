@@ -54,3 +54,31 @@ class TrackedResultsTests(APITestCase):
         self.assertEqual(response.data.keys(), {"id", "json"},
                          "Recieved object does not contain 'id' and 'json' field.")
         self.assertEqual(str(response.data["id"]), self.seqid, "Inconsistent in 'id' field.")
+
+
+class TrackedResultsTests2(APITestCase):
+    def setUp(self):
+        self.client = APIClient()
+        url = reverse("sequence-list")
+        test_file = os.path.join(TESTDATA_ROOT, "vibrio_n16961.fasta")
+        with open(test_file, "rb") as file:
+            response = self.client.post(url, {"file": file})
+        self.seqid = response.data["id"]
+
+        url = reverse("results-list")
+        test_file = os.path.join(TESTDATA_ROOT, "test.json")
+        with open(test_file, "rb") as file:
+            data = {"id": self.seqid, "json": file}
+            self.response = self.client.post(url, data)
+
+    def tearDown(self):
+        self.client = None
+
+    def test_create_results(self):
+        """
+        Ensure we can create a new TrackedResults object.
+        """
+        url = reverse("results-detail", kwargs={"pk": self.seqid})
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIsInstance(response.data["json"], list)
