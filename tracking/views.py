@@ -1,3 +1,4 @@
+import json
 from rest_framework import generics
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -55,7 +56,10 @@ class TrackedResultsDetail(APIView):
     def get(self, request, pk, format=None):
         results = self.get_object(pk)
         serializer = TrackedResultsSerializer(results)
-        return Response(serializer.data)
+        data = serializer.data.copy()
+        with open(serializer.data["json"]) as file:
+            data["json"] = json.loads(file.read())
+        return Response(data)
 
     def put(self, request, pk, format=None):
         results = self.get_object(pk)
