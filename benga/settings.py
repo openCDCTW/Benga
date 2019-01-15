@@ -20,7 +20,7 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 # See https://docs.djangoproject.com/en/2.0/howto/deployment/checklist/
 
 # CELERY
-CELERY_BROKER_URL = 'amqp://'
+CELERY_BROKER_URL = os.environ['CELERY_BROKER_URL']
 CELERY_ACCEPT_CONTENT = ['json']
 CELERY_RESULT_BACKEND = 'django-db'
 CELERY_TASK_SERIALIZER = 'json'
@@ -102,16 +102,16 @@ DATABASES = {
         'NAME': os.environ['DATABASE_NAME'],
         'USER': os.environ['DATABASE_USER'],
         'PASSWORD': os.environ['DATABASE_PASSWORD'],
-        'HOST': '0.0.0.0',
-        'PORT': 5432
+        'HOST': os.environ['DATABASE_HOST'],
+        'PORT': os.environ['DATABASE_PORT']
     }
 }
 
 
 NOSQLS = {
     'mongodb': {
-        'HOST': 'localhost',
-        'PORT': 5432
+        'HOST': os.environ['NOSQL_HOST'],
+        'PORT': os.environ['NOSQL_PORT']
     }
 }
 
