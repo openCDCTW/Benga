@@ -1,8 +1,10 @@
 import json
+import os.path
 from rest_framework import generics
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
+from django.conf import settings
 from django.http import Http404
 from tracking.serializers import SequenceSerializer, TrackedResultsSerializer,\
     TrackingSerializer
@@ -57,7 +59,8 @@ class TrackedResultsDetail(APIView):
         results = self.get_object(pk)
         serializer = TrackedResultsSerializer(results)
         data = serializer.data.copy()
-        with open(serializer.data["json"]) as file:
+        jsonpath = os.path.join(settings.BASE_DIR, serializer.data["json"])
+        with open(jsonpath) as file:
             data["json"] = json.loads(file.read())
         return Response(data)
 
