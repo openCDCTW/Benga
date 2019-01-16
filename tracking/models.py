@@ -8,7 +8,7 @@ def sequences_path(instance, filename):
 
 
 def result_path(instance, filename):
-    return "tracked_results/{0}/{1}".format(instance.id.id, os.path.basename(filename))
+    return "tracked_results/{0}/{1}".format(str(instance.id.id), os.path.basename(filename))
 
 
 class Sequence(models.Model):
