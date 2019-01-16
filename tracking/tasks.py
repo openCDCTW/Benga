@@ -1,5 +1,6 @@
 import os
 import json
+import math
 from collections import Counter
 from celery import shared_task
 import pandas as pd
@@ -28,7 +29,7 @@ def add_metadata(items, track):
         metadata = track.find_one({'BioSample': item["BioSample"]})
         for col in metadata:
             if col != "profile" and col != "_id":
-                item[col] = metadata[col]
+                item[col] = "" if math.isnan(metadata[col]) else metadata[col]
     return items
 
 
