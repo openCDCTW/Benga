@@ -65,6 +65,10 @@ class Upload_contigs extends React.Component {
             autoProcessQueue: false,
             parallelUploads: 200,
             init:function(){
+                this.on("addedfile", function(on_load_header_data){
+                    var fileSizeElement = on_load_header_data.previewElement.querySelector(".dz-size");
+                    fileSizeElement.parentNode.removeChild(fileSizeElement);
+                });
                 this.on("sending", function(file, xhr, formData){
                     formData.append("batch_id", window.batchid);
                 });
@@ -98,7 +102,6 @@ class Upload_contigs extends React.Component {
             alert('Please choose a database !');
             return ;
         }
-
 
         this.dropzone.processQueue();
         this.setState(state => ({ upload_confirm: true , to: '/profile_view' ,

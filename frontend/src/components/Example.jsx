@@ -13,32 +13,8 @@ export default class Example extends React.Component {
 
 	constructor(props) {
 		super(props);
-
         this.state = {};
-		this.query_demo = this.query_demo.bind(this);
     }
-
-	query_demo(){
-
-        fetch('api/profiling/profile/816e94d3-2ad1-4886-95b1-5947c4a333a6/', { method:'GET'})
-			.then(response => response.json())
-			.then(result => this.setState(state => ({
-                profile_result_all: result.file,
-                profile_result_zip: result.zip })));
-
-		fetch('api/dendrogram/dendrogram/816e94d3-2ad1-4886-95b1-5947c4a333a6/', { method: 'GET'})
-            .then(response => response.json())
-            .then(result => this.setState(state => ({
-                png_file: result.png_file, 
-                pdf_file: result.pdf_file,
-                svg_file: result.svg_file, 
-                emf_file: result.emf_file, 
-                newick_file: result.newick_file })));
-	}
-
-	componentDidMount(){
-		this.query_demo();
-	}
 
     render() {
     	return (
@@ -47,7 +23,7 @@ export default class Example extends React.Component {
 				<br />
 				<br />
 	            <div style={{ display:'flex', justifyContent:'center', alignItems:'center'}}>
-	            	<a download href={this.state.profile_result_zip} 
+	            	<a download href={require('./static/example_result/profiles-example.zip')} 
                     style={{ textDecoration:'none' }}>
 	                    <Button variant="contained" color="default">
 		                    Download profiles (.zip)
@@ -56,7 +32,7 @@ export default class Example extends React.Component {
 	                    </Button>
 	                </a>
                     &nbsp;&nbsp;&nbsp;&nbsp;
-                    <a download href={this.state.profile_result_all} 
+                    <a download href={require('./static/example_result/profiles-example.tsv')} 
                     style={{ textDecoration:'none' }}>
 		                <Button variant="contained" color="default">
 		                    Download profiles (.tsv)
@@ -64,11 +40,12 @@ export default class Example extends React.Component {
 		                    <DownloadIcon />
 	                    </Button>
 	                </a>
+
 	            </div>
 				<br />
 				<br />
 	            <div style={{ display:'flex', justifyContent:'center', alignItems:'center'}}>
-	                <img src={require('./static/dendrogram_example.svg')} />
+	                <img src={require('./static/example_result/dendrogram_example.svg')} />
 	            </div>
 	            <br />
 	            <br />
@@ -76,23 +53,28 @@ export default class Example extends React.Component {
 	            <div style={{ display:'flex', justifyContent:'center', alignItems:'center'}}>
 	            	<font size="4">Download </font> 
 	            	&nbsp;&nbsp;&nbsp;&nbsp;
-	            	<a download href={this.state.png_file} style={{ textDecoration:'none' }}>
+	            	<a download href={require('./static/example_result/dendrogram_example.png')} 
+	            	style={{ textDecoration:'none' }}>
 	            		<Button variant="contained" color="default">Png</Button>
 	            	</a>
 	                &nbsp;&nbsp;&nbsp;&nbsp;
-	                <a download href={this.state.pdf_file} style={{ textDecoration:'none' }}>
+	                <a download href={require('./static/example_result/dendrogram_example.pdf')} 
+	                style={{ textDecoration:'none' }}>
 	                	<Button variant="contained" color="default">Pdf</Button>
 	                </a>
 	                &nbsp;&nbsp;&nbsp;&nbsp;
-	                <a download href={this.state.svg_file} style={{ textDecoration:'none' }}>
+	                <a download href={require('./static/example_result/dendrogram_example.svg')} 
+	                style={{ textDecoration:'none' }}>
 	                	<Button variant="contained" color="default">Svg</Button>
 	                </a>
 	                &nbsp;&nbsp;&nbsp;&nbsp;
-	                <a download href={this.state.emf_file} style={{ textDecoration:'none' }}>
+	                <a download href={require('./static/example_result/dendrogram_example.emf')} 
+	                style={{ textDecoration:'none' }}>
 	                	<Button variant="contained" color="default">emf</Button>
 	                </a>
 	                &nbsp;&nbsp;&nbsp;&nbsp;
-	                <a download href={this.state.newick_file} style={{ textDecoration:'none' }}>
+	                <a download href={require('./static/example_result/dendrogram_example.newick')} 
+	                style={{ textDecoration:'none' }}>
 	                	<Button variant="contained" color="default">newick</Button>
 	                </a>
 	            </div>

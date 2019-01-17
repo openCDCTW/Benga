@@ -24,7 +24,6 @@ export default class Profile_view extends React.Component {
             }
         };
 
-
         this.state = { fileName :fileName_str};
 		this.query_result = this.query_result.bind(this);
     }
@@ -72,7 +71,7 @@ export default class Profile_view extends React.Component {
                     <br />
                     <br />
                     <div style={{ display:'flex', justifyContent:'center', alignItems:'center'}}>
-                        <font size="6">Your batch ID : {window.batchid}</font>
+                        <font size="6"> ID : {window.batchid}</font>
                     </div>
                     <br />
                     <div style={{ display:'flex', justifyContent:'center', alignItems:'center'}}>
