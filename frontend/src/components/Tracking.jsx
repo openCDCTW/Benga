@@ -20,6 +20,7 @@ import Paper from '@material-ui/core/Paper';
 import Tabs from '@material-ui/core/Tabs';
 import Tab from '@material-ui/core/Tab';
 import green from '@material-ui/core/colors/green';
+import TextField from '@material-ui/core/TextField';
 
 const styles = theme => ({
     buttoncss:{
@@ -40,6 +41,14 @@ const styles = theme => ({
 	selectEmpty: {
 	    marginTop: theme.spacing.unit * 2,
 	},
+    textField:{
+        marginLeft: theme.spacing.unit * 4,
+        width:'93%'
+    },
+    container:{
+        display:'flex',
+        flexWrap:'wrap',
+    },
 })
 
 
@@ -77,7 +86,6 @@ class Tracking extends React.Component {
         };
 
         this.dropzone = null;
-
 	}
 
     handlePost() {
@@ -110,23 +118,36 @@ class Tracking extends React.Component {
 	        method:'POST',
 	        headers: new Headers({'content-type': 'application/json'}),
 	        body: JSON.stringify(scheme)
-	    });
+	    })
+        .then(response => response.json())
+        .then(result => window.trackingID = result.id );
 
 	}
 
 	remove(){
-
 	    this.dropzone.removeAllFiles();
 	    this.setState(state => ({ to: '/tracking', upload_confirm: false }));
 
 	}
 
-	handleChange(event){
-        if( event.target.value == 'Vibrio_cholerae')
-        this.setState(state => ({ 
-            [event.target.name]: event.target.value,
-            profile_db:"vibrio-profiles",
-        }));
+	select_handleChange(event){
+        if( event.target.value == 'Vibrio_cholerae'){
+            this.setState(state => ({ 
+                [event.target.name]: event.target.value,
+                profile_db:"vibrio-profiles",
+            }));
+        }
+        
+    }
+
+    _onKeyPress(event){
+        if(event.charCode === 13){
+            event.preventDefault();
+        }
+    }
+
+    BioSample_handleChange(event){
+        this.setState(state => ({ BioSampleID: this.search.value}));
     }
 
 	render() {
@@ -140,6 +161,34 @@ class Tracking extends React.Component {
         return (
             <div>
                 <Navigation value={2}/>
+                <br />
+                <br />
+                <Paper>
+                    <div>
+                        <form className={classes.container}>
+                            <TextField
+                                inputRef={ID => this.search = ID}
+                                label="BioSample ID"
+                                type="search"
+                                placeholder="Input BioSample ID here"
+                                onChange={this.BioSample_handleChange.bind(this)}
+                                className={classes.textField}
+                                onKeyPress={this._onKeyPress}
+                                margin="normal"
+                                variant="outlined"
+                                helperText=""
+                            />
+                        </form>
+                    </div>
+                    <br />
+                    <div style={{ width:'97%', display:'flex', justifyContent:'flex-end', 
+                            alignItems:'flex-end'}}>
+                        <Button variant="contained" color="default">
+                            Search
+                        </Button>
+                    </div>
+                    <br />
+                </Paper>
                 <br />
                 <br />
                 <div style={{ width:'97%', display:'flex', justifyContent:'flex-end', 
@@ -164,7 +213,7 @@ class Tracking extends React.Component {
 			              <InputLabel htmlFor="database-required">Database</InputLabel>
 			                <Select
 			                  value={this.state.allele_db}
-			                  onChange={this.handleChange.bind(this)}
+			                  onChange={this.select_handleChange.bind(this)}
 			                  name="allele_db"
 			                  inputProps={{
 			                    id: 'database-required',

@@ -47,7 +47,8 @@ export default class Tutorial extends React.Component {
 					<img src={require('./static/navigation.png')} />
 				</div>
 				<br />
-				<h3>&nbsp;&nbsp;Profiling Pagination</h3>
+				<hr color = "#000000" size="5" />
+				<h3>&nbsp;&nbsp;Profiling</h3>
 				<br />
 				<div style={{ width:'90%' }}>
 					<font>
@@ -160,7 +161,8 @@ export default class Tutorial extends React.Component {
 					<img src={require('./static/seachbar.png')} />
 				</div>
 				<br />
-				<h3>&nbsp;&nbsp;Dendrogram Pagination</h3>
+				<hr color = "#000000" size="5" /> 
+				<h3>&nbsp;&nbsp;Dendrogram</h3>
 				<div style={{ width:'90%' }}>
 					<font>
 						&nbsp;&nbsp;&nbsp;&nbsp;At dendrogram pagination, user can upload profile to get 
@@ -188,7 +190,8 @@ export default class Tutorial extends React.Component {
 					<img src={require('./static/waiting.png')} />
 				</div>
 				<br />
-				<h3>&nbsp;&nbsp;Tracking Pagination</h3>
+				<hr color = "#000000" size="5" /> 
+				<h3>&nbsp;&nbsp;Tracking</h3>
 				<div style={{ width:'90%'}}>
 					<font>
 						&nbsp;&nbsp;&nbsp;&nbsp;At dendrogram pagination, upload sequences to compare cgMLST 
