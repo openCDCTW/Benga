@@ -6,55 +6,46 @@ import Paper from '@material-ui/core/Paper';
 import Tabs from '@material-ui/core/Tabs';
 import Tab from '@material-ui/core/Tab';
 import Button from '@material-ui/core/Button';
-import { withStyle } from '@material-ui/core/styles';
 import ReplyIcon from '@material-ui/icons/Reply';
 import DownloadIcon from '@material-ui/icons/CloudDownload';
-
 
 export default class Example extends React.Component {
 
 	constructor(props) {
 		super(props);
-
         this.state = {};
-		this.query_demo = this.query_demo.bind(this);
     }
 
-	query_demo(){
-		fetch('api/dendrogram/dendrogram/c327bb9e-2dea-4fe3-baee-88d0bcf4d93a/', { method: 'GET'})
-            .then(response => response.json())
-            .then(result => this.setState(state => ({
-                svg_file: result.svg_file })));
-	}
-
-	componentDidMount(){
-		this.query_demo();
-	}
-
     render() {
-
     	return (
 			<div id="url">
-				<Navigation value={2}/>
+				<Navigation value={3}/>
 				<br />
 				<br />
 	            <div style={{ display:'flex', justifyContent:'center', alignItems:'center'}}>
-                    <Button variant="contained" color="default">
-	                    Download profiles (.zip)
-	                    &nbsp;&nbsp;
-	                    <DownloadIcon />
-                    </Button>
+	            	<a download href={require('./static/example_result/profiles-example.zip')} 
+                    style={{ textDecoration:'none' }}>
+	                    <Button variant="contained" color="default">
+		                    Download profiles (.zip)
+		                    &nbsp;&nbsp;
+		                    <DownloadIcon />
+	                    </Button>
+	                </a>
                     &nbsp;&nbsp;&nbsp;&nbsp;
-	                <Button variant="contained" color="default">
-	                    Download profiles (.tsv)
-	                    &nbsp;&nbsp;
-	                    <DownloadIcon />
-                    </Button>
+                    <a download href={require('./static/example_result/profiles-example.tsv')} 
+                    style={{ textDecoration:'none' }}>
+		                <Button variant="contained" color="default">
+		                    Download profiles (.tsv)
+		                    &nbsp;&nbsp;
+		                    <DownloadIcon />
+	                    </Button>
+	                </a>
+
 	            </div>
 				<br />
 				<br />
 	            <div style={{ display:'flex', justifyContent:'center', alignItems:'center'}}>
-	                <img src={this.state.svg_file} />
+	                <img src={require('./static/example_result/dendrogram_example.svg')} />
 	            </div>
 	            <br />
 	            <br />
@@ -62,15 +53,30 @@ export default class Example extends React.Component {
 	            <div style={{ display:'flex', justifyContent:'center', alignItems:'center'}}>
 	            	<font size="4">Download </font> 
 	            	&nbsp;&nbsp;&nbsp;&nbsp;
-	            	<Button variant="contained" color="default">Png</Button>
+	            	<a download href={require('./static/example_result/dendrogram_example.png')} 
+	            	style={{ textDecoration:'none' }}>
+	            		<Button variant="contained" color="default">Png</Button>
+	            	</a>
 	                &nbsp;&nbsp;&nbsp;&nbsp;
-	                <Button variant="contained" color="default">Pdf</Button>
+	                <a download href={require('./static/example_result/dendrogram_example.pdf')} 
+	                style={{ textDecoration:'none' }}>
+	                	<Button variant="contained" color="default">Pdf</Button>
+	                </a>
 	                &nbsp;&nbsp;&nbsp;&nbsp;
-	                <Button variant="contained" color="default">Svg</Button>
+	                <a download href={require('./static/example_result/dendrogram_example.svg')} 
+	                style={{ textDecoration:'none' }}>
+	                	<Button variant="contained" color="default">Svg</Button>
+	                </a>
 	                &nbsp;&nbsp;&nbsp;&nbsp;
-	                <Button variant="contained" color="default">emf</Button>
+	                <a download href={require('./static/example_result/dendrogram_example.emf')} 
+	                style={{ textDecoration:'none' }}>
+	                	<Button variant="contained" color="default">emf</Button>
+	                </a>
 	                &nbsp;&nbsp;&nbsp;&nbsp;
-	                <Button variant="contained" color="default">newick</Button>
+	                <a download href={require('./static/example_result/dendrogram_example.newick')} 
+	                style={{ textDecoration:'none' }}>
+	                	<Button variant="contained" color="default">newick</Button>
+	                </a>
 	            </div>
 	            <br />
 	            <br />

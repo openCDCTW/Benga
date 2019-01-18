@@ -24,12 +24,11 @@ export default class Profile_view extends React.Component {
             }
         };
 
-
         this.state = { fileName :fileName_str};
-		this.query_profile_result = this.query_profile_result.bind(this);
+		this.query_result = this.query_result.bind(this);
     }
 
-	query_profile_result(){
+	query_result(){
 
 		if(this.state.profile_result_all == undefined){
 			fetch('api/profiling/profile/' + window.batchid, { method:'GET'})
@@ -52,8 +51,8 @@ export default class Profile_view extends React.Component {
 	}
 
 	componentDidMount(){
-		this.query_profile_result();
-		this.interval = setInterval(this.query_profile_result, 60000);
+		this.query_result();
+		this.interval = setInterval(this.query_result, 60000);
 	}
 
     render() {
@@ -72,7 +71,7 @@ export default class Profile_view extends React.Component {
                     <br />
                     <br />
                     <div style={{ display:'flex', justifyContent:'center', alignItems:'center'}}>
-                        <font size="6">Your batch ID : {window.batchid}</font>
+                        <font size="6"> ID : {window.batchid}</font>
                     </div>
                     <br />
                     <div style={{ display:'flex', justifyContent:'center', alignItems:'center'}}>

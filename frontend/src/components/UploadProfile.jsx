@@ -4,10 +4,21 @@ import Navigation from './Navigation.jsx';
 import DropzoneComponent from 'react-dropzone-component';
 import { Link } from 'react-router-dom';
 import Button from '@material-ui/core/Button';
-import { withStyle } from '@material-ui/core/styles';
+import { withStyles } from '@material-ui/core/styles';
 import CloudUploadIcon from '@material-ui/icons/CloudUpload';
 import Icon from '@material-ui/core/Icon';
 import DeleteIcon from '@material-ui/icons/Delete';
+import green from '@material-ui/core/colors/green';
+
+const styles = theme => ({
+    cssRoot:{
+        color: theme.palette.getContrastText(green[600]),
+        backgroundColor: green[500],
+        '&:hover': {
+            backgroundColor:green[600],
+        },
+    }
+})
 
 class Upload_profile extends React.Component {
 
@@ -30,6 +41,10 @@ class Upload_profile extends React.Component {
                 this.on("sending", function(file, xhr, formData){
                     formData.append("batch_id", window.batchid);
                 });
+                this.on("success", function(file){
+                    file._removeLink.remove();
+                    delete file._removeLink;
+                });
 
             }
         }
@@ -47,8 +62,8 @@ class Upload_profile extends React.Component {
 
         let fileCheck = this.dropzone.files.length;
 
-        if(fileCheck < 5){
-            alert('Please upload at least 5 files');
+        if(fileCheck < 1){
+            alert('Please upload at least 1 files');
             return ;
         }
 
@@ -60,7 +75,7 @@ class Upload_profile extends React.Component {
     submit(){
 
         if (this.state.upload_confirm == false ){
-            alert('Please upload files first! (At least 5 files)');
+            alert('Please upload files first! (At least 1 files)');
             return ;
         }
 
@@ -88,6 +103,7 @@ class Upload_profile extends React.Component {
         var getID=function(data){
             window.batchid = data.id;
         };
+
     }
 
     render() {
@@ -96,6 +112,7 @@ class Upload_profile extends React.Component {
         const eventHandlers = {
             init: dz => this.dropzone = dz,
         }
+        const { classes } = this.props;
 
         return (
             <div>
@@ -119,7 +136,8 @@ class Upload_profile extends React.Component {
                 <br />
                 <br />
                 <div style={{ display:'flex', justifyContent:'center', alignItems:'center'}}>
-                    <Button variant="contained" color="default" onClick={this.handlePost.bind(this)}>
+                    <Button variant="contained" className ={classes.cssRoot}
+                    onClick={this.handlePost.bind(this)}>
                         Upload
                         &nbsp;&nbsp;
                         <CloudUploadIcon />
@@ -141,4 +159,4 @@ class Upload_profile extends React.Component {
     }
 }
 
-export default Upload_profile;
+export default withStyles(styles)(Upload_profile);
