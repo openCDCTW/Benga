@@ -13,11 +13,15 @@ import TableBody from '@material-ui/core/TableBody';
 import TableCell from '@material-ui/core/TableCell';
 import TableHead from '@material-ui/core/TableHead';
 import TableRow from '@material-ui/core/TableRow';
+//Scrollbar
+import { Scrollbars } from 'react-custom-scrollbars';
 
 const TrackingResultTable = withStyles(theme => ({
 	head:{
 		backgroundColor: theme.palette.common.black,
 		color: theme.palette.common.white,
+		position: "sticky",
+		top: 0
 	},
 	body:{
 		fontSize: 14,
@@ -27,8 +31,7 @@ const TrackingResultTable = withStyles(theme => ({
 const styles = theme => ({
 	root:{
 		width: '100%',
-		margibTop: theme.spacing.unit * 5,
-		overflowX: 'auto',
+		marginTop: theme.spacing.unit,
 	},
 	table:{
 		minWidth: 10,
@@ -58,7 +61,9 @@ class Tracking_result extends React.Component {
 			clearInterval(this.interval);
 		}
 	}
+
 	componentDidMount(){
+		this.query_track_result(); //delete after feature done
 		this.interval = setInterval(this.query_track_result, 10000);
 	}
 
@@ -101,32 +106,35 @@ class Tracking_result extends React.Component {
 					<br />
 					<div style={{ display:'flex', justifyContent:'center', alignItems:'center'}}>
 						<Paper className={classes.root}>
-							<Table className={classes.table}>
-								<TableHead>
-									<TableRow>
-										<TrackingResultTable align="right">Distance</TrackingResultTable>
-										<TrackingResultTable align="right">BioSample</TrackingResultTable>
-										<TrackingResultTable align="right">Country</TrackingResultTable>
-										<TrackingResultTable align="right">ST</TrackingResultTable>
-										<TrackingResultTable align="right">Serogroup_serotype</TrackingResultTable>
-										<TrackingResultTable align="right">Strain</TrackingResultTable>
-										<TrackingResultTable align="right">Year</TrackingResultTable>
-									</TableRow>
-								</TableHead>
-								<TableBody>
-									{trackResult.map(row => (
-										<TableRow className={classes.row} key={row.BioSample}>
-											<TrackingResultTable align="right">{row.distance}</TrackingResultTable>
-											<TrackingResultTable align="right">{row.BioSample}</TrackingResultTable>
-											<TrackingResultTable align="right">{row.Country}</TrackingResultTable>
-											<TrackingResultTable align="right">{row.ST}</TrackingResultTable>
-											<TrackingResultTable align="right">{row.Serogroup_serotype}</TrackingResultTable>
-											<TrackingResultTable align="right">{row.Strain}</TrackingResultTable>
-											<TrackingResultTable align="right">{row.Year}</TrackingResultTable>
+							<Scrollbars 
+							style={{ width: '93%', height: 650, margin:30}}>
+								<Table className={classes.table}>
+									<TableHead>
+										<TableRow>
+											<TrackingResultTable align="right">Distance</TrackingResultTable>
+											<TrackingResultTable align="right">BioSample</TrackingResultTable>
+											<TrackingResultTable align="right">Country</TrackingResultTable>
+											<TrackingResultTable align="right">ST</TrackingResultTable>
+											<TrackingResultTable align="right">Serogroup_serotype</TrackingResultTable>
+											<TrackingResultTable align="right">Strain</TrackingResultTable>
+											<TrackingResultTable align="right">Year</TrackingResultTable>
 										</TableRow>
-									))}
-								</TableBody>
-							</Table>
+									</TableHead>
+									<TableBody>
+										{trackResult.map(row => (
+											<TableRow className={classes.row} key={row.BioSample}>
+												<TrackingResultTable align="right">{row.distance}</TrackingResultTable>
+												<TrackingResultTable align="right">{row.BioSample}</TrackingResultTable>
+												<TrackingResultTable align="right">{row.Country}</TrackingResultTable>
+												<TrackingResultTable align="right">{row.ST}</TrackingResultTable>
+												<TrackingResultTable align="right">{row.Serogroup_serotype}</TrackingResultTable>
+												<TrackingResultTable align="right">{row.Strain}</TrackingResultTable>
+												<TrackingResultTable align="right">{row.Year}</TrackingResultTable>
+											</TableRow>
+										))}
+									</TableBody>
+								</Table>
+							</Scrollbars>
 						</Paper>
 					</div>
 					<br />
