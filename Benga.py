@@ -72,8 +72,8 @@ def profile(input_dir, output_dir, database, threads, occrrence, not_extend, no_
 def tree(input_dir, output_dir, distance_annotate):
     """Plot dendrogram with profile.tsv file in INPUT_DIR, and output to OUTPUT_DIR."""
     profiles = pd.read_csv(os.path.join(input_dir, "profile.tsv"), sep="\t", index_col=0)
-    dendro = phylogeny.Dendrogram()
-    dendro.make_tree(profiles)
+    dm = phylogeny.DistanceMatrix(profiles)
+    dendro = phylogeny.Dendrogram(dm)
     date = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M")
     filename = date + "_tree"
     dendro.to_newick(os.path.join(output_dir, "{}.newick".format(filename)))
