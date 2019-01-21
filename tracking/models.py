@@ -1,5 +1,4 @@
 import uuid
-import os.path
 from django.db import models
 
 
@@ -8,7 +7,7 @@ def sequences_path(instance, filename):
 
 
 def result_path(instance, filename):
-    return "tracked_results/{0}/{1}".format(str(instance.id.id), os.path.basename(filename))
+    return "tracked_results/{0}/{1}".format(str(instance.id.id), instance.json.name)
 
 
 class Sequence(models.Model):
@@ -27,7 +26,7 @@ class Tracking(models.Model):
         ("Vibrio_cholerae", "Vibrio cholerae"),
     )
     PROFILE_DB_CHOICES = (
-        ("vibrio-profiles", "Vibrio cholerae"),
+        ("Vibrio_cholerae", "Vibrio cholerae"),
     )
     id = models.OneToOneField(Sequence, on_delete=models.CASCADE, primary_key=True)
     allele_db = models.CharField(max_length=100, choices=ALLELE_DB_CHOICES, null=False)
