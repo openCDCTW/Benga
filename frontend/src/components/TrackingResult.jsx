@@ -2,8 +2,6 @@ import React from 'react';
 import ReactDOM from 'react-dom';
 import { Link } from 'react-router-dom';
 import Paper from '@material-ui/core/Paper';
-import Tabs from '@material-ui/core/Tabs';
-import Tab from '@material-ui/core/Tab';
 import Button from '@material-ui/core/Button';
 import { withStyles } from '@material-ui/core/styles';
 import ReplyIcon from '@material-ui/icons/Reply';
@@ -15,6 +13,11 @@ import TableHead from '@material-ui/core/TableHead';
 import TableRow from '@material-ui/core/TableRow';
 //Scrollbar
 import { Scrollbars } from 'react-custom-scrollbars';
+//
+import FormControl from '@material-ui/core/FormControl';
+import Select from '@material-ui/core/Select';
+import MenuItem from '@material-ui/core/MenuItem';
+import InputLabel from '@material-ui/core/InputLabel';
 
 const TrackingResultTable = withStyles(theme => ({
 	head:{
@@ -40,14 +43,22 @@ const styles = theme => ({
 		'&:nth-of-type(odd)': {
 			backgroundColor: theme.palette.background.default,
 		},
-	}
+	},
+	formControl: {
+	    marginLeft: theme.spacing.unit * 5,
+	    marginTop: theme.spacing.unit * 3,
+	    minWidth: 240,
+	},
+	selectEmpty: {
+		marginTop: theme.spacing.unit * 2,
+	},
 });
 
 class Tracking_result extends React.Component {
 
 	constructor(props) {
 		super(props);
-		this.state = {};
+		this.state = { rownumber:''};
 		this.query_track_result = this.query_track_result.bind(this);
 	};
 
@@ -56,29 +67,39 @@ class Tracking_result extends React.Component {
 			fetch('api/tracking/results/' + window.trackingID, { method:'GET'})
 			.then(response => response.json())
 			.then(result => this.setState(state => ({
-                tracking_result: result.json })));
+                tracking_result: result.json,
+                tracking_result_shown: result.json })));
 		}else{
 			clearInterval(this.interval);
 		}
 	}
-
+	// 'b448df41-2367-483d-b7a7-25005f722daf' window.trackingID
 	componentDidMount(){
 		this.query_track_result(); //delete after feature done
 		this.interval = setInterval(this.query_track_result, 10000);
 	}
 
+	handleChange(event){
+		this.setState(state => ({ [event.target.name]: event.target.value}));
+		let i = 0;
+		let tmp = [];
+		for(i; i < event.target.value; i++){
+			tmp.push(this.state.tracking_result[i])
+		};
+		this.setState(state => ({ tracking_result_shown: tmp }));
+	};
+
+	turn_on_Tabs(){
+		window.tabSwitch = false;
+	}
+
     render() {
     	const { classes } = this.props;
-    	const trackResult = this.state.tracking_result;
+    	const trackResult = this.state.tracking_result_shown;
 
     	if(this.state.tracking_result == undefined){
     		return(
     			<div>
-				<Paper square>
-					<Tabs value={false} centered>
-						<Tab label=" " disabled/>
-					</Tabs>
-				</Paper>
 				<br />
 				<br />
 				<br />
@@ -98,20 +119,31 @@ class Tracking_result extends React.Component {
     	}else{
     		return (
 				<div id="url">
-					<Paper square>
-						<Tabs value={false} centered>
-							<Tab label=" " disabled/>
-						</Tabs>
-					</Paper>
 					<br />
 					<div style={{ display:'flex', justifyContent:'center', alignItems:'center'}}>
 						<Paper className={classes.root}>
+							<form autoComplete="off">
+								<FormControl className={classes.formControl}>
+									<InputLabel>Display rows (Default:100)</InputLabel>
+										<Select
+										value={this.state.rownumber}
+										onChange={this.handleChange.bind(this)}
+										name="rownumber"
+										className={classes.selectEmpty}
+										>
+										<MenuItem value={100}>100</MenuItem>
+										<MenuItem value={50}>50</MenuItem>
+										<MenuItem value={20}>20</MenuItem>
+										<MenuItem value={10}>10</MenuItem>
+										</Select>
+								</FormControl>
+							</form>
 							<Scrollbars 
-							style={{ width: '93%', height: 650, margin:30}}>
+							style={{ width: '93%', height: 600, margin:30}}>
 								<Table className={classes.table}>
 									<TableHead>
 										<TableRow>
-											<TrackingResultTable align="right">Distance</TrackingResultTable>
+											<TrackingResultTable align="right">Difference(loci)</TrackingResultTable>
 											<TrackingResultTable align="right">BioSample</TrackingResultTable>
 											<TrackingResultTable align="right">Country</TrackingResultTable>
 											<TrackingResultTable align="right">ST</TrackingResultTable>
@@ -124,7 +156,12 @@ class Tracking_result extends React.Component {
 										{trackResult.map(row => (
 											<TableRow className={classes.row} key={row.BioSample}>
 												<TrackingResultTable align="right">{row.distance}</TrackingResultTable>
-												<TrackingResultTable align="right">{row.BioSample}</TrackingResultTable>
+												<TrackingResultTable align="right">
+													<a href={'https://www.ncbi.nlm.nih.gov/biosample/?term='+row.BioSample}
+													target="_blank">
+														{row.BioSample}
+													</a>
+												</TrackingResultTable>
 												<TrackingResultTable align="right">{row.Country}</TrackingResultTable>
 												<TrackingResultTable align="right">{row.ST}</TrackingResultTable>
 												<TrackingResultTable align="right">{row.Serogroup_serotype}</TrackingResultTable>
@@ -140,7 +177,7 @@ class Tracking_result extends React.Component {
 					<br />
 					<div style={{ display:'flex', justifyContent:'center', alignItems:'center'}}>
 						<Link to="/tracking" style={{ textDecoration:'none' }}>
-							<Button variant="contained" color="default">
+							<Button variant="contained" color="default" onClick={this.turn_on_Tabs}>
 								<ReplyIcon />
 								&nbsp;&nbsp;
 								Back

@@ -26,6 +26,8 @@
     "@material-ui/core": "^3.5.1",
     "@material-ui/icons": "^3.0.1",
     "babel-preset-es2015": "^6.24.1",
+    "downloadjs": "^1.4.7",
+    "material-ui-search-bar": "^0.4.2",
     "prop-types": "^15.6.2",
     "react": "^16.5.2",
     "react-custom-scrollbars": "^4.2.1",
