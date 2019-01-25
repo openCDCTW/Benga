@@ -1,6 +1,5 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
-import Navigation from './Navigation.jsx';
 import DropzoneComponent from 'react-dropzone-component';
 import { Link } from 'react-router-dom';
 import Options from './Options.jsx';
@@ -61,6 +60,7 @@ class Upload_contigs extends React.Component {
         this.djsConfig = {
             dictDefaultMessage:"Drop files or click to upload contigs",
             addRemoveLinks: true,
+            maxFilesize:10,
             acceptedFiles: ".fasta,.fa,.fna",
             autoProcessQueue: false,
             parallelUploads: 200,
@@ -126,6 +126,8 @@ class Upload_contigs extends React.Component {
             body: JSON.stringify(scheme)
         });
 
+        window.tabSwitch = true;
+
     }
 
     remove(){
@@ -186,7 +188,7 @@ class Upload_contigs extends React.Component {
         if(this.state.profile_result_all == undefined){
             return (
             <div>
-                <Navigation value={0}/>
+                <br />
                 <br />
                 <div style={{ display:'flex', justifyContent:'center', alignItems:'center'}}>
                     <SearchBar

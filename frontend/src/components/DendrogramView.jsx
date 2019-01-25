@@ -1,9 +1,6 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 import { Link } from 'react-router-dom';
-import Paper from '@material-ui/core/Paper';
-import Tabs from '@material-ui/core/Tabs';
-import Tab from '@material-ui/core/Tab';
 import Button from '@material-ui/core/Button';
 import { withStyle } from '@material-ui/core/styles';
 import ReplyIcon from '@material-ui/icons/Reply';
@@ -39,7 +36,9 @@ export default class Dendrogram_view extends React.Component {
 		this.interval = setInterval(this.query_dengrogram, 5000);
 	}
 
-
+	turn_on_Tabs(){
+		window.tabSwitch = false;
+	}
 
     render() {
 
@@ -47,11 +46,6 @@ export default class Dendrogram_view extends React.Component {
 
     		return(
     			<div>
-				<Paper square>
-					<Tabs value={false} centered>
-						<Tab label=" " disabled/>
-					</Tabs>
-				</Paper>
 				<br />
 				<br />
 				<br />
@@ -71,11 +65,6 @@ export default class Dendrogram_view extends React.Component {
     	}else{
     		return (
 				<div id="url">
-					<Paper square>
-						<Tabs value={false} centered>
-							<Tab label=" " disabled/>
-						</Tabs>
-					</Paper>
 					<br />
 					<div style={{ display:'flex', justifyContent:'center', alignItems:'center'}}>
 						<img src={this.state.svg_file} />
@@ -111,7 +100,7 @@ export default class Dendrogram_view extends React.Component {
 					<br />
 					<div style={{ display:'flex', justifyContent:'center', alignItems:'center'}}>
 						<Link to="/upload_profile" style={{ textDecoration:'none' }}>
-							<Button variant="contained" color="default">
+							<Button variant="contained" color="default" onClick={this.turn_on_Tabs}>
 								<ReplyIcon />
 								&nbsp;&nbsp;
 								Back

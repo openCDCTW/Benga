@@ -9,20 +9,32 @@ export default class Navigation extends React.Component {
 
     constructor(props) {
         super(props);
+        this.state = { value: 0 };
+        window.tabSwitch = false;
+    };
+
+    handleChange(event, value){
+        this.setState({ value });
     };
 
     render(){
+        const { classes } = this.props;
+        const { value } = this.state.value;
+
         return (
         	<Paper square>
-                <Tabs value={this.props.value} indicatorColor="primary" textColor="primary" centered>
-                    <Tab label="Profile" component={Link} to="/" />
-                    <Tab label="Dendrogram" component={Link} to="/upload_profile" />
-                    <Tab label="Tracking" component={Link} to="/tracking" />
-                    <Tab label="Example" component={Link} to="/demo" />
-                    <Tab label="Tutorial" component={Link} to="/tutorial" />
+                <Tabs value={this.state.value} indicatorColor="primary" 
+                textColor="primary" scrollButtons="auto" scrollable={true} 
+                onChange={this.handleChange.bind(this)} disabled={window.tabSwitch}>
+                    <Tab disabled={window.tabSwitch} label="Profile" component={Link} to="/" />
+                    <Tab disabled={window.tabSwitch} label="Dendrogram" component={Link} to="/upload_profile" />
+                    <Tab disabled={window.tabSwitch} label="Tracking" component={Link} to="/tracking" />
+                    <Tab disabled={window.tabSwitch} label="Example" component={Link} to="/demo" />
+                    <Tab disabled={window.tabSwitch} label="Tutorial" component={Link} to="/tutorial" />
                 </Tabs>
             </Paper>
         );
     }
 }
 
+// <Tab disabled={window.tabSwitch} label="Search" component={Link} to="/tracking_search" />
