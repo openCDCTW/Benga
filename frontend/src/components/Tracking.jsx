@@ -1,6 +1,5 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
-import Navigation from './Navigation.jsx';
 import DropzoneComponent from 'react-dropzone-component';
 import { Link } from 'react-router-dom';
 //Option's outlook
@@ -16,11 +15,8 @@ import { withStyles } from '@material-ui/core/styles';
 import CloudUploadIcon from '@material-ui/icons/CloudUpload';
 import Icon from '@material-ui/core/Icon';
 import DeleteIcon from '@material-ui/icons/Delete';
-import Paper from '@material-ui/core/Paper';
-import Tabs from '@material-ui/core/Tabs';
-import Tab from '@material-ui/core/Tab';
 import green from '@material-ui/core/colors/green';
-import TextField from '@material-ui/core/TextField';
+
 
 const styles = theme => ({
     buttoncss:{
@@ -41,14 +37,7 @@ const styles = theme => ({
 	selectEmpty: {
 	    marginTop: theme.spacing.unit * 2,
 	},
-    textField:{
-        marginLeft: theme.spacing.unit * 4,
-        width:'93%'
-    },
-    container:{
-        display:'flex',
-        flexWrap:'wrap',
-    },
+    
 })
 
 
@@ -61,7 +50,7 @@ class Tracking extends React.Component {
 			to: "/tracking",
             upload_confirm: false,
             allele_db:"Vibrio_cholerae",
-            profile_db:"vibrio-profiles",
+            profile_db:"Vibrio_cholerae",
 		};
 
 		this.djsConfig = {
@@ -71,6 +60,10 @@ class Tracking extends React.Component {
             autoProcessQueue: false,
             parallelUploads: 1,
             init:function(){
+                this.on("addedfile", function(on_load_header_data){
+                    var fileSizeElement = on_load_header_data.previewElement.querySelector(".dz-size");
+                    fileSizeElement.parentNode.removeChild(fileSizeElement);
+                });
                 this.on("success", function(file,response){
                     file._removeLink.remove();
                     delete file._removeLink;
@@ -119,9 +112,9 @@ class Tracking extends React.Component {
 	        headers: new Headers({'content-type': 'application/json'}),
 	        body: JSON.stringify(scheme)
 	    })
-        .then(response => response.json())
-        .then(result => window.trackingID = result.id );
+        .then(response => response.json());
 
+        window.tabSwitch = true;
 	}
 
 	remove(){
@@ -137,17 +130,6 @@ class Tracking extends React.Component {
                 profile_db:"vibrio-profiles",
             }));
         }
-        
-    }
-
-    _onKeyPress(event){
-        if(event.charCode === 13){
-            event.preventDefault();
-        }
-    }
-
-    BioSample_handleChange(event){
-        this.setState(state => ({ BioSampleID: this.search.value}));
     }
 
 	render() {
@@ -160,35 +142,6 @@ class Tracking extends React.Component {
 
         return (
             <div>
-                <Navigation value={2}/>
-                <br />
-                <br />
-                <Paper>
-                    <div>
-                        <form className={classes.container}>
-                            <TextField
-                                inputRef={ID => this.search = ID}
-                                label="BioSample ID"
-                                type="search"
-                                placeholder="Input BioSample ID here"
-                                onChange={this.BioSample_handleChange.bind(this)}
-                                className={classes.textField}
-                                onKeyPress={this._onKeyPress}
-                                margin="normal"
-                                variant="outlined"
-                                helperText=""
-                            />
-                        </form>
-                    </div>
-                    <br />
-                    <div style={{ width:'97%', display:'flex', justifyContent:'flex-end', 
-                            alignItems:'flex-end'}}>
-                        <Button variant="contained" color="default">
-                            Search
-                        </Button>
-                    </div>
-                    <br />
-                </Paper>
                 <br />
                 <br />
                 <div style={{ width:'97%', display:'flex', justifyContent:'flex-end', 
