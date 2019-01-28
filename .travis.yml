@@ -27,8 +27,5 @@ before_install:
   - docker pull rabbitmq:3.7-management-alpine
   - docker pull a504082002/benga:celery
 
-before_script:
-  - psql -U postgres -c 'create database travis_ci_test;'
-
 script:
   - docker-compose up
