@@ -82,7 +82,7 @@ export default class Profile_view extends React.Component {
                     <br />
                     <br />
                     <div style={{ display:'flex', justifyContent:'center', alignItems:'center'}}>
-                        <img src="https://svgshare.com/i/9N5.svg" />
+                        <img src={require('./static/waiting.svg')} />
                     </div>
                     <br />
                     <br />
