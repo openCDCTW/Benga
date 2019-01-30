@@ -94,6 +94,7 @@ class Tracking extends React.Component {
 	    this.setState(state => ({ 
 	    	upload_confirm: true,
 	    	to: '/tracking_result' }));
+
 	}
 
 	submit(){
