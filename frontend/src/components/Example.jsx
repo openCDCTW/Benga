@@ -12,7 +12,7 @@ import download from 'downloadjs';
 export default class Example extends React.Component {
 
     download_zip(token){
-		fetch(require('./static/example_result/profiles-example.zip'),{ 
+		fetch(require('./static/Example_result/profiles-example.zip'),{ 
 			method:'GET',
 			headers: {
 				'Authorization':token
@@ -24,7 +24,7 @@ export default class Example extends React.Component {
 	}
 
     download_tsv(token){
-		fetch(require('./static/example_result/profiles-example.tsv'),{ 
+		fetch(require('./static/Example_result/profiles-example.tsv'),{ 
 			method:'GET',
 			headers: {
 				'Authorization':token
@@ -36,7 +36,7 @@ export default class Example extends React.Component {
 	}
 
 	download_png(token){
-		fetch(require('./static/example_result/dendrogram_example.png'),{ 
+		fetch(require('./static/Example_result/dendrogram_example.png'),{ 
 			method:'GET',
 			headers: {
 				'Authorization':token
@@ -48,7 +48,7 @@ export default class Example extends React.Component {
 	}
 
 	download_pdf(token){
-		fetch(require('./static/example_result/dendrogram_example.pdf'),{ 
+		fetch(require('./static/Example_result/dendrogram_example.pdf'),{ 
 			method:'GET',
 			headers: {
 				'Authorization':token
@@ -60,7 +60,7 @@ export default class Example extends React.Component {
 	}
 
 	download_svg(token){
-		fetch(require('./static/example_result/dendrogram_example.svg'),{ 
+		fetch(require('./static/Example_result/dendrogram_example.svg'),{ 
 			method:'GET',
 			headers: {
 				'Authorization':token
@@ -72,7 +72,7 @@ export default class Example extends React.Component {
 	}
 
 	download_emf(token){
-		fetch(require('./static/example_result/dendrogram_example.emf'),{ 
+		fetch(require('./static/Example_result/dendrogram_example.emf'),{ 
 			method:'GET',
 			headers: {
 				'Authorization':token
@@ -84,7 +84,7 @@ export default class Example extends React.Component {
 	}
 
 	download_newick(token){
-		fetch(require('./static/example_result/dendrogram_example.newick'),{ 
+		fetch(require('./static/Example_result/dendrogram_example.newick'),{ 
 			method:'GET',
 			headers: {
 				'Authorization':token
@@ -116,7 +116,7 @@ export default class Example extends React.Component {
 				<br />
 				<br />
 	            <div style={{ display:'flex', justifyContent:'center', alignItems:'center'}}>
-	                <img src={require('./static/example_result/dendrogram_example.svg')} />
+	                <img src={require('./static/Example_result/dendrogram_example.svg')} />
 	            </div>
 	            <br />
 	            <br />
