@@ -170,26 +170,26 @@ class Upload_contigs extends React.Component {
 
     upload_example_data(){
 
-        // let mockfile = [
-        //     { name:"S.Agona_01.fa" },
-        //     { name:"S.Agona_02.fa" },
-        //     { name:"S.Agona_03.fa" },
-        //     { name:"S.Enteritidis_01.fa" },
-        //     { name:"S.Enteritidis_02.fa" },
-        //     { name:"S.Enteritidis_03.fa" },
-        //     { name:"S.GoldCoast_01.fa" },
-        //     { name:"S.GoldCoast_02.fa" },
-        //     { name:"S.GoldCoast_03.fa" },
-        //     { name:"S.GoldCoast_04.fa" },
-        // ];
+        let mockfile = [
+            { name:"S.Agona_01.fa" },
+            { name:"S.Agona_02.fa" },
+            { name:"S.Agona_03.fa" },
+            { name:"S.Enteritidis_01.fa" },
+            { name:"S.Enteritidis_02.fa" },
+            { name:"S.Enteritidis_03.fa" },
+            { name:"S.GoldCoast_01.fa" },
+            { name:"S.GoldCoast_02.fa" },
+            { name:"S.GoldCoast_03.fa" },
+            { name:"S.GoldCoast_04.fa" },
+        ];
 
-        // let i = 0;
-        // for(i; i < mockfile.length; i++){
-        //     this.dropzone.emit("addedfile",mockfile[i]);
-        //     this.dropzone.emit("success",mockfile[i]);
-        //     this.dropzone.emit("complete",mockfile[i]);
-        //     this.dropzone.files.push(mockfile[i]);
-        // };
+        let i = 0;
+        for(i; i < mockfile.length; i++){
+            this.dropzone.emit("addedfile",mockfile[i]);
+            this.dropzone.emit("success",mockfile[i]);
+            this.dropzone.emit("complete",mockfile[i]);
+            this.dropzone.files.push(mockfile[i]);
+        };
 
         let encodeExampleData = [
             require('./static/Example_data/S.Agona_01.fa'), 
@@ -228,6 +228,7 @@ class Upload_contigs extends React.Component {
             enteritidis03, enteritidis04, goldCoast01, goldCoast02, goldCoast03 ];
 
         let k = 0;
+        let upload_status = [];
 
         for(k; k < decodeExampleFile.length; k++){
             let form = new FormData();
@@ -237,7 +238,7 @@ class Upload_contigs extends React.Component {
             fetch('api/profiling/sequence/', {
                 method:'POST',
                 body:form ,
-            });
+            }).then(res => upload_status.push(res.status));
         };
 
         window.databaseName = "Salmonella_enterica";
@@ -245,19 +246,23 @@ class Upload_contigs extends React.Component {
 
         this.setState(state => ({ switch: true }));
 
-        function trigger(){
-            let scheme = {};
-            scheme.occurrence = "95";
-            scheme.database = window.databaseName;
-            scheme.id = window.batchid;
-            fetch('api/profiling/profiling-tree/', {
-                method:'POST',
-                headers: new Headers({'content-type': 'application/json'}),
-                body: JSON.stringify(scheme)
-            });
+        function trigger_celery(){
+
+            if( upload_status.length == 10 ){
+                let scheme = {};
+                scheme.occurrence = "95";
+                scheme.database = window.databaseName;
+                scheme.id = window.batchid;
+                fetch('api/profiling/profiling-tree/', {
+                    method:'POST',
+                    headers: new Headers({'content-type': 'application/json'}),
+                    body: JSON.stringify(scheme)
+                });
+                clearInterval(interval);
+            }
         };
 
-        setTimeout(trigger, 1500);
+        let interval = setInterval(trigger_celery,1500);
     }
 
     back(){
