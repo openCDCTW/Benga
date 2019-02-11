@@ -5,7 +5,8 @@ services:
     image: postgres:9.6-alpine
     restart: always
     environment:
-      POSTGRES_PASSWORD: c!_test
+      POSTGRES_PASSWORD: docker
+      POSTGRES_DB: benga
     volumes:
       - ./test/data/pgdata:/var/lib/postgresql/data
 
@@ -24,6 +25,8 @@ services:
 
   celery:
     image: a504082002/benga:celery
+    environment:
+      SECRET_KEY: ${SECRET_KEY}
     env_file: envs/web.env
     command: bash -c "python3 manage.py migrate; celery -A benga worker -l info"
     depends_on:
