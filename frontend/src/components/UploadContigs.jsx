@@ -170,7 +170,7 @@ class Upload_contigs extends React.Component {
 
     upload_example_data(){
 
-        let mockfile = [
+        let exampleFile = [
             { name:"S.Agona_01.fa" },
             { name:"S.Agona_02.fa" },
             { name:"S.Agona_03.fa" },
@@ -184,11 +184,11 @@ class Upload_contigs extends React.Component {
         ];
 
         let i = 0;
-        for(i; i < mockfile.length; i++){
-            this.dropzone.emit("addedfile",mockfile[i]);
-            this.dropzone.emit("success",mockfile[i]);
-            this.dropzone.emit("complete",mockfile[i]);
-            this.dropzone.files.push(mockfile[i]);
+        for(i; i < exampleFile.length; i++){
+            this.dropzone.emit("addedfile",exampleFile[i]);
+            this.dropzone.emit("success",exampleFile[i]);
+            this.dropzone.emit("complete",exampleFile[i]);
+            this.dropzone.files.push(exampleFile[i]);
         };
 
         let encodeExampleData = [
