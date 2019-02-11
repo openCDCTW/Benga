@@ -1,6 +1,5 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
-import Navigation from './Navigation.jsx';
 import DropzoneComponent from 'react-dropzone-component';
 import { Link } from 'react-router-dom';
 import Button from '@material-ui/core/Button';
@@ -38,6 +37,10 @@ class Upload_profile extends React.Component {
             autoProcessQueue: false,
             parallelUploads: 200,
             init:function(){
+                this.on("addedfile", function(on_load_header_data){
+                    var fileSizeElement = on_load_header_data.previewElement.querySelector(".dz-size");
+                    fileSizeElement.parentNode.removeChild(fileSizeElement);
+                });
                 this.on("sending", function(file, xhr, formData){
                     formData.append("batch_id", window.batchid);
                 });
@@ -86,6 +89,8 @@ class Upload_profile extends React.Component {
             headers: new Headers({'content-type': 'application/json'}),
             body: JSON.stringify(scheme)
         });
+
+        window.tabSwitch = true;
     }
 
     remove(){
@@ -116,7 +121,6 @@ class Upload_profile extends React.Component {
 
         return (
             <div>
-                <Navigation value={1}/>
                 <br />
                 <br />
                 <div style={{ width:'97%', display:'flex', justifyContent:'flex-end', 

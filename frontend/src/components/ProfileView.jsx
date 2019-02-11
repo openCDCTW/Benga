@@ -1,9 +1,6 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 import { Link } from 'react-router-dom';
-import Paper from '@material-ui/core/Paper';
-import Tabs from '@material-ui/core/Tabs';
-import Tab from '@material-ui/core/Tab';
 import Button from '@material-ui/core/Button';
 import { withStyle } from '@material-ui/core/styles';
 import ReplyIcon from '@material-ui/icons/Reply';
@@ -55,17 +52,16 @@ export default class Profile_view extends React.Component {
 		this.interval = setInterval(this.query_result, 60000);
 	}
 
+    turn_on_Tabs(){
+        window.tabSwitch = false;
+    }
+
     render() {
 
     	if(this.state.profile_result_all == undefined){
 
     		return(
     			<div>
-                    <Paper square>
-                        <Tabs value={false} centered>
-                            <Tab label=" " disabled/>
-                        </Tabs>
-                    </Paper>
                     <br />
                     <br />
                     <br />
@@ -86,7 +82,7 @@ export default class Profile_view extends React.Component {
                     <br />
                     <br />
                     <div style={{ display:'flex', justifyContent:'center', alignItems:'center'}}>
-                        <img src="https://svgshare.com/i/9N5.svg" />
+                        <img src={require('./static/waiting.svg')} />
                     </div>
                     <br />
                     <br />
@@ -97,11 +93,8 @@ export default class Profile_view extends React.Component {
     	}else{
     		return (
     				<div id="url">
-                        <Paper square>
-                            <Tabs centered>
-                                <Tab label=" "/>
-                            </Tabs>
-                        </Paper>
+                        <br />
+                        <br />
     					<br />
                         <div style={{ display:'flex', justifyContent:'center', alignItems:'center'}}>
                             <a download href={this.state.profile_result_zip} 
@@ -166,7 +159,7 @@ export default class Profile_view extends React.Component {
                         <br />
                         <div style={{ display:'flex', justifyContent:'center', alignItems:'center'}}>
                             <Link to="/" style={{ textDecoration:'none' }}>
-                                <Button variant="contained" color="default">
+                                <Button variant="contained" color="default" onClick={this.turn_on_Tabs}>
                                     <ReplyIcon />
                                     &nbsp;&nbsp;
                                     Back

@@ -1,6 +1,5 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
-import Navigation from './Navigation.jsx';
 import DropzoneComponent from 'react-dropzone-component';
 import { Link } from 'react-router-dom';
 import Options from './Options.jsx';
@@ -17,6 +16,8 @@ import Tabs from '@material-ui/core/Tabs';
 import Tab from '@material-ui/core/Tab';
 import green from '@material-ui/core/colors/green';
 // import { Scrollbars } from 'react-custom-scrollbars';
+import download from 'downloadjs';
+
 
 const styles = theme => ({
     cssRoot:{
@@ -45,7 +46,6 @@ class Upload_contigs extends React.Component {
             window.batchid = data.id;
         };
 
-
         // TODO: poor performnce issue with everytime load the component will
         // fetch API once.
 
@@ -61,6 +61,7 @@ class Upload_contigs extends React.Component {
         this.djsConfig = {
             dictDefaultMessage:"Drop files or click to upload contigs",
             addRemoveLinks: true,
+            maxFilesize:10,
             acceptedFiles: ".fasta,.fa,.fna",
             autoProcessQueue: false,
             parallelUploads: 200,
@@ -110,7 +111,6 @@ class Upload_contigs extends React.Component {
 
     submit(){
 
-
         if (this.state.upload_confirm == false){
             alert('Please upload files first! (At least 5 files)');
             return ;
@@ -125,6 +125,8 @@ class Upload_contigs extends React.Component {
             headers: new Headers({'content-type': 'application/json'}),
             body: JSON.stringify(scheme)
         });
+
+        window.tabSwitch = true;
 
     }
 
@@ -166,8 +168,101 @@ class Upload_contigs extends React.Component {
                 newick_file: result.newick_file, })));
     }
 
-    upload_samaple(){
-        
+    upload_example_data(){
+
+        let exampleFile = [
+            { name:"S.Agona_01.fa" },
+            { name:"S.Agona_02.fa" },
+            { name:"S.Agona_03.fa" },
+            { name:"S.Enteritidis_01.fa" },
+            { name:"S.Enteritidis_02.fa" },
+            { name:"S.Enteritidis_03.fa" },
+            { name:"S.GoldCoast_01.fa" },
+            { name:"S.GoldCoast_02.fa" },
+            { name:"S.GoldCoast_03.fa" },
+            { name:"S.GoldCoast_04.fa" },
+        ];
+
+        let i = 0;
+        for(i; i < exampleFile.length; i++){
+            this.dropzone.emit("addedfile",exampleFile[i]);
+            this.dropzone.emit("success",exampleFile[i]);
+            this.dropzone.emit("complete",exampleFile[i]);
+            this.dropzone.files.push(exampleFile[i]);
+        };
+
+        let encodeExampleData = [
+            require('./static/Example_data/S.Agona_01.fa'), 
+            require('./static/Example_data/S.Agona_02.fa'), 
+            require('./static/Example_data/S.Agona_03.fa'), 
+            require('./static/Example_data/S.Enteritidis_01.fa'), 
+            require('./static/Example_data/S.Enteritidis_02.fa'), 
+            require('./static/Example_data/S.Enteritidis_03.fa'), 
+            require('./static/Example_data/S.Enteritidis_04.fa'), 
+            require('./static/Example_data/S.GoldCoast_01.fa'), 
+            require('./static/Example_data/S.GoldCoast_02.fa'), 
+            require('./static/Example_data/S.GoldCoast_03.fa'), 
+        ];
+
+        let decodeExampleData = [];
+        let j = 0;
+
+        for(j; j < encodeExampleData.length; j++){
+            let tmp = encodeExampleData[j].substring(13,encodeExampleData[j].length);
+            tmp = window.atob(tmp);
+            decodeExampleData.push(tmp);
+        };
+
+        let agona01 = new File([decodeExampleData[0]],'S.Agona_01.fa');
+        let agona02 = new File([decodeExampleData[1]],'S.Agona_02.fa');
+        let agona03 = new File([decodeExampleData[2]],'S.Agona_03.fa');
+        let enteritidis01 = new File([decodeExampleData[3]],'S.Enteritidis_01.fa');
+        let enteritidis02 = new File([decodeExampleData[4]],'S.Enteritidis_02.fa');
+        let enteritidis03 = new File([decodeExampleData[5]],'S.Enteritidis_03.fa');
+        let enteritidis04 = new File([decodeExampleData[6]],'S.Enteritidis_04.fa');
+        let goldCoast01 = new File([decodeExampleData[7]],'S.GoldCoast_01.fa');
+        let goldCoast02 = new File([decodeExampleData[8]],'S.GoldCoast_02.fa');
+        let goldCoast03 = new File([decodeExampleData[9]],'S.GoldCoast_03.fa');
+
+        let decodeExampleFile = [ agona01, agona02, agona03, enteritidis01, enteritidis02,
+            enteritidis03, enteritidis04, goldCoast01, goldCoast02, goldCoast03 ];
+
+        let k = 0;
+        let upload_status = [];
+
+        for(k; k < decodeExampleFile.length; k++){
+            let form = new FormData();
+            form.append('file',decodeExampleFile[k]);
+            form.append('batch_id',window.batchid);
+
+            fetch('api/profiling/sequence/', {
+                method:'POST',
+                body:form ,
+            }).then(res => upload_status.push(res.status));
+        };
+
+        window.databaseName = "Salmonella_enterica";
+        window.tabSwitch = true;
+
+        this.setState(state => ({ switch: true }));
+
+        function trigger_celery(){
+
+            if( upload_status.length == 10 ){
+                let scheme = {};
+                scheme.occurrence = "95";
+                scheme.database = window.databaseName;
+                scheme.id = window.batchid;
+                fetch('api/profiling/profiling-tree/', {
+                    method:'POST',
+                    headers: new Headers({'content-type': 'application/json'}),
+                    body: JSON.stringify(scheme)
+                });
+                clearInterval(interval);
+            }
+        };
+
+        let interval = setInterval(trigger_celery,1500);
     }
 
     back(){
@@ -186,7 +281,7 @@ class Upload_contigs extends React.Component {
         if(this.state.profile_result_all == undefined){
             return (
             <div>
-                <Navigation value={0}/>
+                <br />
                 <br />
                 <div style={{ display:'flex', justifyContent:'center', alignItems:'center'}}>
                     <SearchBar
@@ -243,12 +338,17 @@ class Upload_contigs extends React.Component {
                     </Link>
                 </div>
                 <br />
+                <br />
+                <br />
+                <br />
                 <div style={{ display:'flex', justifyContent:'center', alignItems:'center'}}>
                     <Button variant="contained" color="default" 
-                     onClick={this.upload_samaple.bind(this)}>
-                        Upload sample data
-                        &nbsp;&nbsp;
-                        <CloudUploadIcon />
+                     onClick={this.upload_example_data.bind(this)}>
+                        <Link to="/profile_view" style={{ textDecoration:'none', color:'#000' }}>
+                            upload sample data
+                            &nbsp;&nbsp;
+                            <CloudUploadIcon />
+                        </Link>
                     </Button>
                 </div>
                 <br />
@@ -260,11 +360,10 @@ class Upload_contigs extends React.Component {
         }else{
             return (
                     <div>
-                        <Paper square>
-                            <Tabs centered>
-                                <Tab label=" "/>
-                            </Tabs>
-                        </Paper>
+                        <br />
+                        <br />
+                        <br />
+                        <br />
                         <br />
                         <div style={{ display:'flex', justifyContent:'center', alignItems:'center'}}>
                             <a download href={this.state.profile_result_all} 
