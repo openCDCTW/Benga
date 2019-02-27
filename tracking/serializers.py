@@ -1,10 +1,10 @@
 from rest_framework import serializers
-from tracking.models import Sequence, TrackedResults, Tracking
+from tracking.models import Profile, TrackedResults, Tracking
 
 
-class SequenceSerializer(serializers.ModelSerializer):
+class ProfileSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Sequence
+        model = Profile
         fields = ('id', 'created', 'file')
 
 
