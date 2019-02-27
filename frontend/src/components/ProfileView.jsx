@@ -33,6 +33,14 @@ export default class Profile_view extends React.Component {
 			.then(response => response.json())
 			.then(result => this.setState(state => ({
                 profile_result_zip: result.zip })));
+            // fetch('api/dendrogram/dendrogram/' + window.batchid, { method: 'GET'})
+            // .then(response => response.json())
+            // .then(result => this.setState(state => ({
+            //     png_file: result.png_file, 
+            //     pdf_file: result.pdf_file,
+            //     svg_file: result.svg_file, 
+            //     emf_file: result.emf_file, 
+            //     newick_file: result.newick_file })));
 		}else{
 			clearInterval(this.interval);
 		}
@@ -91,6 +99,7 @@ export default class Profile_view extends React.Component {
     	}else{
     		return (
     				<div>
+<<<<<<< HEAD
                         <br />
                         <br />
                         <br />
@@ -98,6 +107,20 @@ export default class Profile_view extends React.Component {
                         <br />
                         <br />
                         <br />
+=======
+                        <br />
+                        <br />
+    					<br />
+                        <br />
+                        <br />
+                        <br />
+                        <br />
+                        <br />
+                        <br />
+                        <br />
+                        <br />
+                        <br />
+>>>>>>> Modify user interface
                         <div style={{ display:'flex', justifyContent:'center', alignItems:'center'}}>
                             <a download href={this.state.profile_result_zip} 
                              style={{ textDecoration:'none' }}>
@@ -107,6 +130,18 @@ export default class Profile_view extends React.Component {
                                 <DownloadIcon />
                                 </Button>
                             </a>
+<<<<<<< HEAD
+=======
+                            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                            <a download href={this.state.profile_result_all} 
+                             style={{ textDecoration:'none' }}>
+                                <Button variant="contained" color="default">
+                                Download profiles (.tsv)
+                                &nbsp;&nbsp;
+                                <DownloadIcon />
+                                </Button>
+                            </a>
+>>>>>>> Modify user interface
                         </div>
     					<br />
     					<br />
@@ -130,4 +165,45 @@ export default class Profile_view extends React.Component {
     	}
         
     }
+<<<<<<< HEAD
 }
+=======
+}
+
+                        // <div style={{ display:'flex', justifyContent:'center', alignItems:'center'}}>
+                        //     <img src={this.state.svg_file} />
+                        // </div>
+                        // <div style={{ display:'flex', justifyContent:'center', alignItems:'center'}}>
+                        //     <font>Download</font> 
+                        //     &nbsp;&nbsp;&nbsp;&nbsp;
+                        //     <a download href={this.state.pdf_file} style={{ textDecoration:'none' }}>
+                        //         <Button variant="contained" color="default">
+                        //         Pdf
+                        //         </Button>
+                        //     </a>
+                        //     &nbsp;&nbsp;&nbsp;&nbsp;
+                        //     <a download href={this.state.emf_file} style={{ textDecoration:'none' }}>
+                        //         <Button variant="contained" color="default">
+                        //         emf
+                        //         </Button>
+                        //     </a>
+                        //     &nbsp;&nbsp;&nbsp;&nbsp;
+                        //     <a download href={this.state.svg_file} style={{ textDecoration:'none' }}>
+                        //         <Button variant="contained" color="default">
+                        //         Svg
+                        //         </Button>
+                        //     </a>
+                        //     &nbsp;&nbsp;&nbsp;&nbsp;
+                        //     <a download href={this.state.png_file} style={{ textDecoration:'none' }}>
+                        //         <Button variant="contained" color="default">
+                        //         Png 
+                        //         </Button>
+                        //     </a>
+                        //     &nbsp;&nbsp;&nbsp;&nbsp;
+                        //     <a download href={this.state.newick_file} style={{ textDecoration:'none' }}>
+                        //         <Button variant="contained" color="default">
+                        //         newick
+                        //         </Button>
+                        //     </a>
+                        // </div>
+>>>>>>> Modify user interface

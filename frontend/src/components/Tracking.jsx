@@ -88,20 +88,25 @@ class Tracking extends React.Component {
 		};
 
 		this.djsConfig = {
-            dictDefaultMessage:"Drag a cgMLST profile here",
-            dictRemoveFile:"Remove",
+            dictDefaultMessage:"Drop or click to upload a profile",
             addRemoveLinks: true,
             acceptedFiles: ".tsv",
             autoProcessQueue: false,
             parallelUploads: 1,
+            maxFiles:1,
             init:function(){
                 this.on("addedfile", function(on_load_header_data){
-                    
+                    // var fileSizeElement = on_load_header_data.previewElement.querySelector(".dz-size");
+                    // fileSizeElement.parentNode.removeChild(fileSizeElement);
                 });
                 this.on("success", function(file,response){
                     file._removeLink.remove();
                     delete file._removeLink;
                     window.trackingID = response.id;
+                });
+                this.on("maxfilesexceeded", function(file){
+                    this.removeAllFiles();
+                    this.addFile(file);
                 });
             }
         }
@@ -155,12 +160,6 @@ class Tracking extends React.Component {
         .then(response => response.json());
 
         window.tabSwitch = true;
-	}
-
-	remove(){
-	    this.dropzone.removeAllFiles();
-	    this.setState(state => ({ to: '/tracking', upload_confirm: false }));
-
 	}
 
 	select_handleChange(event){
@@ -257,34 +256,26 @@ class Tracking extends React.Component {
             <div>
                 <br />
                 <br />
-                <div>
-                    <div style={{ float:'left', marginLeft:'10px' }}>
-                        <form className={classes.selectcss} autoComplete="off">
-                            <FormControl required className={classes.formControl} >
-                              <InputLabel htmlFor="database-required">Database</InputLabel>
-                                <Select
-                                  value={this.state.allele_db}
-                                  onChange={this.select_handleChange.bind(this)}
-                                  name="allele_db"
-                                  inputProps={{
-                                    id: 'database-required',
-                                  }}
-                                  className={classes.selectEmpty}
-                                  >
-                                  <MenuItem value={'Vibrio_cholerae'}>Vibrio cholerae</MenuItem>
-                                </Select>
-                              <FormHelperText>Required</FormHelperText>
-                            </FormControl>
-                        </form>
-                    </div>
-                    <div style={{ float:'right', marginTop:'35px', marginRight:'25px' }}>
-                        <Button variant="contained" color="secondary" onClick={this.remove.bind(this)}>
-                                Remove all files
-                                &nbsp;&nbsp;
-                                <DeleteIcon />
-                        </Button>
-                    </div>
+                <div style={{ display:'flex', justifyContent:'center', alignItems:'center', float:'left'}}>
+                    <form className={classes.selectcss} autoComplete="off">
+                        <FormControl required className={classes.formControl} >
+                          <InputLabel htmlFor="database-required">Database</InputLabel>
+                            <Select
+                              value={this.state.allele_db}
+                              onChange={this.select_handleChange.bind(this)}
+                              name="allele_db"
+                              inputProps={{
+                                id: 'database-required',
+                              }}
+                              className={classes.selectEmpty}
+                              >
+                              <MenuItem value={'Vibrio_cholerae'}>Vibrio cholerae</MenuItem>
+                            </Select>
+                          <FormHelperText>Required</FormHelperText>
+                        </FormControl>
+                  </form>
                 </div>
+                <br />
                 <br />
                 <br />
                 <br />
@@ -296,8 +287,8 @@ class Tracking extends React.Component {
                 </div>
                 <br />
                 <br />
-                <br />
-                <div style={{ display:'flex', justifyContent:'center', alignItems:'center'}}>
+                <div style={{ display:'flex', justifyContent:'center', 
+                alignItems:'center'}}>
                     <Button variant="contained" className ={classes.buttoncss} 
                      onClick={this.handlePost.bind(this)}>
                         Upload
@@ -313,7 +304,6 @@ class Tracking extends React.Component {
                         </Button>
                     </Link>
                 </div>
-                <br />
                 <br />
                 <br />
                 <br />

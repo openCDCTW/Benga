@@ -51,12 +51,11 @@ class Upload_profile extends React.Component {
         this.state = {
             to: "/upload_profile",
             upload_confirm: false,
-            algorithm: 'single'
+            algorithm: 'singal_linkage'
         };
 
         this.djsConfig = {
-            dictDefaultMessage:"Drag cgMLST profiles here",
-            dictRemoveFile:"Remove",
+            dictDefaultMessage:"Drop or click to upload profiles",
             addRemoveLinks: true,
             acceptedFiles: ".tsv",
             autoProcessQueue: false,
@@ -177,18 +176,18 @@ class Upload_profile extends React.Component {
                     &nbsp;&nbsp;
                     <Radio
                         color='primary'
-                        checked={this.state.algorithm === 'single'}
+                        checked={this.state.algorithm === 'singal_linkage'}
                         onChange={this.handleChange.bind(this)}
-                        value="single"
+                        value="singal_linkage"
                     />
-                    <font>Single linkage</font>
+                    <font>Singal linkage</font>
                     <Radio
                         color='primary'
-                        checked={this.state.algorithm === 'average'}
+                        checked={this.state.algorithm === 'average_linkage'}
                         onChange={this.handleChange.bind(this)}
-                        value="average"
+                        value="average_linkage"
                     />
-                    <font>UPGMA</font>
+                    <font>Average linkage</font>
                 </div>
                 <br />
                 <div style = {{ display:'flex', justifyContent:'center', alignItems:'center' }}>

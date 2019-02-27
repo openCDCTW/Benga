@@ -59,8 +59,7 @@ class Upload_contigs extends React.Component {
         };
 
         this.djsConfig = {
-            dictDefaultMessage:"Drag contig file(s) here (up to 100 files)",
-            dictRemoveFile:"Remove",
+            dictDefaultMessage:"Drop or click to upload contig files",
             addRemoveLinks: true,
             maxFilesize:10,
             acceptedFiles: ".fasta,.fa,.fna",
@@ -68,7 +67,8 @@ class Upload_contigs extends React.Component {
             parallelUploads: 100,
             init:function(){
                 this.on("addedfile", function(on_load_header_data){
-                    
+                    // var fileSizeElement = on_load_header_data.previewElement.querySelector(".dz-size");
+                    // fileSizeElement.parentNode.removeChild(fileSizeElement);
                 });
                 this.on("sending", function(file, xhr, formData){
                     formData.append("batch_id", window.batchid);
@@ -79,6 +79,9 @@ class Upload_contigs extends React.Component {
                 this.on("success", function(file){
                     file._removeLink.remove();
                     delete file._removeLink;
+                });
+                this.on("removedfile", function(file){
+                    // file.previewElement.fadeOut('slow');
                 });
             }
         }
@@ -99,9 +102,6 @@ class Upload_contigs extends React.Component {
 
         if(fileCheck < 1){
             alert('Please upload contigs file first');
-            return ;
-        }else if(fileCheck > 100){
-            alert('Cannot upload more than 100 files');
             return ;
         }
 
@@ -189,7 +189,6 @@ class Upload_contigs extends React.Component {
             this.dropzone.emit("success", exampleFile[i]);
             this.dropzone.emit("complete", exampleFile[i]);
             this.dropzone.files.push(exampleFile[i]);
-            window.fileName.push(exampleFile[i].name);
         };
 
         let encodeExampleData = [
@@ -250,28 +249,29 @@ class Upload_contigs extends React.Component {
                 body:form ,
             }).then(res => upload_status.push(res.status));
         };
-      
+
+        window.databaseName = "Vibrio_cholerae";
+        window.tabSwitch = true;
+
         this.setState(state => ({ switch: true }));
 
-        this.props.history.push("/profile_view");
+        function trigger_celery(){
 
-        // function trigger_celery(){
+            if( upload_status.length == 12 ){
+                let scheme = {};
+                scheme.occurrence = "95";
+                scheme.database = window.databaseName;
+                scheme.id = window.batchid;
+                fetch('api/profiling/profiling-tree/', {
+                    method:'POST',
+                    headers: new Headers({'content-type': 'application/json'}),
+                    body: JSON.stringify(scheme)
+                });
+                clearInterval(interval);
+            }
+        };
 
-        //     if( upload_status.length == 12 ){
-        //         let scheme = {};
-        //         scheme.occurrence = "95";
-        //         scheme.database = window.databaseName;
-        //         scheme.id = window.batchid;
-        //         fetch('api/profiling/profiling-tree/', {
-        //             method:'POST',
-        //             headers: new Headers({'content-type': 'application/json'}),
-        //             body: JSON.stringify(scheme)
-        //         });
-        //         clearInterval(interval);
-        //     }
-        // };
-
-        // let interval = setInterval(trigger_celery,1500);
+        let interval = setInterval(trigger_celery,1500);
     }
 
     back(){
@@ -293,7 +293,7 @@ class Upload_contigs extends React.Component {
                 <br />
                 <br />
                 <div>
-                    <div style={{ float:'left', marginLeft:'10px', marginTop:'7px' }}>
+                    <div style={{ float:'left' }}>
                         <Options switch={this.state.switch} />
                     </div>
                     <div style={{ float:'right', marginTop:'35px', marginRight:'25px' }}>
@@ -318,9 +318,11 @@ class Upload_contigs extends React.Component {
                 <div style = {{ display:'flex', justifyContent:'center', alignItems:'center' }}>
                     <Button variant="contained" color="default" 
                      onClick={this.upload_example_data.bind(this)}>
-                        Example
-                        &nbsp;&nbsp;
-                        <CloudUploadIcon />
+                        <Link to="/profile_view" style={{ textDecoration:'none', color:'#000' }}>
+                            Example
+                            &nbsp;&nbsp;
+                            <CloudUploadIcon />
+                        </Link>
                     </Button>
                     &nbsp;&nbsp;&nbsp;&nbsp;
                     <Button variant="contained" className ={classes.cssRoot} 
