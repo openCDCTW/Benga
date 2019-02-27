@@ -13,8 +13,22 @@ import Example from './Example.jsx';
 import Tutorial from './Tutorial.jsx';
 import Tracking_result from './TrackingResult.jsx';
 import Tracking_search from './TrackingSearch.jsx';
+import About from './About.jsx';
+
+//
+import { Link } from 'react-router-dom';
 
 class Main extends React.Component {
+
+    constructor(props) {
+
+        super(props);
+        
+        history.pushState(null, null, location.href);
+        window.onpopstate = function(){
+            history.go(1);
+        };
+    }
 
     render() {
         return(
@@ -29,6 +43,7 @@ class Main extends React.Component {
                     <Route path="/tracking" component={Tracking} />
                     <Route path="/tracking_result" component={Tracking_result} />
                     <Route path="/tracking_search" component={Tracking_search} />
+                    <Route path="/about" exact component={About} />
                     <Route path="/demo" component={Example} />
                     <Route path="/tutorial" component={Tutorial} />
                     <Footer />

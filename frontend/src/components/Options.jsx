@@ -14,7 +14,7 @@ const styles = theme => ({
     flexWrap: 'wrap',
   },
   formControl: {
-    margin: theme.spacing.unit,
+    marginLeft: theme.spacing.unit,
     minWidth: 240,
   },
   selectEmpty: {
@@ -47,7 +47,7 @@ class Options extends React.Component {
         return (
           <form className={classes.root} autoComplete="off">
             <FormControl required className={classes.formControl} disabled={this.props.switch}>
-              <InputLabel htmlFor="database-required">Database</InputLabel>
+              <InputLabel htmlFor="database-required">Species</InputLabel>
                 <Select
                   value={this.state.database}
                   onChange={this.handleChange}
@@ -57,13 +57,10 @@ class Options extends React.Component {
                   }}
                   className={classes.selectEmpty}
                   >
-                  <MenuItem value="">
-                    <em>Choose Database</em>
-                  </MenuItem>
-                  <MenuItem value={'Salmonella_enterica'}>Salmonella_enterica</MenuItem>
                   <MenuItem value={'Vibrio_cholerae'}>Vibrio cholerae</MenuItem>
-                  <MenuItem value={'Listeria_monocytogenes'}>Listeria monocytogenes</MenuItem>
-                  <MenuItem value={'Campylobacter_jejuni'}>Campylobacter jejuni</MenuItem>
+                  <MenuItem style={{ color:'#d0d0d0'}} value={'Campylobacter_jejuni'}>Campylobacter jejuni</MenuItem>
+                  <MenuItem style={{ color:'#d0d0d0'}} value={'Listeria_monocytogenes'}>Listeria monocytogenes</MenuItem>
+                  <MenuItem style={{ color:'#d0d0d0'}} value={'Salmonella_enterica'}>Salmonella_enterica</MenuItem>
                 </Select>
               <FormHelperText>Required</FormHelperText>
             </FormControl>

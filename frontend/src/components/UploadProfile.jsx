@@ -8,6 +8,9 @@ import CloudUploadIcon from '@material-ui/icons/CloudUpload';
 import Icon from '@material-ui/core/Icon';
 import DeleteIcon from '@material-ui/icons/Delete';
 import green from '@material-ui/core/colors/green';
+import blue from '@material-ui/core/colors/blue';
+//
+import Radio from '@material-ui/core/Radio';
 
 const styles = theme => ({
     cssRoot:{
@@ -16,7 +19,13 @@ const styles = theme => ({
         '&:hover': {
             backgroundColor:green[600],
         },
-    }
+    },
+    radio:{
+        '&$checked': {
+            color: blue[600],
+    },
+},
+
 })
 
 class Upload_profile extends React.Component {
@@ -28,10 +37,11 @@ class Upload_profile extends React.Component {
         this.state = {
             to: "/upload_profile",
             upload_confirm: false,
+            algorithm: 'singal_linkage'
         };
 
         this.djsConfig = {
-            dictDefaultMessage:"Drop files or click to upload files",
+            dictDefaultMessage:"Drop or click to upload profiles",
             addRemoveLinks: true,
             acceptedFiles: ".tsv",
             autoProcessQueue: false,
@@ -111,6 +121,10 @@ class Upload_profile extends React.Component {
 
     }
 
+    handleChange(event){
+        this.setState({ algorithm: event.target.value });
+    }
+
     render() {
         const config = this.componentConfig;
         const djsConfig = this.djsConfig;
@@ -121,25 +135,45 @@ class Upload_profile extends React.Component {
 
         return (
             <div>
-                <br />
-                <br />
-                <div style={{ width:'97%', display:'flex', justifyContent:'flex-end', 
-                alignItems:'flex-end'}}>
-                    <Button variant="contained" color="secondary" onClick={this.remove.bind(this)}>
-                        Remove all files
-                        &nbsp;&nbsp;
-                        <DeleteIcon />
-                    </Button>
+                <div>
+                    <div style={{ float:'right', marginTop:'35px', marginRight:'25px' }}>
+                        <Button variant="contained" color="secondary" onClick={this.remove.bind(this)}>
+                            Remove all files
+                            &nbsp;&nbsp;
+                            <DeleteIcon />
+                        </Button>
+                    </div>
                 </div>
+                <br />
+                <br />
+                <br />
+                <br />
                 <br />
                 <div style = {{ display:'flex', justifyContent:'center', alignItems:'center' }}>
                     <DropzoneComponent config={config} eventHandlers={eventHandlers} 
                     djsConfig={djsConfig} />
                 </div>
                 <br />
+                <div style={{ display:'flex', justifyContent:'center', alignItems:'center' }}>
+                    <font>Algorithms : </font>
+                    &nbsp;&nbsp;
+                    <Radio
+                        color='primary'
+                        checked={this.state.algorithm === 'singal_linkage'}
+                        onChange={this.handleChange.bind(this)}
+                        value="singal_linkage"
+                    />
+                    <font>Singal linkage</font>
+                    <Radio
+                        color='primary'
+                        checked={this.state.algorithm === 'average_linkage'}
+                        onChange={this.handleChange.bind(this)}
+                        value="average_linkage"
+                    />
+                    <font>Average linkage</font>
+                </div>
                 <br />
-                <br />
-                <div style={{ display:'flex', justifyContent:'center', alignItems:'center'}}>
+                <div style = {{ display:'flex', justifyContent:'center', alignItems:'center' }}>
                     <Button variant="contained" className ={classes.cssRoot}
                     onClick={this.handlePost.bind(this)}>
                         Upload
@@ -155,6 +189,7 @@ class Upload_profile extends React.Component {
                         </Button>
                     </Link>
                 </div>
+                <br />
                 <br />
                 <br />
                 <br />

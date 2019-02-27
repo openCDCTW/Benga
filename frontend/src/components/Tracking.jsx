@@ -54,28 +54,33 @@ class Tracking extends React.Component {
 		};
 
 		this.djsConfig = {
-            dictDefaultMessage:"Drop file or click to upload a contig",
+            dictDefaultMessage:"Drop or click to upload a profile",
             addRemoveLinks: true,
-            acceptedFiles: ".fasta,.fa,.fna",
+            acceptedFiles: ".tsv",
             autoProcessQueue: false,
             parallelUploads: 1,
+            maxFiles:1,
             init:function(){
                 this.on("addedfile", function(on_load_header_data){
-                    var fileSizeElement = on_load_header_data.previewElement.querySelector(".dz-size");
-                    fileSizeElement.parentNode.removeChild(fileSizeElement);
+                    // var fileSizeElement = on_load_header_data.previewElement.querySelector(".dz-size");
+                    // fileSizeElement.parentNode.removeChild(fileSizeElement);
                 });
                 this.on("success", function(file,response){
                     file._removeLink.remove();
                     delete file._removeLink;
                     window.trackingID = response.id;
                 });
+                this.on("maxfilesexceeded", function(file){
+                    this.removeAllFiles();
+                    this.addFile(file);
+                });
             }
         }
 
         this.componentConfig = {
-            iconFiletypes: ['.fasta','.fna','.fa'],
+            iconFiletypes: ['.tsv'],
             showFiletypeIcon: true,
-            postUrl: 'api/tracking/sequence/'
+            postUrl: 'api/tracking/profile/'
         };
 
         this.dropzone = null;
@@ -118,12 +123,6 @@ class Tracking extends React.Component {
         window.tabSwitch = true;
 	}
 
-	remove(){
-	    this.dropzone.removeAllFiles();
-	    this.setState(state => ({ to: '/tracking', upload_confirm: false }));
-
-	}
-
 	select_handleChange(event){
         if( event.target.value == 'Vibrio_cholerae'){
             this.setState(state => ({ 
@@ -145,14 +144,30 @@ class Tracking extends React.Component {
             <div>
                 <br />
                 <br />
-                <div style={{ width:'97%', display:'flex', justifyContent:'flex-end', 
-                alignItems:'flex-end'}}>
-                    <Button variant="contained" color="secondary" onClick={this.remove.bind(this)}>
-                            Remove all files
-                            &nbsp;&nbsp;
-                            <DeleteIcon />
-                    </Button>
+                <div style={{ display:'flex', justifyContent:'center', alignItems:'center', float:'left'}}>
+                    <form className={classes.selectcss} autoComplete="off">
+                        <FormControl required className={classes.formControl} >
+                          <InputLabel htmlFor="database-required">Database</InputLabel>
+                            <Select
+                              value={this.state.allele_db}
+                              onChange={this.select_handleChange.bind(this)}
+                              name="allele_db"
+                              inputProps={{
+                                id: 'database-required',
+                              }}
+                              className={classes.selectEmpty}
+                              >
+                              <MenuItem value={'Vibrio_cholerae'}>Vibrio cholerae</MenuItem>
+                            </Select>
+                          <FormHelperText>Required</FormHelperText>
+                        </FormControl>
+                  </form>
                 </div>
+                <br />
+                <br />
+                <br />
+                <br />
+                <br />
                 <br />
                 <div style = {{ display:'flex', justifyContent:'center', alignItems:'center' }}>
                     <DropzoneComponent config={config} eventHandlers={eventHandlers} 
@@ -160,28 +175,8 @@ class Tracking extends React.Component {
                 </div>
                 <br />
                 <br />
-                <br />
-                <div style={{ display:'flex', justifyContent:'center', alignItems:'center'}}>
-                	<form className={classes.selectcss} autoComplete="off">
-			            <FormControl required className={classes.formControl} >
-			              <InputLabel htmlFor="database-required">Database</InputLabel>
-			                <Select
-			                  value={this.state.allele_db}
-			                  onChange={this.select_handleChange.bind(this)}
-			                  name="allele_db"
-			                  inputProps={{
-			                    id: 'database-required',
-			                  }}
-			                  className={classes.selectEmpty}
-			                  >
-			                  <MenuItem value={'Vibrio_cholerae'}>Vibrio cholerae</MenuItem>
-			                </Select>
-			              <FormHelperText>Required</FormHelperText>
-			            </FormControl>
-		          </form>
-                </div>
-                <br />
-                <div style={{ display:'flex', justifyContent:'center', alignItems:'center'}}>
+                <div style={{ display:'flex', justifyContent:'center', 
+                alignItems:'center'}}>
                     <Button variant="contained" className ={classes.buttoncss} 
                      onClick={this.handlePost.bind(this)}>
                         Upload
@@ -197,7 +192,6 @@ class Tracking extends React.Component {
                         </Button>
                     </Link>
                 </div>
-                <br />
                 <br />
                 <br />
                 <br />

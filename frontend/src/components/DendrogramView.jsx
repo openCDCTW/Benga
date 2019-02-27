@@ -64,7 +64,8 @@ export default class Dendrogram_view extends React.Component {
     	
     	}else{
     		return (
-				<div id="url">
+				<div>
+					<br />
 					<br />
 					<div style={{ display:'flex', justifyContent:'center', alignItems:'center'}}>
 						<img src={this.state.svg_file} />

@@ -59,7 +59,7 @@ class Upload_contigs extends React.Component {
         };
 
         this.djsConfig = {
-            dictDefaultMessage:"Drop files or click to upload contigs",
+            dictDefaultMessage:"Drop or click to upload contig files",
             addRemoveLinks: true,
             maxFilesize:10,
             acceptedFiles: ".fasta,.fa,.fna",
@@ -67,8 +67,8 @@ class Upload_contigs extends React.Component {
             parallelUploads: 200,
             init:function(){
                 this.on("addedfile", function(on_load_header_data){
-                    var fileSizeElement = on_load_header_data.previewElement.querySelector(".dz-size");
-                    fileSizeElement.parentNode.removeChild(fileSizeElement);
+                    // var fileSizeElement = on_load_header_data.previewElement.querySelector(".dz-size");
+                    // fileSizeElement.parentNode.removeChild(fileSizeElement);
                 });
                 this.on("sending", function(file, xhr, formData){
                     formData.append("batch_id", window.batchid);
@@ -77,6 +77,9 @@ class Upload_contigs extends React.Component {
                     window.fileName.push(file.name);
                     file._removeLink.remove();
                     delete file._removeLink;
+                });
+                this.on("removedfile", function(file){
+                    // file.previewElement.fadeOut('slow');
                 });
             }
         }
@@ -94,8 +97,8 @@ class Upload_contigs extends React.Component {
         
         let fileCheck = this.dropzone.files.length;
 
-        if(fileCheck < 5){
-            alert('Please upload at least 5 files');
+        if(fileCheck < 1){
+            alert('Please upload contigs file first');
             return ;
         }
 
@@ -134,6 +137,8 @@ class Upload_contigs extends React.Component {
         
         this.dropzone.removeAllFiles();
         this.setState(state => ({ to: '/', upload_confirm: false, switch: false }));
+        window.fileName.length = 0;
+
         fetch('api/profiling/upload/', {method:'POST'})
         .then(function(res){
            return res.json();
@@ -170,38 +175,42 @@ class Upload_contigs extends React.Component {
 
     upload_example_data(){
 
-        let mockfile = [
-            { name:"S.Agona_01.fa" },
-            { name:"S.Agona_02.fa" },
-            { name:"S.Agona_03.fa" },
-            { name:"S.Enteritidis_01.fa" },
-            { name:"S.Enteritidis_02.fa" },
-            { name:"S.Enteritidis_03.fa" },
-            { name:"S.GoldCoast_01.fa" },
-            { name:"S.GoldCoast_02.fa" },
-            { name:"S.GoldCoast_03.fa" },
-            { name:"S.GoldCoast_04.fa" },
+        let exampleFile = [
+            { name:"V.cholerae_01.fa" },
+            { name:"V.cholerae_02.fa" },
+            { name:"V.cholerae_03.fa" },
+            { name:"V.cholerae_04.fa" },
+            { name:"V.cholerae_05.fa" },
+            { name:"V.cholerae_06.fa" },
+            { name:"V.cholerae_07.fa" },
+            { name:"V.cholerae_08.fa" },
+            { name:"V.cholerae_09.fa" },
+            { name:"V.cholerae_010.fa" },
+            { name:"V.cholerae_011.fa" },
+            { name:"V.cholerae_012.fa" },
         ];
 
         let i = 0;
-        for(i; i < mockfile.length; i++){
-            this.dropzone.emit("addedfile",mockfile[i]);
-            this.dropzone.emit("success",mockfile[i]);
-            this.dropzone.emit("complete",mockfile[i]);
-            this.dropzone.files.push(mockfile[i]);
+        for(i; i < exampleFile.length; i++){
+            this.dropzone.emit("addedfile", exampleFile[i]);
+            this.dropzone.emit("success", exampleFile[i]);
+            this.dropzone.emit("complete", exampleFile[i]);
+            this.dropzone.files.push(exampleFile[i]);
         };
 
         let encodeExampleData = [
-            require('./static/Example_data/S.Agona_01.fa'), 
-            require('./static/Example_data/S.Agona_02.fa'), 
-            require('./static/Example_data/S.Agona_03.fa'), 
-            require('./static/Example_data/S.Enteritidis_01.fa'), 
-            require('./static/Example_data/S.Enteritidis_02.fa'), 
-            require('./static/Example_data/S.Enteritidis_03.fa'), 
-            require('./static/Example_data/S.Enteritidis_04.fa'), 
-            require('./static/Example_data/S.GoldCoast_01.fa'), 
-            require('./static/Example_data/S.GoldCoast_02.fa'), 
-            require('./static/Example_data/S.GoldCoast_03.fa'), 
+            require('./static/Example_data/V.cholerae_01.fa'), 
+            require('./static/Example_data/V.cholerae_02.fa'), 
+            require('./static/Example_data/V.cholerae_03.fa'), 
+            require('./static/Example_data/V.cholerae_04.fa'), 
+            require('./static/Example_data/V.cholerae_05.fa'), 
+            require('./static/Example_data/V.cholerae_06.fa'), 
+            require('./static/Example_data/V.cholerae_07.fa'), 
+            require('./static/Example_data/V.cholerae_08.fa'), 
+            require('./static/Example_data/V.cholerae_09.fa'), 
+            require('./static/Example_data/V.cholerae_10.fa'), 
+            require('./static/Example_data/V.cholerae_11.fa'), 
+            require('./static/Example_data/V.cholerae_12.fa'), 
         ];
 
         let decodeExampleData = [];
@@ -213,19 +222,21 @@ class Upload_contigs extends React.Component {
             decodeExampleData.push(tmp);
         };
 
-        let agona01 = new File([decodeExampleData[0]],'S.Agona_01.fa');
-        let agona02 = new File([decodeExampleData[1]],'S.Agona_02.fa');
-        let agona03 = new File([decodeExampleData[2]],'S.Agona_03.fa');
-        let enteritidis01 = new File([decodeExampleData[3]],'S.Enteritidis_01.fa');
-        let enteritidis02 = new File([decodeExampleData[4]],'S.Enteritidis_02.fa');
-        let enteritidis03 = new File([decodeExampleData[5]],'S.Enteritidis_03.fa');
-        let enteritidis04 = new File([decodeExampleData[6]],'S.Enteritidis_04.fa');
-        let goldCoast01 = new File([decodeExampleData[7]],'S.GoldCoast_01.fa');
-        let goldCoast02 = new File([decodeExampleData[8]],'S.GoldCoast_02.fa');
-        let goldCoast03 = new File([decodeExampleData[9]],'S.GoldCoast_03.fa');
+        let VC01 = new File([decodeExampleData[0]],'V.cholerae_01.fa');
+        let VC02 = new File([decodeExampleData[1]],'V.cholerae_02.fa');
+        let VC03 = new File([decodeExampleData[2]],'V.cholerae_03.fa');
+        let VC04 = new File([decodeExampleData[3]],'V.cholerae_04.fa');
+        let VC05 = new File([decodeExampleData[4]],'V.cholerae_05.fa');
+        let VC06 = new File([decodeExampleData[5]],'V.cholerae_06.fa');
+        let VC07 = new File([decodeExampleData[6]],'V.cholerae_07.fa');
+        let VC08 = new File([decodeExampleData[7]],'V.cholerae_08.fa');
+        let VC09 = new File([decodeExampleData[8]],'V.cholerae_09.fa');
+        let VC10 = new File([decodeExampleData[9]],'V.cholerae_10.fa');
+        let VC11 = new File([decodeExampleData[9]],'V.cholerae_11.fa');
+        let VC12 = new File([decodeExampleData[9]],'V.cholerae_12.fa');
 
-        let decodeExampleFile = [ agona01, agona02, agona03, enteritidis01, enteritidis02,
-            enteritidis03, enteritidis04, goldCoast01, goldCoast02, goldCoast03 ];
+        let decodeExampleFile = [ VC01, VC02, VC03, VC04, VC05, VC06, VC07, VC08,
+            VC09, VC10, VC11, VC12 ];
 
         let k = 0;
         let upload_status = [];
@@ -241,14 +252,14 @@ class Upload_contigs extends React.Component {
             }).then(res => upload_status.push(res.status));
         };
 
-        window.databaseName = "Salmonella_enterica";
+        window.databaseName = "Vibrio_cholerae";
         window.tabSwitch = true;
 
         this.setState(state => ({ switch: true }));
 
         function trigger_celery(){
 
-            if( upload_status.length == 10 ){
+            if( upload_status.length == 12 ){
                 let scheme = {};
                 scheme.occurrence = "95";
                 scheme.database = window.databaseName;
@@ -283,26 +294,22 @@ class Upload_contigs extends React.Component {
             <div>
                 <br />
                 <br />
-                <div style={{ display:'flex', justifyContent:'center', alignItems:'center'}}>
-                    <SearchBar
-                        onChange = {(value) => this.setState({ querybyID: value })}
-                        onRequestSearch={this.query.bind(this)}
-                        placeholder = {"Input batch ID here to query data"}
-                        style = {{
-                            width: '90%',
-                            margin: '0 auto',
-                        }}
-                    />
+                <div>
+                    <div style={{ float:'left' }}>
+                        <Options switch={this.state.switch} />
+                    </div>
+                    <div style={{ float:'right', marginTop:'35px', marginRight:'25px' }}>
+                        <Button variant="contained" color="secondary" onClick={this.remove.bind(this)}>
+                                Remove all files
+                                &nbsp;&nbsp;
+                                <DeleteIcon />
+                        </Button>
+                    </div>
                 </div>
                 <br />
-                <div style={{ width:'97%', display:'flex', justifyContent:'flex-end', 
-                alignItems:'flex-end'}}>
-                    <Button variant="contained" color="secondary" onClick={this.remove.bind(this)}>
-                            Remove all files
-                            &nbsp;&nbsp;
-                            <DeleteIcon />
-                    </Button>
-                </div>
+                <br />
+                <br />
+                <br />
                 <br />
                 <div style = {{ display:'flex', justifyContent:'center', alignItems:'center' }}>
                     <DropzoneComponent config={config} eventHandlers={eventHandlers} 
@@ -310,18 +317,16 @@ class Upload_contigs extends React.Component {
                 </div>
                 <br />
                 <br />
-                <div style={{ display:'flex', justifyContent:'center', alignItems:'center'}}>
-                    <font> SUGGESTION: Please use &nbsp;
-                        <a href="http://cab.spbu.ru/software/spades/" target="_blank">SPAdes</a>
-                        &nbsp; to assembly before upload. 
-                    </font>
-                </div>
-                <br />
-                <div style={{ display:'flex', justifyContent:'center', alignItems:'center'}}>
-                    <Options switch={this.state.switch} />
-                </div>
-                <br />
-                <div style={{ display:'flex', justifyContent:'center', alignItems:'center'}}>
+                <div style = {{ display:'flex', justifyContent:'center', alignItems:'center' }}>
+                    <Button variant="contained" color="default" 
+                     onClick={this.upload_example_data.bind(this)}>
+                        <Link to="/profile_view" style={{ textDecoration:'none', color:'#000' }}>
+                            Example
+                            &nbsp;&nbsp;
+                            <CloudUploadIcon />
+                        </Link>
+                    </Button>
+                    &nbsp;&nbsp;&nbsp;&nbsp;
                     <Button variant="contained" className ={classes.cssRoot} 
                      onClick={this.handlePost.bind(this)}>
                         Upload
@@ -339,18 +344,18 @@ class Upload_contigs extends React.Component {
                 </div>
                 <br />
                 <br />
-                <br />
-                <br />
                 <div style={{ display:'flex', justifyContent:'center', alignItems:'center'}}>
-                    <Button variant="contained" color="default" 
-                     onClick={this.upload_example_data.bind(this)}>
-                        <Link to="/profile_view" style={{ textDecoration:'none', color:'#000' }}>
-                            upload sample data
-                            &nbsp;&nbsp;
-                            <CloudUploadIcon />
-                        </Link>
-                    </Button>
+                    <SearchBar
+                        onChange = {(value) => this.setState({ querybyID: value })}
+                        onRequestSearch={this.query.bind(this)}
+                        placeholder = {"Input batch ID here to query result"}
+                        style = {{
+                            width: '90%',
+                            margin: '0 auto',
+                        }}
+                    />
                 </div>
+                <br />
                 <br />
                 <br />
                 <br />
