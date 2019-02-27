@@ -94,14 +94,19 @@ class Tracking extends React.Component {
             acceptedFiles: ".tsv",
             autoProcessQueue: false,
             parallelUploads: 1,
+            maxFiles:1,
             init:function(){
                 this.on("addedfile", function(on_load_header_data){
-                    
+
                 });
                 this.on("success", function(file,response){
                     file._removeLink.remove();
                     delete file._removeLink;
                     window.trackingID = response.id;
+                });
+                this.on("maxfilesexceeded", function(file){
+                    this.removeAllFiles();
+                    this.addFile(file);
                 });
             }
         }
@@ -155,12 +160,6 @@ class Tracking extends React.Component {
         .then(response => response.json());
 
         window.tabSwitch = true;
-	}
-
-	remove(){
-	    this.dropzone.removeAllFiles();
-	    this.setState(state => ({ to: '/tracking', upload_confirm: false }));
-
 	}
 
 	select_handleChange(event){
@@ -313,7 +312,6 @@ class Tracking extends React.Component {
                         </Button>
                     </Link>
                 </div>
-                <br />
                 <br />
                 <br />
                 <br />

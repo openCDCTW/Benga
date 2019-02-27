@@ -93,10 +93,6 @@ class Tracking_result extends React.Component {
 		window.tabSwitch = false;
 	}
 
-	downloadProfiles(){
-
-	}
-
     render() {
     	const { classes } = this.props;
     	const trackResult = this.state.tracking_result_shown;
