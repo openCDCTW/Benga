@@ -254,24 +254,6 @@ class Upload_contigs extends React.Component {
         this.setState(state => ({ switch: true }));
 
         this.props.history.push("/profile_view");
-
-        // function trigger_celery(){
-
-        //     if( upload_status.length == 12 ){
-        //         let scheme = {};
-        //         scheme.occurrence = "95";
-        //         scheme.database = window.databaseName;
-        //         scheme.id = window.batchid;
-        //         fetch('api/profiling/profiling-tree/', {
-        //             method:'POST',
-        //             headers: new Headers({'content-type': 'application/json'}),
-        //             body: JSON.stringify(scheme)
-        //         });
-        //         clearInterval(interval);
-        //     }
-        // };
-
-        // let interval = setInterval(trigger_celery,1500);
     }
 
     back(){

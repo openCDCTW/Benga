@@ -94,7 +94,6 @@ class Tracking extends React.Component {
             acceptedFiles: ".tsv",
             autoProcessQueue: false,
             parallelUploads: 1,
-            maxFiles:1,
             init:function(){
                 this.on("addedfile", function(on_load_header_data){
 
@@ -104,17 +103,13 @@ class Tracking extends React.Component {
                     delete file._removeLink;
                     window.trackingID = response.id;
                 });
-                this.on("maxfilesexceeded", function(file){
-                    this.removeAllFiles();
-                    this.addFile(file);
-                });
             }
         }
 
         this.componentConfig = {
             iconFiletypes: ['.tsv'],
             showFiletypeIcon: true,
-            postUrl: 'api/tracking/profile/'
+            postUrl: 'api/tracking/sequence/'
         };
 
         this.dropzone = null;
@@ -160,6 +155,12 @@ class Tracking extends React.Component {
         .then(response => response.json());
 
         window.tabSwitch = true;
+	}
+
+	remove(){
+	    this.dropzone.removeAllFiles();
+	    this.setState(state => ({ to: '/tracking', upload_confirm: false }));
+
 	}
 
 	select_handleChange(event){
@@ -315,139 +316,10 @@ class Tracking extends React.Component {
                 <br />
                 <br />
                 <br />
+                <br />
             </div>
         );
     }
 }
 
 export default withStyles(styles)(Tracking);
-
-
-
-                // <div>
-                //     <Paper>
-                //         <div>
-                //             <br />
-                //             <Typography style={{ marginLeft:'20px', fontSize:'25px', fontWeight:'500' }}>
-                //                 Search database
-                //             </Typography>
-                //             <form className={classes.container}>
-                //                 <TextField
-                //                     inputRef={ID => this.biosample = ID}
-                //                     label="BioSample ID"
-                //                     type="search"
-                //                     placeholder="Input BioSample ID here"
-                //                     onChange={this.bioSampleHandleChange.bind(this)}
-                //                     className={classes.textField}
-                //                     onKeyPress={this._onKeyPress}
-                //                     margin="normal"
-                //                     variant="outlined"
-                //                 />
-                //                 <TextField
-                //                     inputRef={ID => this.strain = ID}
-                //                     label="Strain ID"
-                //                     type="search"
-                //                     placeholder="Input strain ID here"
-                //                     onChange={this.strainHandleChange.bind(this)}
-                //                     className={classes.textField}
-                //                     onKeyPress={this._onKeyPress}
-                //                     margin="normal"
-                //                     variant="outlined"
-                //                 />
-                //                 <TextField
-                //                     inputRef={ID => this.serotype = ID}
-                //                     label="ST"
-                //                     type="search"
-                //                     placeholder="Input serotype here"
-                //                     onChange={this.serotypeHandleChange.bind(this)}
-                //                     className={classes.textField}
-                //                     onKeyPress={this._onKeyPress}
-                //                     margin="normal"
-                //                     variant="outlined"
-                //                 />
-                //                 <FormControl variant="outlined" className={classes.countrySelect}>
-                //                     <InputLabel
-                //                         ref={ref => {
-                //                           this.InputLabelRef = ref;
-                //                         }}
-                //                     >
-                //                     Country
-                //                     </InputLabel>
-                //                     <Select
-                //                     value={this.state.country}
-                //                     onChange={this.countryHandleChange.bind(this)}
-                //                     name="country"
-                //                     input={
-                //                             <OutlinedInput
-                //                             labelWidth={this.state.labelWidth}
-                //                             name="country"
-                //                             />
-                //                         }
-                //                     MenuProps={{
-                //                         PaperProps: {
-                //                             style: {
-                //                                 maxHeight: 49 * 4.5 + 8,
-                //                             },
-                //                           },
-                //                       }}
-                //                     >
-                //                         <MenuItem value=''>Any</MenuItem>
-                //                         <MenuItem value='Taiwan'>Taiwan</MenuItem>
-                //                         <MenuItem value='China'>China</MenuItem>
-                //                         <MenuItem value='Russia'>Russia</MenuItem>
-                //                         <MenuItem value='Ukraine'>Ukraine</MenuItem>
-                //                         <MenuItem value='USA'>USA</MenuItem>
-                //                     </Select>
-                //                 </FormControl>
-                //             </form>
-                //         </div>
-                //         <div>
-                //             <form className={classes.container}>
-                //                 <TextField
-                //                     label="Year"
-                //                     inputRef={year => this.yearFrom = year}
-                //                     type="number"
-                //                     onChange={this.yearFromHandleChange.bind(this)}
-                //                     className={classes.numberField}
-                //                     inputProps={{ 
-                //                         style:{ textAlign: 'center'},
-                //                     }}
-                //                     margin="normal"
-                //                     variant="outlined"
-                //                     error={this.state.yearError}
-                //                 />
-                //                 &nbsp;&nbsp;
-                //                 <Typography style={{ fontSize:'18px', display:'flex', justifyContent:'center', 
-                //                 alignItems:'center'}}>to</Typography>
-                //                 &nbsp;&nbsp;
-                //                 <TextField
-                //                     label="Year"
-                //                     inputRef={year => this.yearTo = year}
-                //                     type="number"
-                //                     onChange={this.yearToHandleChange.bind(this)}
-                //                     className={classes.numberField}
-                //                     inputProps={{ 
-                //                         style:{ textAlign: 'center'},
-                //                     }}
-                //                     margin="normal"
-                //                     variant="outlined"
-                //                     error={this.state.yearError}
-                //                 />
-                //             </form>
-                //         </div>
-                //         <br />
-                //         <div style={{ width:'97%', display:'flex', justifyContent:'flex-end', 
-                //                 alignItems:'flex-end'}}>
-                //             <Button variant="contained" color="default" onClick={this.search.bind(this)}>
-                //                 Search
-                //                 &nbsp;&nbsp;
-                //                 <SearchIcon />
-                //             </Button>
-                //         </div>
-                //         <br />
-                //     </Paper>
-                //     <br />
-                //     <br />
-                //     <br />
-                //     <br />
-                // </div>
