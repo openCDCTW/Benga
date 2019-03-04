@@ -59,7 +59,7 @@ class Upload_contigs extends React.Component {
         };
 
         this.djsConfig = {
-            dictDefaultMessage:"Drop or click to upload contig files",
+            dictDefaultMessage:"Drop contig file(s) here",
             addRemoveLinks: true,
             maxFilesize:10,
             acceptedFiles: ".fasta,.fa,.fna",
@@ -79,9 +79,6 @@ class Upload_contigs extends React.Component {
                 this.on("success", function(file){
                     file._removeLink.remove();
                     delete file._removeLink;
-                });
-                this.on("removedfile", function(file){
-                    // file.previewElement.fadeOut('slow');
                 });
             }
         }
@@ -293,7 +290,7 @@ class Upload_contigs extends React.Component {
                 <br />
                 <br />
                 <div>
-                    <div style={{ float:'left' }}>
+                    <div style={{ float:'left', marginLeft:'10px', marginTop:'7px' }}>
                         <Options switch={this.state.switch} />
                     </div>
                     <div style={{ float:'right', marginTop:'35px', marginRight:'25px' }}>
@@ -321,8 +318,8 @@ class Upload_contigs extends React.Component {
                         <Link to="/profile_view" style={{ textDecoration:'none', color:'#000' }}>
                             Example
                             &nbsp;&nbsp;
-                            <CloudUploadIcon />
                         </Link>
+                        <CloudUploadIcon />
                     </Button>
                     &nbsp;&nbsp;&nbsp;&nbsp;
                     <Button variant="contained" className ={classes.cssRoot} 
