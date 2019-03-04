@@ -28,7 +28,7 @@ class Options extends React.Component {
         super(props);
 
         this.state = {
-            database: '',
+            database: 'Vibrio_cholerae',
             labelWidth: 0,
         };
 

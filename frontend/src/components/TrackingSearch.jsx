@@ -20,24 +20,24 @@ import Select from '@material-ui/core/Select';
 
 const styles = theme => ({
     textField:{
-        marginLeft: '23px',
+        marginLeft: '19px',
         marginTop: '25px',
-        width:'30%'
+        width:'22.5%'
     },
     container:{
         display:'flex',
         flexWrap:'wrap',
     },
     numberField:{
-    	marginLeft: '10px',
-        marginTop: '10px',
+    	marginLeft: '19px',
+        marginTop: '20px',
         marginRight: '10px',
         width:'110px'
     },
     countrySelect:{
-    	marginLeft: '23px',
+    	marginLeft: '19px',
         marginTop: '25px',
-    	width: '30%',
+    	width: '22.5%',
     }
 })
 
@@ -117,11 +117,16 @@ class TrackingSearch extends React.Component {
     	this.setState(state => ({ [event.target.name]: event.target.value }));
     }
 
+    serotypeHandleChange(event){
+    	this.setState(state => ({ serotype: this.serotype.value }));
+    }
+
     search(){
     	console.log(this.state.bioSampleID);
     	console.log(this.state.strain);
     	console.log(Number.parseInt(this.state.yearFrom, 10));
     	console.log(Number.parseInt(this.state.yearTo, 10));
+    	console.log(this.state.serotype);
 
     	if( this.state.yearFrom > this.state.yearTo ){
     		this.setState(state => ({ yearError: true }));
@@ -153,10 +158,21 @@ class TrackingSearch extends React.Component {
 	                        />
 	                        <TextField
 	                            inputRef={ID => this.strain = ID}
-	                            label="Strain"
+	                            label="Strain ID"
 	                            type="search"
-	                            placeholder="Input strain here"
+	                            placeholder="Input strain ID here"
 	                            onChange={this.strainHandleChange.bind(this)}
+	                            className={classes.textField}
+	                            onKeyPress={this._onKeyPress}
+	                            margin="normal"
+	                            variant="outlined"
+	                        />
+	                        <TextField
+	                            inputRef={ID => this.serotype = ID}
+	                            label="ST"
+	                            type="search"
+	                            placeholder="Input serotype here"
+	                            onChange={this.serotypeHandleChange.bind(this)}
 	                            className={classes.textField}
 	                            onKeyPress={this._onKeyPress}
 	                            margin="normal"
@@ -200,10 +216,6 @@ class TrackingSearch extends React.Component {
 	                </div>
 	                <div>
 	                	<form className={classes.container}>
-	                		<Typography style={{ fontSize:'18px', marginLeft:'25px', 
-	                		display:'flex', justifyContent:'center', alignItems:'center'}}> 
-	                		from </Typography>
-	                        &nbsp;&nbsp;
 	                        <TextField
 	                        	label="Year"
 	                			inputRef={year => this.yearFrom = year}
