@@ -93,9 +93,9 @@ class Tracking_result extends React.Component {
 		window.tabSwitch = false;
 	}
 
-	// downloadProfiles(){
+	downloadProfiles(){
 
-	// }
+	}
 
     render() {
     	const { classes } = this.props;
@@ -197,10 +197,3 @@ class Tracking_result extends React.Component {
 }
 
 export default withStyles(styles)(Tracking_result);
-
-
-							// <div style={{ float:'right', marginBottom:'25px', marginRight:'25px' }}>
-							// 	<Button variant="contained" color="primary" onClick={this.downloadProfiles.bind(this)}>
-							// 	Download
-							// 	</Button>
-							// </div>

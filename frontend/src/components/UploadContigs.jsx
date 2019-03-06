@@ -60,15 +60,17 @@ class Upload_contigs extends React.Component {
 
         this.djsConfig = {
             dictDefaultMessage:"Drop contig file(s) here",
+            dictRemoveFile:"Remove",
             addRemoveLinks: true,
             maxFilesize:10,
             acceptedFiles: ".fasta,.fa,.fna",
             autoProcessQueue: false,
-            parallelUploads: 100,
+            parallelUploads: 200,
+            thumbnailWidth: 50,
+            thumbnailHeight: 50,
             init:function(){
                 this.on("addedfile", function(on_load_header_data){
-                    // var fileSizeElement = on_load_header_data.previewElement.querySelector(".dz-size");
-                    // fileSizeElement.parentNode.removeChild(fileSizeElement);
+                    
                 });
                 this.on("sending", function(file, xhr, formData){
                     formData.append("batch_id", window.batchid);
