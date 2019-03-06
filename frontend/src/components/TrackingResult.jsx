@@ -73,14 +73,14 @@ class Tracking_result extends React.Component {
 			clearInterval(this.interval);
 		}
 	}
-	// 'b448df41-2367-483d-b7a7-25005f722daf' window.trackingID
+
 	componentDidMount(){
-		this.query_track_result(); //delete after feature done
+		this.query_track_result(); //delete after testing
 		this.interval = setInterval(this.query_track_result, 10000);
 	}
 
 	handleChange(event){
-		this.setState(state => ({ [event.target.name]: event.target.value}));
+		this.setState(state => ({ [event.target.name]: event.target.value }));
 		let i = 0;
 		let tmp = [];
 		for(i; i < event.target.value; i++){
@@ -91,6 +91,10 @@ class Tracking_result extends React.Component {
 
 	turn_on_Tabs(){
 		window.tabSwitch = false;
+	}
+
+	downloadProfiles(){
+
 	}
 
     render() {
@@ -118,7 +122,7 @@ class Tracking_result extends React.Component {
     	
     	}else{
     		return (
-				<div id="url">
+				<div>
 					<br />
 					<div style={{ display:'flex', justifyContent:'center', alignItems:'center'}}>
 						<Paper className={classes.root}>
@@ -145,11 +149,11 @@ class Tracking_result extends React.Component {
 										<TableRow>
 											<TrackingResultTable align="right">Difference(loci)</TrackingResultTable>
 											<TrackingResultTable align="right">BioSample</TrackingResultTable>
+											<TrackingResultTable align="right">Strain</TrackingResultTable>
 											<TrackingResultTable align="right">Country</TrackingResultTable>
+											<TrackingResultTable align="right">Year</TrackingResultTable>
 											<TrackingResultTable align="right">ST</TrackingResultTable>
 											<TrackingResultTable align="right">Serogroup_serotype</TrackingResultTable>
-											<TrackingResultTable align="right">Strain</TrackingResultTable>
-											<TrackingResultTable align="right">Year</TrackingResultTable>
 										</TableRow>
 									</TableHead>
 									<TableBody>
@@ -162,16 +166,17 @@ class Tracking_result extends React.Component {
 														{row.BioSample}
 													</a>
 												</TrackingResultTable>
+												<TrackingResultTable align="right">{row.Strain}</TrackingResultTable>
 												<TrackingResultTable align="right">{row.Country}</TrackingResultTable>
+												<TrackingResultTable align="right">{row.Year}</TrackingResultTable>
 												<TrackingResultTable align="right">{row.ST}</TrackingResultTable>
 												<TrackingResultTable align="right">{row.Serogroup_serotype}</TrackingResultTable>
-												<TrackingResultTable align="right">{row.Strain}</TrackingResultTable>
-												<TrackingResultTable align="right">{row.Year}</TrackingResultTable>
 											</TableRow>
 										))}
 									</TableBody>
 								</Table>
 							</Scrollbars>
+							<br />
 						</Paper>
 					</div>
 					<br />
