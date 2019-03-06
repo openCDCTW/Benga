@@ -15,9 +15,6 @@ import Tracking_result from './TrackingResult.jsx';
 import Tracking_search from './TrackingSearch.jsx';
 import About from './About.jsx';
 
-//
-import { Link } from 'react-router-dom';
-
 class Main extends React.Component {
 
     constructor(props) {

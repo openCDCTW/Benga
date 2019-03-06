@@ -73,9 +73,9 @@ class Tracking_result extends React.Component {
 			clearInterval(this.interval);
 		}
 	}
-	// 'b448df41-2367-483d-b7a7-25005f722daf' window.trackingID
+
 	componentDidMount(){
-		this.query_track_result(); //delete after feature done
+		this.query_track_result(); //delete after testing
 		this.interval = setInterval(this.query_track_result, 10000);
 	}
 
@@ -93,9 +93,9 @@ class Tracking_result extends React.Component {
 		window.tabSwitch = false;
 	}
 
-	// downloadProfiles(){
+	downloadProfiles(){
 
-	// }
+	}
 
     render() {
     	const { classes } = this.props;
@@ -197,10 +197,3 @@ class Tracking_result extends React.Component {
 }
 
 export default withStyles(styles)(Tracking_result);
-
-
-							// <div style={{ float:'right', marginBottom:'25px', marginRight:'25px' }}>
-							// 	<Button variant="contained" color="primary" onClick={this.downloadProfiles.bind(this)}>
-							// 	Download
-							// 	</Button>
-							// </div>

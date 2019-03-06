@@ -55,14 +55,14 @@ class Tracking extends React.Component {
 
 		this.djsConfig = {
             dictDefaultMessage:"Drop a cgMLST profile here",
+            dictRemoveFile:"Remove",
             addRemoveLinks: true,
             acceptedFiles: ".tsv",
             autoProcessQueue: false,
             parallelUploads: 1,
             init:function(){
                 this.on("addedfile", function(on_load_header_data){
-                    // var fileSizeElement = on_load_header_data.previewElement.querySelector(".dz-size");
-                    // fileSizeElement.parentNode.removeChild(fileSizeElement);
+                    
                 });
                 this.on("success", function(file,response){
                     file._removeLink.remove();

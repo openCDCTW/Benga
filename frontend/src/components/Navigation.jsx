@@ -45,5 +45,3 @@ export default class Navigation extends React.Component {
         );
     }
 }
-
-// <Tab disabled={window.tabSwitch} label="Search" component={Link} to="/tracking_search" />

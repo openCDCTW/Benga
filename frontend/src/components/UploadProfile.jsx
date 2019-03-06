@@ -42,14 +42,14 @@ class Upload_profile extends React.Component {
 
         this.djsConfig = {
             dictDefaultMessage:"Drop cgMLST profiles here",
+            dictRemoveFile:"Remove",
             addRemoveLinks: true,
             acceptedFiles: ".tsv",
             autoProcessQueue: false,
             parallelUploads: 200,
             init:function(){
                 this.on("addedfile", function(on_load_header_data){
-                    // var fileSizeElement = on_load_header_data.previewElement.querySelector(".dz-size");
-                    // fileSizeElement.parentNode.removeChild(fileSizeElement);
+
                 });
                 this.on("sending", function(file, xhr, formData){
                     formData.append("batch_id", window.batchid);
