@@ -96,7 +96,6 @@ class Tracking extends React.Component {
             parallelUploads: 1,
             init:function(){
                 this.on("addedfile", function(on_load_header_data){
-
                 });
                 this.on("success", function(file,response){
                     file._removeLink.remove();
