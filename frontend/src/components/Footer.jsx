@@ -8,7 +8,7 @@ export default class Footer extends React.Component {
         return (
     		<footer>
         		<div>
-                    <font>Copyright (c) 2018 Centrallab, Taiwan (Taiwan CDC).</font>
+                    <font>Copyright (c) 2018 Center for disease control, MOHW, Taiwan (Taiwan CDC).</font>
                 </div>
       		</footer>
         );
