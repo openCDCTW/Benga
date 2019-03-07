@@ -3,7 +3,7 @@ import datetime
 import os.path
 import subprocess
 import pandas as pd
-from src.algorithms import databases, profiling, phylogeny, statistics
+from src.algorithms import databases, profiling, clustering, statistics
 
 
 CONTEXT_SETTINGS = dict(help_option_names=['-h', '--help'])
@@ -67,13 +67,15 @@ def profile(input_dir, output_dir, database, threads, occrrence, not_extend, no_
               context_settings=CONTEXT_SETTINGS)
 @click.argument('input_dir', type=click.Path(exists=True))
 @click.argument('output_dir', type=click.Path(exists=True))
+@click.option('--linkage', default="single", type=click.Choice(["single", "average"]),
+              help="Linkage for hierarchical clustering [Default: single]")
 @click.option('--distance-annotate', default=False, is_flag=True,
               help="Annotating the distances on dendrogram node [Default: Disable]")
-def tree(input_dir, output_dir, distance_annotate):
+def tree(input_dir, output_dir, linkage, distance_annotate):
     """Plot dendrogram with profile.tsv file in INPUT_DIR, and output to OUTPUT_DIR."""
     profiles = pd.read_csv(os.path.join(input_dir, "profile.tsv"), sep="\t", index_col=0)
-    dm = phylogeny.DistanceMatrix(profiles)
-    dendro = phylogeny.Dendrogram(dm)
+    dm = clustering.DistanceMatrix(profiles)
+    dendro = clustering.Dendrogram(dm, linkage)
     date = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M")
     filename = date + "_tree"
     dendro.to_newick(os.path.join(output_dir, "{}.newick".format(filename)))

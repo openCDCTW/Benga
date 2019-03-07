@@ -4,32 +4,32 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from django.http import Http404
-from tracking.serializers import SequenceSerializer, TrackedResultsSerializer,\
+from tracking.serializers import ProfileSerializer, TrackedResultsSerializer,\
     TrackingSerializer
-from tracking.tasks import profile_and_track
-from tracking.models import Sequence, TrackedResults
+from tracking.tasks import track
+from tracking.models import Profile, TrackedResults
 
 
-class SequenceList(generics.ListCreateAPIView):
-    queryset = Sequence.objects.all()
-    serializer_class = SequenceSerializer
+class ProfileList(generics.ListCreateAPIView):
+    queryset = Profile.objects.all()
+    serializer_class = ProfileSerializer
 
 
-class SequenceDetail(APIView):
+class ProfileDetail(APIView):
     def get_object(self, pk):
         try:
-            return Sequence.objects.get(pk=pk)
-        except Sequence.DoesNotExist:
+            return Profile.objects.get(pk=pk)
+        except Profile.DoesNotExist:
             raise Http404
 
     def get(self, request, pk, format=None):
         sequence = self.get_object(pk)
-        serializer = SequenceSerializer(sequence)
+        serializer = ProfileSerializer(sequence)
         return Response(serializer.data)
 
     def put(self, request, pk, format=None):
         sequence = self.get_object(pk)
-        serializer = SequenceSerializer(sequence, data=request.data)
+        serializer = ProfileSerializer(sequence, data=request.data)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data)
@@ -78,7 +78,6 @@ class Tracking(APIView):
     def post(self, request, format=None):
         serializer = TrackingSerializer(data=request.data)
         if serializer.is_valid():
-            profile_and_track.delay(str(serializer.data["id"]), str(serializer.data["allele_db"]), 95,
-                                    str(serializer.data["profile_db"]))
+            track.delay(str(serializer.data["id"]), str(serializer.data["profile_db"]))
             return Response(serializer.data, status=status.HTTP_202_ACCEPTED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
