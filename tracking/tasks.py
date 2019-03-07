@@ -42,11 +42,23 @@ def to_db(id, results_file):
 
 
 @shared_task
-def track(query_profile, database):
+def track(id, database):
+    input_dir = os.path.join(settings.MEDIA_ROOT, "tracking", id)
+    profile_filename = os.path.join(input_dir, "profile.tsv")
+    output_dir = os.path.join(settings.MEDIA_ROOT, "temp", id)
+    files.create_if_not_exist(output_dir)
+
+    query_profile = pd.read_csv(profile_filename, sep="\t", index_col=0)
+    query_profile = query_profile[query_profile.columns[0]]
     track = nosql.get_dbtrack(database)
     distances = distance_against_all(query_profile, track)
     results = add_metadata(distances, track)
-    return results
+    results.replace(np.nan, "", regex=True, inplace=True)
+
+    results_file = os.path.join(output_dir, id[0:8] + ".json")
+    with open(results_file, "w") as file:
+        file.write(results.to_json(orient='records'))
+    to_db(id, results_file)
 
 
 @shared_task
