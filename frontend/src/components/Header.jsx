@@ -8,7 +8,7 @@ export default class Header extends React.Component {
         return (
             <header>
                 <br />
-                <font size="5" color="white">BacTrack</font>
+                <font size="5" color="white">cgMLST@TAIWAN</font>
                 <br />
             </header>
         );

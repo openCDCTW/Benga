@@ -124,21 +124,21 @@ export default class Example extends React.Component {
 	            <div style={{ display:'flex', justifyContent:'center', alignItems:'center'}}>
 	            	<font size="4">Download </font> 
 	            	&nbsp;&nbsp;&nbsp;&nbsp;
-	            	<Button variant="contained" color="default" onClick={this.download_png.bind(this)}>
-	            		Png
-	            	</Button>
-	                &nbsp;&nbsp;&nbsp;&nbsp;
-	                <Button variant="contained" color="default" onClick={this.download_pdf.bind(this)}>
+	            	<Button variant="contained" color="default" onClick={this.download_pdf.bind(this)}>
 	                	Pdf
 	                </Button>
-	                &nbsp;&nbsp;&nbsp;&nbsp;
-	               	<Button variant="contained" color="default" onClick={this.download_svg.bind(this)}>
-	               		Svg
-	               	</Button>
 	                &nbsp;&nbsp;&nbsp;&nbsp;
 	                <Button variant="contained" color="default" onClick={this.download_emf.bind(this)}>
 	                	emf
 	                </Button>
+	                &nbsp;&nbsp;&nbsp;&nbsp;
+	                <Button variant="contained" color="default" onClick={this.download_svg.bind(this)}>
+	               		Svg
+	               	</Button>
+	                &nbsp;&nbsp;&nbsp;&nbsp;
+	            	<Button variant="contained" color="default" onClick={this.download_png.bind(this)}>
+	            		Png
+	            	</Button>
 	                &nbsp;&nbsp;&nbsp;&nbsp;
 	                <Button variant="contained" color="default" onClick={this.download_newick.bind(this)}>
 	                	newick
