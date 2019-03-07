@@ -67,7 +67,6 @@ class Upload_contigs extends React.Component {
             autoProcessQueue: false,
             parallelUploads: 200,
             thumbnailWidth: 50,
-            thumbnailHeight: 50,
             init:function(){
                 this.on("addedfile", function(on_load_header_data){
                     
