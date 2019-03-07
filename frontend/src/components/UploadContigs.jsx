@@ -66,7 +66,6 @@ class Upload_contigs extends React.Component {
             acceptedFiles: ".fasta,.fa,.fna",
             autoProcessQueue: false,
             parallelUploads: 200,
-            thumbnailWidth: 50,
             init:function(){
                 this.on("addedfile", function(on_load_header_data){
                     
