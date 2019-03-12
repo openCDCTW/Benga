@@ -46,7 +46,7 @@ def track(id, database):
     input_dir = os.path.join(settings.MEDIA_ROOT, "tracking", id)
     profile_filename = os.path.join(input_dir, "profile.tsv")
     output_dir = os.path.join(settings.MEDIA_ROOT, "temp", id)
-    files.create_if_not_exist(output_dir)
+    os.makedirs(output_dir, exist_ok=True)
 
     query_profile = pd.read_csv(profile_filename, sep="\t", index_col=0)
     query_profile = query_profile[query_profile.columns[0]]
@@ -65,7 +65,7 @@ def track(id, database):
 def profile_and_track(id, allele_db, occr_level, profile_db):
     input_dir = os.path.join(settings.MEDIA_ROOT, "tracking", id)
     output_dir = os.path.join(settings.MEDIA_ROOT, "temp", id)
-    files.create_if_not_exist(output_dir)
+    os.makedirs(output_dir, exist_ok=True)
 
     profile_filename = os.path.join(output_dir, "profile.tsv")
     profiling.profiling(output_dir, input_dir, allele_db, occr_level=occr_level, threads=2)

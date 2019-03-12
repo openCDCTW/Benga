@@ -1,5 +1,4 @@
 import os
-import shutil
 from Bio import SeqIO
 from src.utils import seq
 
@@ -53,10 +52,6 @@ class ContigHandler:
             self.__write_new_format(source_file, sink_file, i)
 
 
-def joinpath(a, *args):
-    return os.path.join(a, *args)
-
-
 def drop_duplicate(l, idfun=None):
     if idfun is None:
         idfun = lambda x: x
@@ -69,25 +64,6 @@ def drop_duplicate(l, idfun=None):
             seen[marker] = 1
             result.append(item)
     return result
-
-
-def create_if_not_exist(path):
-    if not os.path.exists(path):
-        os.makedirs(path)
-
-
-def clear_folder(path):
-    if os.path.exists(path):
-        shutil.rmtree(path)
-    os.mkdir(path)
-
-
-def recursive_chown(dir, user):
-    for root, dirs, files in os.walk(dir):
-        for d in dirs:
-            shutil.chown(joinpath(root, d), user)
-        for f in files:
-            shutil.chown(joinpath(root, f), user)
 
 
 def fasta_filename(filename):
