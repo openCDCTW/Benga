@@ -9,6 +9,4 @@ urlpatterns = [
     path('sequence/<uuid:pk>/', views.SequenceDetail.as_view(), name="sequence-detail"),
     path('profile/', views.ProfileList.as_view(), name="profile-list"),
     path('profile/<uuid:pk>/', views.ProfileDetail.as_view(), name="profile-detail"),
-    path('profiling/', views.Profiling.as_view(), name="profiling"),
-    path('profiling-tree/', views.ProfilingTree.as_view(), name="profiling-tree"),
 ]
