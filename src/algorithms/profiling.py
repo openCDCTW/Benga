@@ -139,7 +139,8 @@ def add_new_alleles(id_allele_list, ref_db, temp_dir, ref_len):
 
 
 def profiling(output_dir, input_dir, database, threads, occr_level=None, selected_loci=None,
-              enable_adding_new_alleles=True, generate_profiles=True, logger=None, debug=False):
+              profile_file="profile", enable_adding_new_alleles=True, generate_profiles=True,
+              logger=None, debug=False):
     if not logger:
         lf = logs.LoggerFactory()
         lf.addConsoleHandler()
@@ -190,7 +191,7 @@ def profiling(output_dir, input_dir, database, threads, occr_level=None, selecte
             allele_counts.update(alleles.keys())
         result = pd.concat(collect, axis=1)
         result.columns = list(map(lambda x: namemap[x], result.columns))
-        result.to_csv(os.path.join(output_dir, "profile.tsv"), sep="\t")
+        result.to_csv(os.path.join(output_dir, profile_file + ".tsv"), sep="\t")
         bio = to_bionumerics_format(result)
         bio.to_csv(os.path.join(output_dir, 'bionumerics.csv'), index=False)
     else:
