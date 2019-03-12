@@ -11,16 +11,10 @@ class BatchSerializer(serializers.ModelSerializer):
 class SequenceSerializer(serializers.ModelSerializer):
     class Meta:
         model = Sequence
-        fields = ('id', 'batch_id', 'file')
+        fields = ('id', 'batch_id', 'file', 'occurrence', 'database')
 
 
 class ProfileSerializer(serializers.ModelSerializer):
     class Meta:
         model = Profile
-        fields = ('id', 'created', 'file', 'zip', 'occurrence', 'database')
-
-
-class ProfilingSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Profile
-        fields = ('id', 'occurrence', 'database')
+        fields = ('id', 'created', 'zip', 'occurrence', 'database')

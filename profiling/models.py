@@ -3,7 +3,8 @@ from django.db import models
 
 
 def sequences_path(instance, filename):
-    return "uploads/{0}/{1}".format(instance.batch_id.id, instance.file.name)
+    return "uploads/{0}/{1}/{2}".format(instance.batch_id.id, str(instance.id.id),
+                                        instance.file.name)
 
 
 def zip_path(instance, filename):
@@ -14,12 +15,15 @@ def zip_path(instance, filename):
 class Batch(models.Model):
     id = models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, null=False, auto_created=True)
     created = models.DateTimeField(auto_now_add=True)
+    seq_num = models.SmallIntegerField()
 
 
 class Sequence(models.Model):
     id = models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, null=False, auto_created=True)
     batch_id = models.ForeignKey(Batch, on_delete=models.CASCADE)
     file = models.FileField(upload_to=sequences_path, null=False)
+    occurrence = models.SmallIntegerField(null=False)
+    database = models.TextField(null=False)
 
 
 class Profile(models.Model):

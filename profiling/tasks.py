@@ -9,6 +9,7 @@ from django.conf import settings
 from django.core.files import File
 
 from profiling.serializers import ProfileSerializer
+from profiling.models import Batch, Sequence
 from src.algorithms import profiling
 import dendrogram.tasks as tree
 
@@ -46,8 +47,38 @@ def save(batch_id, database, occr_level, zip_filename):
     serializer = ProfileSerializer(data=profile_data)
     if serializer.is_valid():
         serializer.save()
-    else:
-        print(serializer.errors)
+
+
+def get_filename(seq_id):
+    return os.path.basename(Sequence.objects.get(pk=seq_id).file.name)
+
+
+def get_seq_number(batch_id):
+    return Batch.objects.get(pk=batch_id).seq_num
+
+
+def get_file_number(dir, ext=".tsv"):
+    return len(list(filter(lambda x: x.endswith(ext), os.listdir(dir))))
+
+
+@shared_task
+def single_profiling(seq_id, batch_id, database, occr_level):
+    input_dir = os.path.join(settings.MEDIA_ROOT, "uploads", batch_id, seq_id)
+    output_dir = os.path.join(settings.MEDIA_ROOT, "temp", batch_id)
+    os.makedirs(output_dir, exist_ok=True)
+    profiling.profiling(output_dir, input_dir, database, occr_level=occr_level,
+                        threads=2, profile_file=get_filename(seq_id))
+    return batch_id, output_dir, database, occr_level
+
+
+@shared_task
+def zip_save(args):
+    batch_id, output_dir, database, occr_level = args
+    seq_num = get_seq_number(batch_id)
+    if seq_num == get_file_number(output_dir):
+        zip_filename = zip_folder(output_dir)
+        save(batch_id, database, occr_level, zip_filename)
+        shutil.rmtree(output_dir)
 
 
 @shared_task
