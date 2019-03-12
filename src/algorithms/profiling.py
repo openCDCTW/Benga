@@ -106,7 +106,7 @@ def blast_for_new_alleles(candidates, alleles, ref_db, temp_dir, ref_len):
     seq.save_records(recs, candidate_file)
     allele_len = generate_allele_len(recs)
 
-    blastp_out_file = files.joinpath(temp_dir, "{}.blastp.out".format(filename))
+    blastp_out_file = os.path.join(temp_dir, "{}.blastp.out".format(filename))
     seq.query_blastpdb(candidate_file, ref_db, blastp_out_file, seq.BLAST_COLUMNS)
 
     blastp_out = filter_duplicates(blastp_out_file, allele_len, ref_len, identity=95)
@@ -143,13 +143,13 @@ def profiling(output_dir, input_dir, database, threads, occr_level=None, selecte
     if not logger:
         lf = logs.LoggerFactory()
         lf.addConsoleHandler()
-        lf.addFileHandler(files.joinpath(output_dir, "profiling.log"))
+        lf.addFileHandler(os.path.join(output_dir, "profiling.log"))
         logger = lf.create()
     load_database_config(logger=logger)
 
     logger.info("Formating contigs...")
-    query_dir = files.joinpath(output_dir, "query")
-    files.create_if_not_exist(query_dir)
+    query_dir = os.path.join(output_dir, "query")
+    os.makedirs(query_dir, exist_ok=True)
     contighandler = files.ContigHandler()
     contighandler.new_format(input_dir, query_dir, replace_ext=True)
     namemap = contighandler.namemap
@@ -166,7 +166,7 @@ def profiling(output_dir, input_dir, database, threads, occr_level=None, selecte
 
     logger.info("Making reference blastdb for blastp...")
     temp_dir = os.path.join(query_dir, "temp")
-    files.create_if_not_exist(temp_dir)
+    os.makedirs(temp_dir, exist_ok=True)
     ref_db = os.path.join(temp_dir, "ref_blastpdb")
     ref_len = make_ref_blastpdb(ref_db, database)
 
@@ -190,7 +190,7 @@ def profiling(output_dir, input_dir, database, threads, occr_level=None, selecte
             allele_counts.update(alleles.keys())
         result = pd.concat(collect, axis=1)
         result.columns = list(map(lambda x: namemap[x], result.columns))
-        result.to_csv(files.joinpath(output_dir, "profile.tsv"), sep="\t")
+        result.to_csv(os.path.join(output_dir, "profile.tsv"), sep="\t")
         bio = to_bionumerics_format(result)
         bio.to_csv(os.path.join(output_dir, 'bionumerics.csv'), index=False)
     else:

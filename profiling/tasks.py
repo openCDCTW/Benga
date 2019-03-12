@@ -10,7 +10,6 @@ from django.core.files import File
 
 from profiling.serializers import ProfileSerializer
 from src.algorithms import profiling
-from src.utils import files
 import dendrogram.tasks as tree
 
 
@@ -35,15 +34,14 @@ def profile(batch_id, database, input_dir, occr_level, output_dir):
 
     # Separate individual profiles and zip
     profile_dir = os.path.join(output_dir, batch_id)
-    files.create_if_not_exist(profile_dir)
+    os.makedirs(profile_dir, exist_ok=True)
     separate_profiles(profile_filename, profile_dir)
     zip_filename = zip_folder(profile_dir)
     return profile_filename, zip_filename
 
 
-def save(batch_id, database, occr_level, profile_filename, zip_filename):
-    profile_data = {"id": batch_id, "file": File(open(profile_filename, "rb")),
-                    "zip": File(open(zip_filename, "rb")),
+def save(batch_id, database, occr_level, zip_filename):
+    profile_data = {"id": batch_id, "zip": File(open(zip_filename, "rb")),
                     "occurrence": occr_level, "database": database}
     serializer = ProfileSerializer(data=profile_data)
     if serializer.is_valid():
@@ -53,13 +51,13 @@ def save(batch_id, database, occr_level, profile_filename, zip_filename):
 
 
 @shared_task
-def do_profiling(batch_id, database, occr_level):
+def batch_profiling(batch_id, database, occr_level):
     input_dir = os.path.join(settings.MEDIA_ROOT, "uploads", batch_id)
     output_dir = os.path.join(settings.MEDIA_ROOT, "temp", batch_id)
-    files.create_if_not_exist(output_dir)
+    os.makedirs(output_dir, exist_ok=True)
 
-    profile_filename, zip_filename = profile(batch_id, database, input_dir, occr_level, output_dir)
-    save(batch_id, database, occr_level, profile_filename, zip_filename)
+    _, zip_filename = profile(batch_id, database, input_dir, occr_level, output_dir)
+    save(batch_id, database, occr_level, zip_filename)
     shutil.rmtree(output_dir)
 
 
@@ -67,7 +65,7 @@ def do_profiling(batch_id, database, occr_level):
 def profile_and_tree(batch_id, database, occr_level):
     input_dir = os.path.join(settings.MEDIA_ROOT, "uploads", batch_id)
     output_dir = os.path.join(settings.MEDIA_ROOT, "temp", batch_id)
-    files.create_if_not_exist(output_dir)
+    os.makedirs(output_dir, exist_ok=True)
 
     # profile
     profile_filename, zip_filename = profile(batch_id, database, input_dir, occr_level, output_dir)

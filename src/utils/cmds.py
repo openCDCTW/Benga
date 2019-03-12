@@ -10,14 +10,14 @@ MODELS_PATH = os.path.abspath(os.path.join(DIR_PATH, "..", "..", 'models'))
 
 def form_prokka_cmd(newname, inpath, outpath):
     name, ext = newname.split(".")
-    args = ["prokka", "--prefix", name, "--cpus", "2", "--outdir", files.joinpath(outpath, name),
-            files.joinpath(inpath, newname)]
+    args = ["prokka", "--prefix", name, "--cpus", "2", "--outdir", os.path.join(outpath, name),
+            os.path.join(inpath, newname)]
     return " ".join(map(str, args))
 
 
 def form_roary_cmd(inpath, outpath, ident_min, threads):
-    args = ["roary", "-p", threads, "-i", ident_min, "-s", "-f", files.joinpath(outpath, "roary"),
-            files.joinpath(inpath, "*.gff")]
+    args = ["roary", "-p", threads, "-i", ident_min, "-s", "-f", os.path.join(outpath, "roary"),
+            os.path.join(inpath, "*.gff")]
     return " ".join(map(str, args))
 
 
