@@ -14,18 +14,18 @@ from src.utils.alleles import filter_duplicates
 
 def move_file(annotate_dir, dest_dir, ext):
     for folder in os.listdir(annotate_dir):
-        path = files.joinpath(annotate_dir, folder)
+        path = os.path.join(annotate_dir, folder)
         for file in os.listdir(path):
-            current_file = files.joinpath(path, file)
+            current_file = os.path.join(path, file)
             if file.endswith(ext):
-                os.rename(current_file, files.joinpath(dest_dir, file))
+                os.rename(current_file, os.path.join(dest_dir, file))
 
 
 def create_noncds(database_dir, gff_dir):
     noncds = defaultdict(list)
     for file in os.listdir(gff_dir):
         name, ext = file.split(".")
-        for line in open(files.joinpath(gff_dir, file), "r").read().splitlines():
+        for line in open(os.path.join(gff_dir, file), "r").read().splitlines():
             if line.startswith("##sequence") or line.startswith("##gff"):
                 continue
             if line.startswith("##FASTA"):
@@ -38,7 +38,7 @@ def create_noncds(database_dir, gff_dir):
                 prokkaid = annotation.split(";")[0][3:]
                 if seq_type != "CDS":
                     noncds[name].append(prokkaid)
-    with open(files.joinpath(database_dir, "nonCDS.json"), "w") as file:
+    with open(os.path.join(database_dir, "nonCDS.json"), "w") as file:
         file.write(json.dumps(noncds))
 
 
@@ -97,7 +97,7 @@ def collect_allele_info(profiles, ffn_dir):
     freq = defaultdict(Counter)
     new_profiles = []
     for subject, profile in profiles.iteritems():
-        ffn_file = files.joinpath(ffn_dir, "{}.ffn".format(subject))
+        ffn_file = os.path.join(ffn_dir, "{}.ffn".format(subject))
         seqs = {record.id: record.seq for record in SeqIO.parse(ffn_file, "fasta")}
 
         new_profile = pd.Series(name=subject)
@@ -120,13 +120,13 @@ def collect_allele_info(profiles, ffn_dir):
 def reference_self_blastp(output_dir, freq):
     ref_recs = [seq.new_record(locus, counter.most_common(1)[0][0].translate(table=11)) for locus, counter in freq.items()]
     ref_length = {rec.id: len(rec.seq) for rec in ref_recs}
-    ref_faa = files.joinpath(output_dir, "ref_seq.faa")
+    ref_faa = os.path.join(output_dir, "ref_seq.faa")
     seq.save_records(ref_recs, ref_faa)
 
-    ref_db = files.joinpath(output_dir, "ref_db")
+    ref_db = os.path.join(output_dir, "ref_db")
     seq.compile_blastpdb(ref_faa, ref_db)
 
-    blastp_out_file = files.joinpath(output_dir, "ref_db.blastp.out")
+    blastp_out_file = os.path.join(output_dir, "ref_db.blastp.out")
     seq.query_blastpdb(ref_faa, ref_db, blastp_out_file, seq.BLAST_COLUMNS)
     return blastp_out_file, ref_length
 
@@ -209,33 +209,33 @@ def annotate_configs(input_dir, output_dir, logger=None, threads=8):
     if not logger:
         lf = logs.LoggerFactory()
         lf.addConsoleHandler()
-        lf.addFileHandler(files.joinpath(output_dir, "annotation.log"))
+        lf.addFileHandler(os.path.join(output_dir, "annotation.log"))
         logger = lf.create()
 
     logger.info("Formating contigs...")
-    genome_dir = files.joinpath(output_dir, "Genomes")
-    files.create_if_not_exist(genome_dir)
+    genome_dir = os.path.join(output_dir, "Genomes")
+    os.makedirs(genome_dir, exist_ok=True)
     contighandler = files.ContigHandler()
     contighandler.new_format(input_dir, genome_dir, replace_ext=False)
     namemap = contighandler.namemap
-    with open(files.joinpath(output_dir, "namemap.json"), "w") as f:
+    with open(os.path.join(output_dir, "namemap.json"), "w") as f:
         f.write(json.dumps(namemap))
 
     logger.info("Annotating...")
-    annotate_dir = files.joinpath(output_dir, "Annotated")
-    files.create_if_not_exist(annotate_dir)
+    annotate_dir = os.path.join(output_dir, "Annotated")
+    os.makedirs(annotate_dir, exist_ok=True)
     c = [cmds.form_prokka_cmd(x, genome_dir, annotate_dir) for x in namemap.keys()]
     with ProcessPoolExecutor(int(threads / 2)) as executor:
         executor.map(cmds.execute_cmd, c)
 
     logger.info("Moving protein CDS (.ffn) files...")
-    ffn_dir = files.joinpath(output_dir, "FFN")
-    files.create_if_not_exist(ffn_dir)
+    ffn_dir = os.path.join(output_dir, "FFN")
+    os.makedirs(ffn_dir, exist_ok=True)
     move_file(annotate_dir, ffn_dir, ".ffn")
 
     logger.info("Moving annotation (.gff) files...")
-    gff_dir = files.joinpath(output_dir, "GFF")
-    files.create_if_not_exist(gff_dir)
+    gff_dir = os.path.join(output_dir, "GFF")
+    os.makedirs(gff_dir, exist_ok=True)
     move_file(annotate_dir, gff_dir, ".gff")
 
     logger.info("Creating nonCDS.json...")
@@ -246,13 +246,13 @@ def make_database(output_dir, drop_by_occur, logger=None, threads=2):
     if not logger:
         lf = logs.LoggerFactory()
         lf.addConsoleHandler()
-        lf.addFileHandler(files.joinpath(output_dir, "make_database.log"))
+        lf.addFileHandler(os.path.join(output_dir, "make_database.log"))
         logger = lf.create()
     db.load_database_config(logger=logger)
 
     logger.info("Calculating the pan genome...")
     min_identity = 95
-    c = cmds.form_roary_cmd(files.joinpath(output_dir, "GFF"), output_dir, min_identity, threads)
+    c = cmds.form_roary_cmd(os.path.join(output_dir, "GFF"), output_dir, min_identity, threads)
     logger.info("Run roary with following command: " + c)
     subprocess.run(c, shell=True)
 
@@ -262,12 +262,12 @@ def make_database(output_dir, drop_by_occur, logger=None, threads=2):
     db.create_pgadb_relations(dbname)
 
     logger.info("Extract profiles from roary result matrix...")
-    matrix_file = files.joinpath(output_dir, "roary", "gene_presence_absence.csv")
+    matrix_file = os.path.join(output_dir, "roary", "gene_presence_absence.csv")
     profiles, total_isolates = extract_profiles(matrix_file, dbname)
 
     logger.info("Collecting allele profiles and making allele frequencies and reference sequence...")
-    ffn_dir = files.joinpath(output_dir, "FFN")
-    profile_file = files.joinpath(output_dir, "allele_profiles.tsv")
+    ffn_dir = os.path.join(output_dir, "FFN")
+    profile_file = os.path.join(output_dir, "allele_profiles.tsv")
     profiles, freq = collect_allele_info(profiles, ffn_dir)
 
     logger.info("Checking duplicated loci by self-blastp...")

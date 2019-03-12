@@ -57,7 +57,7 @@ def save(batch_id, linkage, emf_filename, newick_filename, pdf_filename, png_fil
 def plot_dendrogram(batch_id, linkage):
     input_dir = os.path.join(settings.MEDIA_ROOT, "uploads", batch_id)
     output_dir = os.path.join(settings.MEDIA_ROOT, "temp", batch_id)
-    files.create_if_not_exist(output_dir)
+    os.makedirs(output_dir, exist_ok=True)
 
     emf_filename, newick_filename, pdf_filename, png_filename, svg_filename = plot(input_dir, output_dir, linkage)
     save(batch_id, linkage, emf_filename, newick_filename, pdf_filename, png_filename, svg_filename)
