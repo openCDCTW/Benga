@@ -45,13 +45,13 @@ class ProfileDetail(APIView):
             raise Http404
 
     def get(self, request, pk, format=None):
-        sequence = self.get_object(pk)
-        serializer = ProfileSerializer(sequence)
+        profile = self.get_object(pk)
+        serializer = ProfileSerializer(profile)
         return Response(serializer.data)
 
     def delete(self, request, pk, format=None):
-        sequence = self.get_object(pk)
-        sequence.delete()
+        profile = self.get_object(pk)
+        profile.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
@@ -68,21 +68,21 @@ class DendrogramDetail(APIView):
             raise Http404
 
     def get(self, request, pk, format=None):
-        sequence = self.get_object(pk)
-        serializer = DendrogramSerializer(sequence)
+        dendrogram = self.get_object(pk)
+        serializer = DendrogramSerializer(dendrogram)
         return Response(serializer.data)
 
     def put(self, request, pk, format=None):
-        sequence = self.get_object(pk)
-        serializer = DendrogramSerializer(sequence, data=request.data)
+        dendrogram = self.get_object(pk)
+        serializer = DendrogramSerializer(dendrogram, data=request.data)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     def delete(self, request, pk, format=None):
-        sequence = self.get_object(pk)
-        sequence.delete()
+        dendrogram = self.get_object(pk)
+        dendrogram.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
