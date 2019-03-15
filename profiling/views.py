@@ -4,9 +4,8 @@ from rest_framework.response import Response
 from rest_framework import status
 from django.http import Http404
 from profiling.models import Batch, Sequence, Profile
-from profiling.serializers import BatchSerializer, SequenceSerializer,\
-    ProfileSerializer, ProfilingSerializer
-from profiling.tasks import do_profiling, profile_and_tree
+from profiling.serializers import BatchSerializer, SequenceSerializer, ProfileSerializer
+from profiling.tasks import single_profiling, zip_save
 
 
 class BatchList(generics.ListCreateAPIView):
@@ -15,6 +14,7 @@ class BatchList(generics.ListCreateAPIView):
 
 
 class BatchDetail(mixins.RetrieveModelMixin,
+                  mixins.UpdateModelMixin,
                   mixins.DestroyModelMixin,
                   generics.GenericAPIView):
     queryset = Batch.objects.all()
@@ -23,13 +23,29 @@ class BatchDetail(mixins.RetrieveModelMixin,
     def get(self, request, *args, **kwargs):
         return self.retrieve(request, *args, **kwargs)
 
+    def put(self, request, *args, **kwargs):
+        return self.retrieve(request, *args, **kwargs)
+
     def delete(self, request, *args, **kwargs):
         return self.destroy(request, *args, **kwargs)
 
 
 class SequenceList(generics.ListCreateAPIView):
-    queryset = Sequence.objects.all()
-    serializer_class = SequenceSerializer
+    def get(self, request, format=None):
+        sequence = Sequence.objects.all()
+        serializer = SequenceSerializer(sequence)
+        return Response(serializer.data)
+
+    def post(self, request, format=None):
+        serializer = SequenceSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            (single_profiling.s(str(serializer.data["id"]),
+                                str(serializer.data["batch_id"]),
+                                serializer.data["database"],
+                                serializer.data["occurrence"]) | zip_save.s())()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 class SequenceDetail(APIView):
@@ -43,14 +59,6 @@ class SequenceDetail(APIView):
         sequence = self.get_object(pk)
         serializer = SequenceSerializer(sequence)
         return Response(serializer.data)
-
-    def put(self, request, pk, format=None):
-        sequence = self.get_object(pk)
-        serializer = SequenceSerializer(sequence, data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     def delete(self, request, pk, format=None):
         sequence = self.get_object(pk)
@@ -71,39 +79,19 @@ class ProfileDetail(APIView):
             raise Http404
 
     def get(self, request, pk, format=None):
-        sequence = self.get_object(pk)
-        serializer = ProfileSerializer(sequence)
+        profile = self.get_object(pk)
+        serializer = ProfileSerializer(profile)
         return Response(serializer.data)
 
     def put(self, request, pk, format=None):
-        sequence = self.get_object(pk)
-        serializer = ProfileSerializer(sequence, data=request.data)
+        profile = self.get_object(pk)
+        serializer = ProfileSerializer(profile, data=request.data)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     def delete(self, request, pk, format=None):
-        sequence = self.get_object(pk)
-        sequence.delete()
+        profile = self.get_object(pk)
+        profile.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
-
-
-class Profiling(APIView):
-    def post(self, request, format=None):
-        serializer = ProfilingSerializer(data=request.data)
-        if serializer.is_valid():
-            do_profiling.delay(str(serializer.data["id"]), serializer.data["database"],
-                               serializer.data["occurrence"])
-            return Response(serializer.data, status=status.HTTP_202_ACCEPTED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-
-class ProfilingTree(APIView):
-    def post(self, request, format=None):
-        serializer = ProfilingSerializer(data=request.data)
-        if serializer.is_valid():
-            profile_and_tree.delay(str(serializer.data["id"]), serializer.data["database"],
-                                   serializer.data["occurrence"])
-            return Response(serializer.data, status=status.HTTP_202_ACCEPTED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

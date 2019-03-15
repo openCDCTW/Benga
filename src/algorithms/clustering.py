@@ -43,7 +43,6 @@ class Dendrogram:
 
     def __init__(self, dm, link):
         self._nodes = list(dm.index)
-        self._tree = hierarchy.to_tree(self._linkage, False)
         self._newick = None
         if link == "single":
             self._linkage = fastcluster.single(squareform(dm.distance))
@@ -51,6 +50,7 @@ class Dendrogram:
             self._linkage = fastcluster.average(squareform(dm.distance))
         else:
             raise AttributeError("Invalid value {} for link in Dendrogram.".format(link))
+        self._tree = hierarchy.to_tree(self._linkage, False)
 
     @property
     def newick(self):

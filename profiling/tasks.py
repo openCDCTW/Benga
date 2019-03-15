@@ -9,8 +9,8 @@ from django.conf import settings
 from django.core.files import File
 
 from profiling.serializers import ProfileSerializer
+from profiling.models import Batch, Sequence
 from src.algorithms import profiling
-from src.utils import files
 import dendrogram.tasks as tree
 
 
@@ -35,31 +35,60 @@ def profile(batch_id, database, input_dir, occr_level, output_dir):
 
     # Separate individual profiles and zip
     profile_dir = os.path.join(output_dir, batch_id)
-    files.create_if_not_exist(profile_dir)
+    os.makedirs(profile_dir, exist_ok=True)
     separate_profiles(profile_filename, profile_dir)
     zip_filename = zip_folder(profile_dir)
     return profile_filename, zip_filename
 
 
-def save(batch_id, database, occr_level, profile_filename, zip_filename):
-    profile_data = {"id": batch_id, "file": File(open(profile_filename, "rb")),
-                    "zip": File(open(zip_filename, "rb")),
+def save(batch_id, database, occr_level, zip_filename):
+    profile_data = {"id": batch_id, "zip": File(open(zip_filename, "rb")),
                     "occurrence": occr_level, "database": database}
     serializer = ProfileSerializer(data=profile_data)
     if serializer.is_valid():
         serializer.save()
-    else:
-        print(serializer.errors)
+
+
+def get_filename(seq_id):
+    return os.path.basename(Sequence.objects.get(pk=seq_id).file.name)
+
+
+def get_seq_number(batch_id):
+    return Batch.objects.get(pk=batch_id).seq_num
+
+
+def get_file_number(dir, ext=".tsv"):
+    return len(list(filter(lambda x: x.endswith(ext), os.listdir(dir))))
 
 
 @shared_task
-def do_profiling(batch_id, database, occr_level):
+def single_profiling(seq_id, batch_id, database, occr_level):
+    input_dir = os.path.join(settings.MEDIA_ROOT, "uploads", batch_id, seq_id)
+    output_dir = os.path.join(settings.MEDIA_ROOT, "temp", batch_id)
+    os.makedirs(output_dir, exist_ok=True)
+    profiling.profiling(output_dir, input_dir, database, occr_level=occr_level,
+                        threads=2, profile_file=get_filename(seq_id))
+    return batch_id, output_dir, database, occr_level
+
+
+@shared_task
+def zip_save(args):
+    batch_id, output_dir, database, occr_level = args
+    seq_num = get_seq_number(batch_id)
+    if seq_num == get_file_number(output_dir):
+        zip_filename = zip_folder(output_dir)
+        save(batch_id, database, occr_level, zip_filename)
+        shutil.rmtree(output_dir)
+
+
+@shared_task
+def batch_profiling(batch_id, database, occr_level):
     input_dir = os.path.join(settings.MEDIA_ROOT, "uploads", batch_id)
     output_dir = os.path.join(settings.MEDIA_ROOT, "temp", batch_id)
-    files.create_if_not_exist(output_dir)
+    os.makedirs(output_dir, exist_ok=True)
 
-    profile_filename, zip_filename = profile(batch_id, database, input_dir, occr_level, output_dir)
-    save(batch_id, database, occr_level, profile_filename, zip_filename)
+    _, zip_filename = profile(batch_id, database, input_dir, occr_level, output_dir)
+    save(batch_id, database, occr_level, zip_filename)
     shutil.rmtree(output_dir)
 
 
@@ -67,7 +96,7 @@ def do_profiling(batch_id, database, occr_level):
 def profile_and_tree(batch_id, database, occr_level):
     input_dir = os.path.join(settings.MEDIA_ROOT, "uploads", batch_id)
     output_dir = os.path.join(settings.MEDIA_ROOT, "temp", batch_id)
-    files.create_if_not_exist(output_dir)
+    os.makedirs(output_dir, exist_ok=True)
 
     # profile
     profile_filename, zip_filename = profile(batch_id, database, input_dir, occr_level, output_dir)

@@ -17,4 +17,4 @@ class TrackedResultsSerializer(serializers.ModelSerializer):
 class TrackingSerializer(serializers.ModelSerializer):
     class Meta:
         model = Tracking
-        fields = ('id', 'allele_db', 'profile_db')
+        fields = ('id', 'profile_db')
