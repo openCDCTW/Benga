@@ -5,7 +5,7 @@ from profiling.models import Batch, Sequence, Profile
 class BatchSerializer(serializers.ModelSerializer):
     class Meta:
         model = Batch
-        fields = ('id', 'created')
+        fields = ('id', 'created', 'seq_num')
 
 
 class SequenceSerializer(serializers.ModelSerializer):
