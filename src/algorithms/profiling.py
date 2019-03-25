@@ -2,6 +2,7 @@ import functools
 import os
 import re
 import shutil
+import uuid
 import subprocess
 from collections import Counter
 from concurrent.futures import ThreadPoolExecutor
@@ -55,14 +56,14 @@ def identify_alleles(args):
     return genome_id, alleles
 
 
-def update_allele_counts(counter, database):
-    table_to_sql("batch_add_counts", counter, database=database, append=False)
+def update_allele_counts(counter, database, tablename):
+    table_to_sql(tablename, counter, database=database, append=False)
     query = "update alleles " \
             "set count = alleles.count + ba.count " \
             "from batch_add_counts as ba " \
             "where alleles.allele_id=ba.allele_id;"
     to_sql(query, database=database)
-    to_sql("drop table batch_add_counts;", database=database)
+    to_sql("drop table {};".format(tablename), database=database)
 
 
 def profile_by_query(alleles, genome_id, selected_loci, database):
@@ -147,6 +148,7 @@ def profiling(output_dir, input_dir, database, threads, occr_level=None, selecte
         lf.addFileHandler(os.path.join(output_dir, "profiling.log"))
         logger = lf.create()
     load_database_config(logger=logger)
+    pid = uuid.uuid4().hex[0:8]
 
     logger.info("Formating contigs...")
     query_dir = os.path.join(output_dir, "query")
@@ -168,7 +170,7 @@ def profiling(output_dir, input_dir, database, threads, occr_level=None, selecte
     logger.info("Making reference blastdb for blastp...")
     temp_dir = os.path.join(query_dir, "temp")
     os.makedirs(temp_dir, exist_ok=True)
-    ref_db = os.path.join(temp_dir, "ref_blastpdb")
+    ref_db = os.path.join(temp_dir, "ref_blastpdb_{}".format(pid))
     ref_len = make_ref_blastpdb(ref_db, database)
 
     logger.info("Identifying loci and allocating alleles...")
@@ -193,7 +195,7 @@ def profiling(output_dir, input_dir, database, threads, occr_level=None, selecte
         result.columns = list(map(lambda x: namemap[x], result.columns))
         result.to_csv(os.path.join(output_dir, profile_file + ".tsv"), sep="\t")
         bio = to_bionumerics_format(result)
-        bio.to_csv(os.path.join(output_dir, 'bionumerics.csv'), index=False)
+        bio.to_csv(os.path.join(output_dir, "bionumerics_{}.csv".format(pid)), index=False)
     else:
         logger.info("Not going to output profiles.")
         for genome_id, alleles in id_allele_list:
@@ -201,7 +203,7 @@ def profiling(output_dir, input_dir, database, threads, occr_level=None, selecte
 
     allele_counts = pd.DataFrame(allele_counts, index=[0]).T\
         .reset_index().rename(columns={"index": "allele_id", 0: "count"})
-    update_allele_counts(allele_counts, database)
+    update_allele_counts(allele_counts, database, "batch_add_counts_{}".format(pid))
     if not debug:
         shutil.rmtree(query_dir)
     logger.info("Done!")
