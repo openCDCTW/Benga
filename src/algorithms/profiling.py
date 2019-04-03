@@ -61,8 +61,8 @@ def update_allele_counts(counter, database, tablename):
     db.table_to_sql(tablename, counter, database=database, append=False)
     query = "update alleles " \
             "set count = alleles.count + ba.count " \
-            "from batch_add_counts as ba " \
-            "where alleles.allele_id=ba.allele_id;"
+            "from {} as ba " \
+            "where alleles.allele_id=ba.allele_id;".format(tablename)
     db.to_sql(query, database=database)
     db.to_sql("drop table {};".format(tablename), database=database)
 
