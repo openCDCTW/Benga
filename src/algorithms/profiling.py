@@ -8,11 +8,12 @@ from collections import Counter
 from concurrent.futures import ThreadPoolExecutor
 
 import pandas as pd
+import sqlalchemy as sa
 from Bio import SeqIO
 
 from src.algorithms.bionumerics import to_bionumerics_format
 from src.utils import files, cmds, operations, logs, seq
-from src.utils.db import load_database_config, from_sql, table_to_sql, to_sql
+from src.utils import db
 from src.utils.alleles import filter_duplicates
 
 MLST = ["aroC_1", "aroC_2", "aroC_3", "dnaN", "hemD", "hisD", "purE", "sucA_1", "sucA_2", "thrA_2", "thrA_3"]
@@ -57,23 +58,22 @@ def identify_alleles(args):
 
 
 def update_allele_counts(counter, database, tablename):
-    table_to_sql(tablename, counter, database=database, append=False)
+    db.table_to_sql(tablename, counter, database=database, append=False)
     query = "update alleles " \
             "set count = alleles.count + ba.count " \
             "from batch_add_counts as ba " \
             "where alleles.allele_id=ba.allele_id;"
-    to_sql(query, database=database)
-    to_sql("drop table {};".format(tablename), database=database)
+    db.to_sql(query, database=database)
+    db.to_sql("drop table {};".format(tablename), database=database)
 
 
 def profile_by_query(alleles, genome_id, selected_loci, database):
-    locus_ids = ",".join("'{}'".format(x) for x in selected_loci)
-    allele_ids = ",".join("'{}'".format(x) for x in alleles.keys())
-    query = "select allele_id, locus_id " \
-            "from pairs " \
-            "where allele_id in ({}) and locus_id in ({});".format(allele_ids, locus_ids)
+    query = sa.select([db.PAIRS]).where(sa.and_(
+        db.PAIRS.c['allele_id'].in_(alleles.keys()),
+        db.PAIRS.c['locus_id'].in_(selected_loci)
+    ))
     # ensure allele_id is mapped only once
-    profile = from_sql(query, database=database).drop_duplicates("allele_id")
+    profile = db.from_sql(query, database=database).drop_duplicates("allele_id")
     # ensure locus_id exists only once
     profile = profile.drop_duplicates("locus_id").set_index("locus_id")
     profile = profile.rename(columns={"allele_id": genome_id}).iloc[:, 0]
@@ -88,7 +88,7 @@ def make_ref_blastpdb(ref_db_file, database):
     query = "select loci.locus_id, alleles.peptide_seq " \
             "from loci inner join alleles " \
             "on loci.ref_allele = alleles.allele_id;"
-    refs = from_sql(query, database=database)
+    refs = db.from_sql(query, database=database)
 
     ref_recs = [seq.new_record(row["locus_id"], row["peptide_seq"], seqtype="protein") for _, row in refs.iterrows()]
     ref_fasta = ref_db_file + ".fasta"
@@ -124,15 +124,15 @@ def update_database(new_allele_pairs, alleles):
         count = 0
         collect.append((allele_id, dna, peptide, count))
     collect = pd.DataFrame(collect, columns=["allele_id", "dna_seq", "peptide_seq", "count"]).drop_duplicates()
-    table_to_sql("alleles", collect)
+    db.table_to_sql("alleles", collect)
     pairs = pd.DataFrame(new_allele_pairs, columns=["allele_id", "locus_id"]).drop_duplicates()
-    table_to_sql("pairs", pairs)
+    db.table_to_sql("pairs", pairs)
     return pairs
 
 
 def add_new_alleles(id_allele_list, ref_db, temp_dir, ref_len):
     all_alleles = functools.reduce(lambda x, y: {**x, **y[1]}, id_allele_list, {})
-    existed_alleles = from_sql("select allele_id from alleles;")["allele_id"].tolist()
+    existed_alleles = db.from_sql("select allele_id from alleles;")["allele_id"].tolist()
     candidates = list(filter(lambda x: x not in existed_alleles, all_alleles.keys()))
     new_allele_pairs = blast_for_new_alleles(candidates, all_alleles, ref_db, temp_dir, ref_len)
     if new_allele_pairs:
@@ -147,7 +147,7 @@ def profiling(output_dir, input_dir, database, threads, occr_level=None, selecte
         lf.addConsoleHandler()
         lf.addFileHandler(os.path.join(output_dir, "profiling.log"))
         logger = lf.create()
-    load_database_config(logger=logger)
+    db.load_database_config(logger=logger)
     pid = uuid.uuid4().hex[0:8]
 
     logger.info("Formating contigs...")
@@ -165,7 +165,7 @@ def profiling(output_dir, input_dir, database, threads, occr_level=None, selecte
         selected_loci = set(selected_loci)
     else:  # select loci by scheme
         query = "select locus_id from loci where occurrence>={};".format(occr_level)
-        selected_loci = set(from_sql(query, database=database).iloc[:, 0])
+        selected_loci = set(db.from_sql(query, database=database).iloc[:, 0])
 
     logger.info("Making reference blastdb for blastp...")
     temp_dir = os.path.join(query_dir, "temp")
