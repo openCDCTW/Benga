@@ -204,6 +204,6 @@ def profiling(output_dir, input_dir, database, threads, occr_level=None, selecte
     allele_counts = pd.DataFrame(allele_counts, index=[0]).T\
         .reset_index().rename(columns={"index": "allele_id", 0: "count"})
     update_allele_counts(allele_counts, database, "batch_add_counts_{}".format(pid))
-    if not debug:
+    if not debug and os.path.exists(query_dir):
         shutil.rmtree(query_dir)
     logger.info("Done!")

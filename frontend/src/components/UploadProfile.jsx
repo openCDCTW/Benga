@@ -34,25 +34,39 @@ class Upload_profile extends React.Component {
 
         super(props);
 
+        fetch('api/dendrogram/upload/', {method:'POST'})
+        .then(function(res){
+           return res.json();
+        }).then(function(batch){
+           return getID(batch);
+        });
+
+        var getID=function(data){
+            window.clusteringID = data.id;
+        };
+
+        // TODO: poor performnce issue with everytime load the component will
+        // fetch API once.
+
         this.state = {
             to: "/upload_profile",
             upload_confirm: false,
-            algorithm: 'singal_linkage'
+            algorithm: 'single'
         };
 
         this.djsConfig = {
-            dictDefaultMessage:"Drop cgMLST profiles here",
+            dictDefaultMessage:"Drag cgMLST profiles here",
             dictRemoveFile:"Remove",
             addRemoveLinks: true,
             acceptedFiles: ".tsv",
             autoProcessQueue: false,
-            parallelUploads: 200,
+            parallelUploads: 500,
             init:function(){
                 this.on("addedfile", function(on_load_header_data){
 
                 });
                 this.on("sending", function(file, xhr, formData){
-                    formData.append("batch_id", window.batchid);
+                    formData.append("batch_id", window.clusteringID);
                 });
                 this.on("success", function(file){
                     file._removeLink.remove();
@@ -78,6 +92,9 @@ class Upload_profile extends React.Component {
         if(fileCheck < 1){
             alert('Please upload at least 1 files');
             return ;
+        }else if(fileCheck > 500){
+            alert('Cannot upload more than 500 files');
+            return ;
         }
 
         this.dropzone.processQueue();
@@ -93,7 +110,8 @@ class Upload_profile extends React.Component {
         }
 
         var scheme = {};
-        scheme.id = window.batchid;
+        scheme.id = window.clusteringID;
+        scheme.linkage = this.state.algorithm;
         fetch('api/dendrogram/plot/', {
             method:'POST',
             headers: new Headers({'content-type': 'application/json'}),
@@ -108,7 +126,7 @@ class Upload_profile extends React.Component {
         this.dropzone.removeAllFiles();
         
         this.setState(state => ({ to: '/upload_profile', upload_confirm: false}));
-        fetch('api/profiling/upload/', {method:'POST'})
+        fetch('api/dendrogram/upload/', {method:'POST'})
         .then(function(res){
            return res.json();
         }).then(function(batch){
@@ -116,7 +134,7 @@ class Upload_profile extends React.Component {
         });
 
         var getID=function(data){
-            window.batchid = data.id;
+            window.clusteringID = data.id;
         };
 
     }
@@ -159,18 +177,18 @@ class Upload_profile extends React.Component {
                     &nbsp;&nbsp;
                     <Radio
                         color='primary'
-                        checked={this.state.algorithm === 'singal_linkage'}
+                        checked={this.state.algorithm === 'single'}
                         onChange={this.handleChange.bind(this)}
-                        value="singal_linkage"
+                        value="single"
                     />
-                    <font>Singal linkage</font>
+                    <font>Single linkage</font>
                     <Radio
                         color='primary'
-                        checked={this.state.algorithm === 'average_linkage'}
+                        checked={this.state.algorithm === 'average'}
                         onChange={this.handleChange.bind(this)}
-                        value="average_linkage"
+                        value="average"
                     />
-                    <font>Average linkage</font>
+                    <font>UPGMA</font>
                 </div>
                 <br />
                 <div style = {{ display:'flex', justifyContent:'center', alignItems:'center' }}>

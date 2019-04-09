@@ -149,11 +149,13 @@ class Tracking_result extends React.Component {
 										<TableRow>
 											<TrackingResultTable align="right">Difference(loci)</TrackingResultTable>
 											<TrackingResultTable align="right">BioSample</TrackingResultTable>
-											<TrackingResultTable align="right">Strain</TrackingResultTable>
-											<TrackingResultTable align="right">Country</TrackingResultTable>
-											<TrackingResultTable align="right">Year</TrackingResultTable>
+											<TrackingResultTable align="right">Strain ID/Alias</TrackingResultTable>
+											<TrackingResultTable align="right">SourceSeq</TrackingResultTable>
+											<TrackingResultTable align="right">Source country</TrackingResultTable>
+											<TrackingResultTable align="right">Isolated year</TrackingResultTable>
 											<TrackingResultTable align="right">ST</TrackingResultTable>
-											<TrackingResultTable align="right">Serogroup_serotype</TrackingResultTable>
+											<TrackingResultTable align="right">Serogroup_type</TrackingResultTable>
+											<TrackingResultTable align="right">Number of void loci</TrackingResultTable>
 										</TableRow>
 									</TableHead>
 									<TableBody>
@@ -167,10 +169,12 @@ class Tracking_result extends React.Component {
 													</a>
 												</TrackingResultTable>
 												<TrackingResultTable align="right">{row.Strain}</TrackingResultTable>
-												<TrackingResultTable align="right">{row.Country}</TrackingResultTable>
-												<TrackingResultTable align="right">{row.Year}</TrackingResultTable>
+												<TrackingResultTable align="right">{row.SourceSeq}</TrackingResultTable>
+												<TrackingResultTable align="right">{row.SourceCountry}</TrackingResultTable>
+												<TrackingResultTable align="right">{row.IsolatYear}</TrackingResultTable>
 												<TrackingResultTable align="right">{row.ST}</TrackingResultTable>
-												<TrackingResultTable align="right">{row.Serogroup_serotype}</TrackingResultTable>
+												<TrackingResultTable align="right">{row.Serogroup_type}</TrackingResultTable>
+												<TrackingResultTable align="right">{row.Number_of_void_loci}</TrackingResultTable>
 											</TableRow>
 										))}
 									</TableBody>

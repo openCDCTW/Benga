@@ -5,7 +5,8 @@ import Button from '@material-ui/core/Button';
 import { withStyle } from '@material-ui/core/styles';
 import ReplyIcon from '@material-ui/icons/Reply';
 import DownloadIcon from '@material-ui/icons/CloudDownload';
-
+import CircularProgress from '@material-ui/core/CircularProgress';
+import download from 'downloadjs';
 
 export default class Profile_view extends React.Component {
 
@@ -21,23 +22,26 @@ export default class Profile_view extends React.Component {
             }
         };
 
-        this.state = { fileName :fileName_str};
+        this.state = { fileName :fileName_str };
 		this.query_result = this.query_result.bind(this);
     }
 
 	query_result(){
 
-		if(this.state.profile_result_all == undefined){
+		if(this.state.profile_result_zip == undefined){
 			fetch('api/profiling/profile/' + window.batchid, { method:'GET'})
 			.then(response => response.json())
 			.then(result => this.setState(state => ({
-                profile_result_all: result.file,
                 profile_result_zip: result.zip })));
 		}else{
 			clearInterval(this.interval);
 		}
 
 	}
+
+    getIdFile(){
+        download(window.batchid,'BatchId.txt',"text/tab-separated-values");
+    }
 
 	componentDidMount(){
 		this.query_result();
@@ -50,7 +54,7 @@ export default class Profile_view extends React.Component {
 
     render() {
 
-    	if(this.state.profile_result_all == undefined){
+    	if(this.state.profile_result_zip == undefined){
 
     		return(
     			<div>
@@ -58,6 +62,10 @@ export default class Profile_view extends React.Component {
                     <br />
                     <div style={{ display:'flex', justifyContent:'center', alignItems:'center'}}>
                         <font size="6"> ID : {window.batchid}</font>
+                        &nbsp;&nbsp;&nbsp;&nbsp;
+                        <Button variant="contained" color="default" onClick={this.getIdFile}>
+                            Get ID
+                        </Button>
                     </div>
                     <br />
                     <div style={{ display:'flex', justifyContent:'center', alignItems:'center'}}>
@@ -72,7 +80,7 @@ export default class Profile_view extends React.Component {
                     <br />
                     <br />
                     <div style={{ display:'flex', justifyContent:'center', alignItems:'center'}}>
-                        <img src={require('./static/waiting.svg')} />
+                        <CircularProgress size={175} />
                     </div>
                     <br />
                     <br />
@@ -85,11 +93,6 @@ export default class Profile_view extends React.Component {
     				<div>
                         <br />
                         <br />
-    					<br />
-                        <br />
-                        <br />
-                        <br />
-                        <br />
                         <br />
                         <br />
                         <br />
@@ -100,16 +103,6 @@ export default class Profile_view extends React.Component {
                              style={{ textDecoration:'none' }}>
                                 <Button variant="contained" color="default">
                                 Download profiles (.zip)
-                                &nbsp;&nbsp;
-                                <DownloadIcon />
-                                </Button>
-                            </a>
-                            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-                            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-                            <a download href={this.state.profile_result_all} 
-                             style={{ textDecoration:'none' }}>
-                                <Button variant="contained" color="default">
-                                Download profiles (.tsv)
                                 &nbsp;&nbsp;
                                 <DownloadIcon />
                                 </Button>
