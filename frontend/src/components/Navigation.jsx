@@ -33,12 +33,10 @@ export default class Navigation extends React.Component {
                     <Tab style={{ fontSize:'16px',textTransform:'none' }} disabled={window.tabSwitch} 
                     label="Strain Tracking" component={Link} to="/tracking" />
                     <Tab style={{ fontSize:'16px',textTransform:'none' }} disabled={window.tabSwitch} 
-                    label="Search Database" component={Link} to="/tracking_search" />
-                    <Tab style={{ fontSize:'16px',textTransform:'none' }} disabled={window.tabSwitch} 
                     label="Clustering" component={Link} to="/upload_profile" />
                     <Tab style={{ fontSize:'16px',textTransform:'none' }} disabled={window.tabSwitch} 
                     label="Example" component={Link} to="/demo" />
-                    <Tab style={{ fontSize:'16px',textTransform:'none' }} disabled={window.tabSwitch} 
+                    <Tab style={{ fontSize:'16px',textTransform:'none' }} disabled={true} 
                     label="Tutorial" component={Link} to="/tutorial" />
                 </Tabs>
             </Paper>

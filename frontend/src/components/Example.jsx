@@ -106,12 +106,6 @@ export default class Example extends React.Component {
 	                    &nbsp;&nbsp;
 	                    <DownloadIcon />
                     </Button>
-                    &nbsp;&nbsp;&nbsp;&nbsp;
-	                <Button variant="contained" color="default" onClick={this.download_tsv.bind(this)}>
-	                    Download profiles (.tsv)
-	                    &nbsp;&nbsp;
-	                    <DownloadIcon />
-                    </Button>
 	            </div>
 				<br />
 				<br />

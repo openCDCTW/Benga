@@ -16,7 +16,7 @@ export default class Dendrogram_view extends React.Component {
 	query_dengrogram(){
 		
 		if(this.state.png_file == undefined){
-			fetch('api/dendrogram/dendrogram/' + window.batchid, { method: 'GET'})
+			fetch('api/dendrogram/dendrogram/' + window.clusteringID, { method: 'GET'})
 			.then(response => response.json())
 			.then(result => this.setState(state => ({
 				png_file: result.png_file, 

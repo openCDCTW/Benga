@@ -59,22 +59,24 @@ class Upload_contigs extends React.Component {
         };
 
         this.djsConfig = {
-            dictDefaultMessage:"Drop contig file(s) here",
+            dictDefaultMessage:"Drag contig file(s) here (up to 100 files)",
             dictRemoveFile:"Remove",
             addRemoveLinks: true,
             maxFilesize:10,
             acceptedFiles: ".fasta,.fa,.fna",
             autoProcessQueue: false,
-            parallelUploads: 200,
+            parallelUploads: 100,
             init:function(){
                 this.on("addedfile", function(on_load_header_data){
                     
                 });
                 this.on("sending", function(file, xhr, formData){
                     formData.append("batch_id", window.batchid);
+                    formData.append("database", window.databaseName);
+                    formData.append("occurrence", 95);
+                    window.fileName.push(file.name);
                 });
                 this.on("success", function(file){
-                    window.fileName.push(file.name);
                     file._removeLink.remove();
                     delete file._removeLink;
                 });
@@ -98,6 +100,9 @@ class Upload_contigs extends React.Component {
         if(fileCheck < 1){
             alert('Please upload contigs file first');
             return ;
+        }else if(fileCheck > 100){
+            alert('Cannot upload more than 100 files');
+            return ;
         }
 
         if(window.databaseName == ""){
@@ -105,30 +110,22 @@ class Upload_contigs extends React.Component {
             return ;
         }
 
+        this.setState(state => ({ upload_confirm: true ,switch: true }));
+        window.tabSwitch = true;
+
         this.dropzone.processQueue();
-        this.setState(state => ({ upload_confirm: true , to: '/profile_view' ,
-            switch: true }));
-    }
-
-    submit(){
-
-        if (this.state.upload_confirm == false){
-            alert('Please upload files first! (At least 5 files)');
-            return ;
-        }
 
         var scheme = {};
-        scheme.occurrence = "95";
-        scheme.database = window.databaseName;
-        scheme.id = window.batchid;
-        fetch('api/profiling/profiling-tree/', {
-            method:'POST',
+        scheme.seq_num = this.dropzone.files.length;
+        console.log(scheme.seq_num);
+        console.log(this.dropzone.files.length);
+        fetch('api/profiling/upload/' + window.batchid + '/', { 
+            method:'PATCH',
             headers: new Headers({'content-type': 'application/json'}),
             body: JSON.stringify(scheme)
         });
 
-        window.tabSwitch = true;
-
+        this.props.history.push("/profile_view");
     }
 
     remove(){
@@ -158,17 +155,7 @@ class Upload_contigs extends React.Component {
         fetch('api/profiling/profile/' + this.state.querybyID, { method:'GET'})
             .then(response => response.json())
             .then(result => this.setState(state => ({
-                profile_result_all: result.file,
-                profile_result_zip: result.zip,})));
-
-        fetch('api/dendrogram/dendrogram/' + this.state.querybyID, { method: 'GET'})
-            .then(response => response.json())
-            .then(result => this.setState(state => ({
-                png_file: result.png_file, 
-                pdf_file: result.pdf_file,
-                svg_file: result.svg_file, 
-                emf_file: result.emf_file, 
-                newick_file: result.newick_file, })));
+                profile_result_zip: result.zip })));
     }
 
     upload_example_data(){
@@ -188,12 +175,21 @@ class Upload_contigs extends React.Component {
             { name:"V.cholerae_012.fa" },
         ];
 
+        var scheme = {};
+        scheme.seq_num = 12;
+        fetch('api/profiling/upload/' + window.batchid + '/', { 
+            method:'PATCH',
+            headers: new Headers({'content-type': 'application/json'}),
+            body: JSON.stringify(scheme)
+        });
+
         let i = 0;
         for(i; i < exampleFile.length; i++){
             this.dropzone.emit("addedfile", exampleFile[i]);
             this.dropzone.emit("success", exampleFile[i]);
             this.dropzone.emit("complete", exampleFile[i]);
             this.dropzone.files.push(exampleFile[i]);
+            window.fileName.push(exampleFile[i].name);
         };
 
         let encodeExampleData = [
@@ -239,39 +235,43 @@ class Upload_contigs extends React.Component {
         let k = 0;
         let upload_status = [];
 
+        window.databaseName = "Vibrio_cholerae";
+        window.tabSwitch = true;
+
         for(k; k < decodeExampleFile.length; k++){
             let form = new FormData();
             form.append('file',decodeExampleFile[k]);
             form.append('batch_id',window.batchid);
+            form.append('occurrence',"95");
+            form.append('database',window.databaseName);
 
             fetch('api/profiling/sequence/', {
                 method:'POST',
                 body:form ,
             }).then(res => upload_status.push(res.status));
         };
-
-        window.databaseName = "Vibrio_cholerae";
-        window.tabSwitch = true;
-
+      
         this.setState(state => ({ switch: true }));
 
-        function trigger_celery(){
+        this.props.history.push("/profile_view");
 
-            if( upload_status.length == 12 ){
-                let scheme = {};
-                scheme.occurrence = "95";
-                scheme.database = window.databaseName;
-                scheme.id = window.batchid;
-                fetch('api/profiling/profiling-tree/', {
-                    method:'POST',
-                    headers: new Headers({'content-type': 'application/json'}),
-                    body: JSON.stringify(scheme)
-                });
-                clearInterval(interval);
-            }
-        };
+        // function trigger_celery(){
 
-        let interval = setInterval(trigger_celery,1500);
+        //     if( upload_status.length == 12 ){
+        //         let scheme = {};
+        //         scheme.occurrence = "95";
+        //         scheme.database = window.databaseName;
+        //         scheme.id = window.batchid;
+        //         fetch('api/profiling/profiling-tree/', {
+        //             method:'POST',
+        //             headers: new Headers({'content-type': 'application/json'}),
+        //             body: JSON.stringify(scheme)
+        //         });
+        //         clearInterval(interval);
+        //     }
+        // };
+
+        // let interval = setInterval(trigger_celery,1500);
     }
 
     back(){
@@ -287,7 +287,7 @@ class Upload_contigs extends React.Component {
             init: dz => this.dropzone = dz,}
         const { classes } = this.props;
 
-        if(this.state.profile_result_all == undefined){
+        if(this.state.profile_result_zip == undefined){
             return (
             <div>
                 <br />
@@ -318,10 +318,8 @@ class Upload_contigs extends React.Component {
                 <div style = {{ display:'flex', justifyContent:'center', alignItems:'center' }}>
                     <Button variant="contained" color="default" 
                      onClick={this.upload_example_data.bind(this)}>
-                        <Link to="/profile_view" style={{ textDecoration:'none', color:'#000' }}>
-                            Example
-                            &nbsp;&nbsp;
-                        </Link>
+                        Example
+                        &nbsp;&nbsp;
                         <CloudUploadIcon />
                     </Button>
                     &nbsp;&nbsp;&nbsp;&nbsp;
@@ -331,14 +329,6 @@ class Upload_contigs extends React.Component {
                         &nbsp;&nbsp;
                         <CloudUploadIcon />
                     </Button>
-                    &nbsp;&nbsp;&nbsp;&nbsp;
-                    <Link to={this.state.to} style={{ textDecoration:'none' }}>
-                        <Button variant="contained" color="primary" onClick={this.submit.bind(this)}>
-                            profiling
-                            &nbsp;&nbsp;
-                            <Icon>send</Icon>
-                        </Button>
-                    </Link>
                 </div>
                 <br />
                 <br />
@@ -368,16 +358,8 @@ class Upload_contigs extends React.Component {
                         <br />
                         <br />
                         <br />
+                        <br />
                         <div style={{ display:'flex', justifyContent:'center', alignItems:'center'}}>
-                            <a download href={this.state.profile_result_all} 
-                             style={{ textDecoration:'none' }}>
-                                <Button variant="contained" color="default">
-                                Download profiles (.tsv)
-                                &nbsp;&nbsp;
-                                <DownloadIcon />
-                                </Button>
-                            </a>
-                            &nbsp;&nbsp;&nbsp;&nbsp;
                             <a download href={this.state.profile_result_zip} 
                              style={{ textDecoration:'none' }}>
                                 <Button variant="contained" color="default">
@@ -389,47 +371,7 @@ class Upload_contigs extends React.Component {
                         </div>
                         <br />
                         <br />
-                        <div style={{ display:'flex', justifyContent:'center', alignItems:'center'}}>
-                            <img src={this.state.svg_file} />
-                        </div>
                         <br />
-                        <div style={{ display:'flex', justifyContent:'center', alignItems:'center'}}>
-                            <font size="4">Download Dendrogram</font>
-                        </div>
-                        <br />
-                        <br />
-                        <div style={{ display:'flex', justifyContent:'center', alignItems:'center'}}>
-                            
-                            <a download href={this.state.png_file} style={{ textDecoration:'none' }}>
-                                <Button variant="contained" color="default">
-                                Png 
-                                </Button>
-                            </a>
-                            &nbsp;&nbsp;&nbsp;&nbsp;
-                            <a download href={this.state.pdf_file} style={{ textDecoration:'none' }}>
-                                <Button variant="contained" color="default">
-                                Pdf
-                                </Button>
-                            </a>
-                            &nbsp;&nbsp;&nbsp;&nbsp;
-                            <a download href={this.state.svg_file} style={{ textDecoration:'none' }}>
-                                <Button variant="contained" color="default">
-                                Svg
-                                </Button>
-                            </a>
-                            &nbsp;&nbsp;&nbsp;&nbsp;
-                            <a download href={this.state.emf_file} style={{ textDecoration:'none' }}>
-                                <Button variant="contained" color="default">
-                                emf
-                                </Button>
-                            </a>
-                            &nbsp;&nbsp;&nbsp;&nbsp;
-                            <a download href={this.state.newick_file} style={{ textDecoration:'none' }}>
-                                <Button variant="contained" color="default">
-                                newick
-                                </Button>
-                            </a>
-                        </div>
                         <br />
                         <br />
                         <div style={{ display:'flex', justifyContent:'center', alignItems:'center' }}>

@@ -12,7 +12,6 @@ import Tracking from './Tracking.jsx';
 import Example from './Example.jsx';
 import Tutorial from './Tutorial.jsx';
 import Tracking_result from './TrackingResult.jsx';
-import Tracking_search from './TrackingSearch.jsx';
 import About from './About.jsx';
 
 class Main extends React.Component {
@@ -39,7 +38,6 @@ class Main extends React.Component {
                     <Route path="/dendrogram_view" component={Dendrogram_view} />
                     <Route path="/tracking" component={Tracking} />
                     <Route path="/tracking_result" component={Tracking_result} />
-                    <Route path="/tracking_search" component={Tracking_search} />
                     <Route path="/about" exact component={About} />
                     <Route path="/demo" component={Example} />
                     <Route path="/tutorial" component={Tutorial} />

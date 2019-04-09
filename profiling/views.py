@@ -6,6 +6,7 @@ from django.http import Http404
 from profiling.models import Batch, Sequence, Profile
 from profiling.serializers import BatchSerializer, SequenceSerializer, ProfileSerializer
 from profiling.tasks import single_profiling, zip_save
+import time
 
 
 class BatchList(generics.ListCreateAPIView):
