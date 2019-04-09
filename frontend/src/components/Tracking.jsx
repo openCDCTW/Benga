@@ -16,7 +16,14 @@ import CloudUploadIcon from '@material-ui/icons/CloudUpload';
 import Icon from '@material-ui/core/Icon';
 import DeleteIcon from '@material-ui/icons/Delete';
 import green from '@material-ui/core/colors/green';
-
+//search
+import TextField from '@material-ui/core/TextField';
+import Paper from '@material-ui/core/Paper';
+import Tabs from '@material-ui/core/Tabs';
+import Tab from '@material-ui/core/Tab';
+import SearchIcon from '@material-ui/icons/Search';
+import Typography from '@material-ui/core/Typography';
+import OutlinedInput from '@material-ui/core/OutlinedInput';
 
 const styles = theme => ({
     buttoncss:{
@@ -37,6 +44,26 @@ const styles = theme => ({
 	selectEmpty: {
 	    marginTop: theme.spacing.unit * 2,
 	},
+        textField:{
+        marginLeft: '19px',
+        marginTop: '25px',
+        width:'22.5%'
+    },
+    container:{
+        display:'flex',
+        flexWrap:'wrap',
+    },
+    numberField:{
+        marginLeft: '19px',
+        marginTop: '20px',
+        marginRight: '10px',
+        width:'110px'
+    },
+    countrySelect:{
+        marginLeft: '19px',
+        marginTop: '25px',
+        width: '22.5%',
+    }
     
 })
 
@@ -46,15 +73,22 @@ class Tracking extends React.Component {
 	constructor(props) {
 
 		super(props);
+
+        let nowYear = new Date();
+
 		this.state = {
 			to: "/tracking",
             upload_confirm: false,
             allele_db:"Vibrio_cholerae",
             profile_db:"Vibrio_cholerae",
+            yearError: false,
+            country: '',
+            labelWidth: 0,
+            nowYear: nowYear.getFullYear(),
 		};
 
 		this.djsConfig = {
-            dictDefaultMessage:"Drop a cgMLST profile here",
+            dictDefaultMessage:"Drag a cgMLST profile here",
             dictRemoveFile:"Remove",
             addRemoveLinks: true,
             acceptedFiles: ".tsv",
@@ -75,11 +109,17 @@ class Tracking extends React.Component {
         this.componentConfig = {
             iconFiletypes: ['.tsv'],
             showFiletypeIcon: true,
-            postUrl: 'api/tracking/sequence/'
+            postUrl: 'api/tracking/profile/'
         };
 
         this.dropzone = null;
 	}
+
+    componentDidMount() {
+        // this.setState({
+        //   labelWidth: ReactDOM.findDOMNode(this.InputLabelRef).offsetWidth,
+        // });
+    }
 
     handlePost() {
     
@@ -106,7 +146,6 @@ class Tracking extends React.Component {
 
 	    var scheme = {};
 	    scheme.id = window.trackingID ;
-	    scheme.allele_db = this.state.allele_db;
         scheme.profile_db = this.state.profile_db;
 	    fetch('api/tracking/tracking/', {
 	        method:'POST',
@@ -130,6 +169,79 @@ class Tracking extends React.Component {
                 [event.target.name]: event.target.value,
                 profile_db:"vibrio-profiles",
             }));
+        }
+    }
+
+    _onKeyPress(event){
+        if(event.charCode === 13){
+            event.preventDefault();
+        }
+    }
+
+    bioSampleHandleChange(event){
+        this.setState(state => ({ bioSampleID: this.biosample.value }));
+    }
+
+    strainHandleChange(event){
+        this.setState(state => ({ strain: this.strain.value }));
+    }
+
+    yearFromHandleChange(event){
+        let year_from = Number.parseInt(this.yearFrom.value, 10);
+
+        if( this.yearFrom.value == year_from ){
+            if( year_from > 0 && year_from <= this.state.nowYear ){
+                this.setState(state => ({ 
+                    yearFrom: this.yearFrom.value , 
+                    yearError:false
+                }));
+            }else{
+                this.yearFrom.value = '';
+                this.setState(state => ({ yearFrom: undefined }));
+            }
+        }else{
+            this.yearFrom.value = '';
+            this.setState(state => ({ yearFrom: undefined }));
+        }
+    }
+
+    yearToHandleChange(event){
+        let year_To = Number.parseInt(this.yearTo.value, 10);
+        
+        if( this.yearTo.value == year_To ){
+            if( year_To > 0 && year_To <= this.state.nowYear ){
+                this.setState(state => ({ 
+                    yearTo: this.yearTo.value, 
+                    yearError: false
+                }));
+            }else{
+                this.yearTo.value = '';
+                this.setState(state => ({ yearTo: undefined }));
+            }
+        }else{
+            this.yearTo.value = '';
+            this.setState(state => ({ yearTo: undefined }));
+        }
+    }
+
+    countryHandleChange(event){
+        this.setState(state => ({ [event.target.name]: event.target.value }));
+    }
+
+    serotypeHandleChange(event){
+        this.setState(state => ({ serotype: this.serotype.value }));
+    }
+
+    search(){
+        console.log(this.state.bioSampleID);
+        console.log(this.state.strain);
+        console.log(Number.parseInt(this.state.yearFrom, 10));
+        console.log(Number.parseInt(this.state.yearTo, 10));
+        console.log(this.state.serotype);
+
+        if( this.state.yearFrom > this.state.yearTo ){
+            this.setState(state => ({ yearError: true }));
+            alert('Input year error');
         }
     }
 
@@ -211,3 +323,133 @@ class Tracking extends React.Component {
 }
 
 export default withStyles(styles)(Tracking);
+
+
+
+                // <div>
+                //     <Paper>
+                //         <div>
+                //             <br />
+                //             <Typography style={{ marginLeft:'20px', fontSize:'25px', fontWeight:'500' }}>
+                //                 Search database
+                //             </Typography>
+                //             <form className={classes.container}>
+                //                 <TextField
+                //                     inputRef={ID => this.biosample = ID}
+                //                     label="BioSample ID"
+                //                     type="search"
+                //                     placeholder="Input BioSample ID here"
+                //                     onChange={this.bioSampleHandleChange.bind(this)}
+                //                     className={classes.textField}
+                //                     onKeyPress={this._onKeyPress}
+                //                     margin="normal"
+                //                     variant="outlined"
+                //                 />
+                //                 <TextField
+                //                     inputRef={ID => this.strain = ID}
+                //                     label="Strain ID"
+                //                     type="search"
+                //                     placeholder="Input strain ID here"
+                //                     onChange={this.strainHandleChange.bind(this)}
+                //                     className={classes.textField}
+                //                     onKeyPress={this._onKeyPress}
+                //                     margin="normal"
+                //                     variant="outlined"
+                //                 />
+                //                 <TextField
+                //                     inputRef={ID => this.serotype = ID}
+                //                     label="ST"
+                //                     type="search"
+                //                     placeholder="Input serotype here"
+                //                     onChange={this.serotypeHandleChange.bind(this)}
+                //                     className={classes.textField}
+                //                     onKeyPress={this._onKeyPress}
+                //                     margin="normal"
+                //                     variant="outlined"
+                //                 />
+                //                 <FormControl variant="outlined" className={classes.countrySelect}>
+                //                     <InputLabel
+                //                         ref={ref => {
+                //                           this.InputLabelRef = ref;
+                //                         }}
+                //                     >
+                //                     Country
+                //                     </InputLabel>
+                //                     <Select
+                //                     value={this.state.country}
+                //                     onChange={this.countryHandleChange.bind(this)}
+                //                     name="country"
+                //                     input={
+                //                             <OutlinedInput
+                //                             labelWidth={this.state.labelWidth}
+                //                             name="country"
+                //                             />
+                //                         }
+                //                     MenuProps={{
+                //                         PaperProps: {
+                //                             style: {
+                //                                 maxHeight: 49 * 4.5 + 8,
+                //                             },
+                //                           },
+                //                       }}
+                //                     >
+                //                         <MenuItem value=''>Any</MenuItem>
+                //                         <MenuItem value='Taiwan'>Taiwan</MenuItem>
+                //                         <MenuItem value='China'>China</MenuItem>
+                //                         <MenuItem value='Russia'>Russia</MenuItem>
+                //                         <MenuItem value='Ukraine'>Ukraine</MenuItem>
+                //                         <MenuItem value='USA'>USA</MenuItem>
+                //                     </Select>
+                //                 </FormControl>
+                //             </form>
+                //         </div>
+                //         <div>
+                //             <form className={classes.container}>
+                //                 <TextField
+                //                     label="Year"
+                //                     inputRef={year => this.yearFrom = year}
+                //                     type="number"
+                //                     onChange={this.yearFromHandleChange.bind(this)}
+                //                     className={classes.numberField}
+                //                     inputProps={{ 
+                //                         style:{ textAlign: 'center'},
+                //                     }}
+                //                     margin="normal"
+                //                     variant="outlined"
+                //                     error={this.state.yearError}
+                //                 />
+                //                 &nbsp;&nbsp;
+                //                 <Typography style={{ fontSize:'18px', display:'flex', justifyContent:'center', 
+                //                 alignItems:'center'}}>to</Typography>
+                //                 &nbsp;&nbsp;
+                //                 <TextField
+                //                     label="Year"
+                //                     inputRef={year => this.yearTo = year}
+                //                     type="number"
+                //                     onChange={this.yearToHandleChange.bind(this)}
+                //                     className={classes.numberField}
+                //                     inputProps={{ 
+                //                         style:{ textAlign: 'center'},
+                //                     }}
+                //                     margin="normal"
+                //                     variant="outlined"
+                //                     error={this.state.yearError}
+                //                 />
+                //             </form>
+                //         </div>
+                //         <br />
+                //         <div style={{ width:'97%', display:'flex', justifyContent:'flex-end', 
+                //                 alignItems:'flex-end'}}>
+                //             <Button variant="contained" color="default" onClick={this.search.bind(this)}>
+                //                 Search
+                //                 &nbsp;&nbsp;
+                //                 <SearchIcon />
+                //             </Button>
+                //         </div>
+                //         <br />
+                //     </Paper>
+                //     <br />
+                //     <br />
+                //     <br />
+                //     <br />
+                // </div>
