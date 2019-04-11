@@ -9,8 +9,8 @@ from django.conf import settings
 from django.core.files import File
 
 from dendrogram.serializers import DendrogramSerializer
+from dendrogram.models import Batch
 from src.algorithms import clustering
-from src.utils import files
 
 
 def read_profiles(input_dir):
@@ -53,12 +53,26 @@ def save(batch_id, linkage, emf_filename, newick_filename, pdf_filename, png_fil
         print(serializer.errors)
 
 
+def get_prof_number(batch_id):
+    return Batch.objects.get(pk=batch_id).prof_num
+
+
+def get_linkage(batch_id):
+    return Batch.objects.get(pk=batch_id).linkage
+
+
+def get_file_number(dir, ext=".tsv"):
+    return len(list(filter(lambda x: x.endswith(ext), os.listdir(dir))))
+
+
 @shared_task
-def plot_dendrogram(batch_id, linkage):
+def plot_dendrogram(batch_id):
     input_dir = os.path.join(settings.MEDIA_ROOT, "uploads", batch_id)
     output_dir = os.path.join(settings.MEDIA_ROOT, "temp", batch_id)
     os.makedirs(output_dir, exist_ok=True)
-
-    emf_filename, newick_filename, pdf_filename, png_filename, svg_filename = plot(input_dir, output_dir, linkage)
-    save(batch_id, linkage, emf_filename, newick_filename, pdf_filename, png_filename, svg_filename)
-    shutil.rmtree(output_dir)
+    prof_num = get_prof_number(batch_id)
+    if prof_num == get_file_number(output_dir):
+        linkage = get_linkage(batch_id)
+        emf_file, newick_file, pdf_file, png_file, svg_file = plot(input_dir, output_dir, linkage)
+        save(batch_id, linkage, emf_file, newick_file, pdf_file, png_file, svg_file)
+        shutil.rmtree(output_dir)
