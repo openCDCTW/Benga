@@ -66,6 +66,19 @@ class SequenceDetail(APIView):
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
+class BatchSequenceDetail(APIView):
+    def get_object(self, batch_id):
+        try:
+            return Sequence.objects.get(batch_id=batch_id)
+        except Sequence.DoesNotExist:
+            raise Http404
+
+    def get(self, request, batch_id, format=None):
+        sequence = self.get_object(batch_id)
+        serializer = SequenceSerializer(sequence)
+        return Response(serializer.data)
+
+
 class ProfileList(generics.ListCreateAPIView):
     queryset = Profile.objects.all()
     serializer_class = ProfileSerializer
