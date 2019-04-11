@@ -5,7 +5,7 @@ from dendrogram.models import Batch, Profile, Dendrogram
 class BatchSerializer(serializers.ModelSerializer):
     class Meta:
         model = Batch
-        fields = ('id', 'created')
+        fields = ('id', 'created', 'prof_num', 'linkage')
 
 
 class ProfileSerializer(serializers.ModelSerializer):
@@ -18,9 +18,3 @@ class DendrogramSerializer(serializers.ModelSerializer):
     class Meta:
         model = Dendrogram
         fields = ('id', 'created', 'linkage', 'png_file', 'pdf_file', 'svg_file', 'emf_file', 'newick_file')
-
-
-class PlotingSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Dendrogram
-        fields = ('id', 'linkage')
