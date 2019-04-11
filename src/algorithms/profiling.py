@@ -16,13 +16,6 @@ from src.utils import files, cmds, operations, logs, seq
 from src.utils import db
 from src.utils.alleles import filter_duplicates
 
-MLST = ["aroC_1", "aroC_2", "aroC_3", "dnaN", "hemD", "hisD", "purE", "sucA_1", "sucA_2", "thrA_2", "thrA_3"]
-virulence_genes = ["lpfA", "lpfA_1", "lpfA_2", "lpfA_3", "lpfA_4", "lpfB", "lpfB_1", "lpfB_2", "lpfC", "lpfC_1",
-                   "lpfD", "lpfD_1", "lpfD_2", "lpfE", # "lpfC''", "lpfC''_1", "lpfC''_2", "lpfC'_3",
-                   "fimA_1", "fimA_2", "fimA_4", "fimA_5", "fimA_6", "fimC_1", "fimC_2", "fimC_3",
-                   "fimD_1", "fimD_2", "fimD_3", "fimD_4", "fimD_5", "fim_2", "viaA_1", "viaA_2",
-                   "fur_1", "fur_2", "rpoS", "rpoS_1", "rpoS_2", "spvB", "spvB_1", "spvB_2", "spvC"]
-
 # class Profiler(metaclass=abc.ABCMeta):
 #     def __init__(self):
 #         raise NotImplementedError()
@@ -141,7 +134,7 @@ def add_new_alleles(id_allele_list, ref_db, temp_dir, ref_len):
 
 def profiling(output_dir, input_dir, database, threads, occr_level=None, selected_loci=None,
               profile_file="profile", enable_adding_new_alleles=True, generate_profiles=True,
-              logger=None, debug=False):
+              generate_bn=True, logger=None, debug=False):
     if not logger:
         lf = logs.LoggerFactory()
         lf.addConsoleHandler()
@@ -151,11 +144,10 @@ def profiling(output_dir, input_dir, database, threads, occr_level=None, selecte
     pid = uuid.uuid4().hex[0:8]
 
     logger.info("Formating contigs...")
-    query_dir = os.path.join(output_dir, "query")
+    query_dir = os.path.join(output_dir, "query_{}".format(pid))
     os.makedirs(query_dir, exist_ok=True)
     contighandler = files.ContigHandler()
-    contighandler.new_format(input_dir, query_dir, replace_ext=True)
-    namemap = contighandler.namemap
+    contighandler.new_format(input_dir, query_dir)
 
     model = re.search('[a-zA-Z]+\w[a-zA-Z]+', database).group(0)
     logger.info("Used model: {}".format(model))
@@ -168,7 +160,7 @@ def profiling(output_dir, input_dir, database, threads, occr_level=None, selecte
         selected_loci = set(db.from_sql(query, database=database).iloc[:, 0])
 
     logger.info("Making reference blastdb for blastp...")
-    temp_dir = os.path.join(query_dir, "temp")
+    temp_dir = os.path.join(query_dir, "temp_{}".format(pid))
     os.makedirs(temp_dir, exist_ok=True)
     ref_db = os.path.join(temp_dir, "ref_blastpdb_{}".format(pid))
     ref_len = make_ref_blastpdb(ref_db, database)
@@ -192,10 +184,10 @@ def profiling(output_dir, input_dir, database, threads, occr_level=None, selecte
             collect.append(profile)
             allele_counts.update(alleles.keys())
         result = pd.concat(collect, axis=1)
-        result.columns = list(map(lambda x: namemap[x], result.columns))
         result.to_csv(os.path.join(output_dir, profile_file + ".tsv"), sep="\t")
-        bio = to_bionumerics_format(result)
-        bio.to_csv(os.path.join(output_dir, "bionumerics_{}.csv".format(pid)), index=False)
+        if generate_bn:
+            bio = to_bionumerics_format(result)
+            bio.to_csv(os.path.join(output_dir, "bionumerics_{}.csv".format(pid)), index=False)
     else:
         logger.info("Not going to output profiles.")
         for genome_id, alleles in id_allele_list:
@@ -204,6 +196,6 @@ def profiling(output_dir, input_dir, database, threads, occr_level=None, selecte
     allele_counts = pd.DataFrame(allele_counts, index=[0]).T\
         .reset_index().rename(columns={"index": "allele_id", 0: "count"})
     update_allele_counts(allele_counts, database, "batch_add_counts_{}".format(pid))
-    if not debug:
+    if not debug and os.path.exists(query_dir):
         shutil.rmtree(query_dir)
     logger.info("Done!")

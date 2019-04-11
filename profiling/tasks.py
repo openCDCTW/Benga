@@ -67,7 +67,7 @@ def single_profiling(seq_id, batch_id, database, occr_level):
     output_dir = os.path.join(settings.MEDIA_ROOT, "temp", batch_id)
     os.makedirs(output_dir, exist_ok=True)
     profiling.profiling(output_dir, input_dir, database, occr_level=occr_level,
-                        threads=2, profile_file=get_filename(seq_id))
+                        threads=2, profile_file=get_filename(seq_id), generate_bn=False)
     return batch_id, output_dir, database, occr_level
 
 
@@ -75,7 +75,7 @@ def single_profiling(seq_id, batch_id, database, occr_level):
 def zip_save(args):
     batch_id, output_dir, database, occr_level = args
     seq_num = get_seq_number(batch_id)
-    if seq_num == get_file_number(output_dir):
+    if os.path.exists(output_dir) and seq_num == get_file_number(output_dir):
         zip_filename = zip_folder(output_dir)
         save(batch_id, database, occr_level, zip_filename)
         shutil.rmtree(output_dir)
