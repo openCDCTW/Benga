@@ -40,7 +40,7 @@ def dendrograms_newick_path(instance, filename):
 class Batch(models.Model):
     id = models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, null=False, auto_created=True)
     created = models.DateTimeField(auto_now_add=True)
-    prof_num = models.SmallIntegerField(null=True)
+    prof_num = models.SmallIntegerField(null=True)git add git
     linkage = models.CharField(max_length=100, choices=LINKAGE_CHOICES)
 
 
