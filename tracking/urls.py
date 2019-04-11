@@ -7,5 +7,4 @@ urlpatterns = [
     path('profile/<uuid:pk>/', views.ProfileDetail.as_view(), name="profile-detail"),
     path('results/', views.TrackedResultsList.as_view(), name="results-list"),
     path('results/<uuid:pk>/', views.TrackedResultsDetail.as_view(), name="results-detail"),
-    path('tracking/', views.Tracking.as_view(), name="tracking"),
 ]
