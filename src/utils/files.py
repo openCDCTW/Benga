@@ -33,7 +33,7 @@ class ContigHandler:
 
     def new_format(self, from_dir, to_dir):
         for filename in sorted(os.listdir(from_dir)):
-            newname = self.replace_ext(filename)
+            newname = self.replace_ext(filename) + ".fa"
             source_file = os.path.join(from_dir, filename)
             sink_file = os.path.join(to_dir, newname)
             self.__write_new_format(source_file, sink_file)
