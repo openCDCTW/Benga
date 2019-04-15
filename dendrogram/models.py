@@ -41,7 +41,7 @@ class Batch(models.Model):
     id = models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, null=False, auto_created=True)
     created = models.DateTimeField(auto_now_add=True)
     prof_num = models.SmallIntegerField(null=True)
-    linkage = models.CharField(max_length=100, choices=LINKAGE_CHOICES, null=False)
+    linkage = models.CharField(max_length=100, choices=LINKAGE_CHOICES)
 
 
 class Profile(models.Model):
