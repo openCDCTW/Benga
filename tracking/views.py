@@ -19,7 +19,7 @@ class ProfileList(generics.ListCreateAPIView):
         serializer = ProfileSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
-            track.s(str(serializer.data["id"]), str(serializer.data["profile_db"]))()
+            track.delay(str(serializer.data["id"]), str(serializer.data["profile_db"]))
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
