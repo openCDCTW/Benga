@@ -40,7 +40,7 @@ class ProfileList(generics.ListCreateAPIView):
         serializer = ProfileSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
-            plot_dendrogram.s(str(serializer.data["id"]))()
+            plot_dendrogram.delay(str(serializer.data["batch_id"]))
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
