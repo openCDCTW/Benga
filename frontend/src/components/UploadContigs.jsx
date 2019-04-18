@@ -14,17 +14,17 @@ import SearchBar from './SearchBar.jsx';
 import Paper from '@material-ui/core/Paper';
 import Tabs from '@material-ui/core/Tabs';
 import Tab from '@material-ui/core/Tab';
-import green from '@material-ui/core/colors/green';
+import blue from '@material-ui/core/colors/blue';
 // import { Scrollbars } from 'react-custom-scrollbars';
 import download from 'downloadjs';
 
 
 const styles = theme => ({
     cssRoot:{
-        color: theme.palette.getContrastText(green[600]),
-        backgroundColor: green[500],
+        color: theme.palette.getContrastText(blue[900]),
+        backgroundColor: blue[900],
         '&:hover': {
-            backgroundColor:green[600],
+            backgroundColor:blue[600],
         },
     }
 })
@@ -53,8 +53,6 @@ class Upload_contigs extends React.Component {
         window.fileName = [];
 
         this.state = {
-            to: "/",
-            upload_confirm: false,
             switch: false,
         };
 
@@ -110,15 +108,13 @@ class Upload_contigs extends React.Component {
             return ;
         }
 
-        this.setState(state => ({ upload_confirm: true ,switch: true }));
-        window.tabSwitch = true;
+        this.setState(state => ({ switch: true }));
 
         this.dropzone.processQueue();
 
         var scheme = {};
         scheme.seq_num = this.dropzone.files.length;
-        console.log(scheme.seq_num);
-        console.log(this.dropzone.files.length);
+        //database ,file 
         fetch('api/profiling/upload/' + window.batchid + '/', { 
             method:'PATCH',
             headers: new Headers({'content-type': 'application/json'}),
@@ -131,7 +127,7 @@ class Upload_contigs extends React.Component {
     remove(){
         
         this.dropzone.removeAllFiles();
-        this.setState(state => ({ to: '/', upload_confirm: false, switch: false }));
+        this.setState(state => ({ switch: false }));
         window.fileName.length = 0;
 
         fetch('api/profiling/upload/', {method:'POST'})
@@ -148,14 +144,16 @@ class Upload_contigs extends React.Component {
 
     query(){
 
-        fetch('api/profiling/profile/' + this.state.querybyID, { method:'GET'})
+        fetch('api/profiling/profile/' + this.state.querybyID + '/', { method:'GET'})
         .then(response => response.json())
-        .catch(error => alert("Data not found"));
+        .then(result => this.setState(state => ({
+                profile_result_zip: result.zip })))
+        .catch(error => alert("Not found"));
 
-        fetch('api/profiling/profile/' + this.state.querybyID, { method:'GET'})
-            .then(response => response.json())
-            .then(result => this.setState(state => ({
-                profile_result_zip: result.zip })));
+        // fetch('api/profiling/profile/' + this.state.querybyID + '/', { method:'GET'})
+        //     .then(response => response.json())
+        //     .then(result => this.setState(state => ({
+        //         profile_result_zip: result.zip })));
     }
 
     upload_example_data(){
@@ -167,16 +165,10 @@ class Upload_contigs extends React.Component {
             { name:"V.cholerae_04.fa" },
             { name:"V.cholerae_05.fa" },
             { name:"V.cholerae_06.fa" },
-            { name:"V.cholerae_07.fa" },
-            { name:"V.cholerae_08.fa" },
-            { name:"V.cholerae_09.fa" },
-            { name:"V.cholerae_010.fa" },
-            { name:"V.cholerae_011.fa" },
-            { name:"V.cholerae_012.fa" },
         ];
 
         var scheme = {};
-        scheme.seq_num = 12;
+        scheme.seq_num = 6;
         fetch('api/profiling/upload/' + window.batchid + '/', { 
             method:'PATCH',
             headers: new Headers({'content-type': 'application/json'}),
@@ -199,12 +191,6 @@ class Upload_contigs extends React.Component {
             require('./static/Example_data/V.cholerae_04.fa'), 
             require('./static/Example_data/V.cholerae_05.fa'), 
             require('./static/Example_data/V.cholerae_06.fa'), 
-            require('./static/Example_data/V.cholerae_07.fa'), 
-            require('./static/Example_data/V.cholerae_08.fa'), 
-            require('./static/Example_data/V.cholerae_09.fa'), 
-            require('./static/Example_data/V.cholerae_10.fa'), 
-            require('./static/Example_data/V.cholerae_11.fa'), 
-            require('./static/Example_data/V.cholerae_12.fa'), 
         ];
 
         let decodeExampleData = [];
@@ -222,21 +208,13 @@ class Upload_contigs extends React.Component {
         let VC04 = new File([decodeExampleData[3]],'V.cholerae_04.fa');
         let VC05 = new File([decodeExampleData[4]],'V.cholerae_05.fa');
         let VC06 = new File([decodeExampleData[5]],'V.cholerae_06.fa');
-        let VC07 = new File([decodeExampleData[6]],'V.cholerae_07.fa');
-        let VC08 = new File([decodeExampleData[7]],'V.cholerae_08.fa');
-        let VC09 = new File([decodeExampleData[8]],'V.cholerae_09.fa');
-        let VC10 = new File([decodeExampleData[9]],'V.cholerae_10.fa');
-        let VC11 = new File([decodeExampleData[9]],'V.cholerae_11.fa');
-        let VC12 = new File([decodeExampleData[9]],'V.cholerae_12.fa');
 
-        let decodeExampleFile = [ VC01, VC02, VC03, VC04, VC05, VC06, VC07, VC08,
-            VC09, VC10, VC11, VC12 ];
+        let decodeExampleFile = [ VC01, VC02, VC03, VC04, VC05, VC06 ];
 
         let k = 0;
         let upload_status = [];
 
         window.databaseName = "Vibrio_cholerae";
-        window.tabSwitch = true;
 
         for(k; k < decodeExampleFile.length; k++){
             let form = new FormData();
@@ -255,11 +233,6 @@ class Upload_contigs extends React.Component {
 
         this.props.history.push("/profile_view");
     }
-
-    back(){
-        window.location.reload();
-    }
-
     
     render() {
 
@@ -307,7 +280,7 @@ class Upload_contigs extends React.Component {
                     &nbsp;&nbsp;&nbsp;&nbsp;
                     <Button variant="contained" className ={classes.cssRoot} 
                      onClick={this.handlePost.bind(this)}>
-                        Upload
+                        Submit
                         &nbsp;&nbsp;
                         <CloudUploadIcon />
                     </Button>
@@ -318,7 +291,7 @@ class Upload_contigs extends React.Component {
                     <SearchBar
                         onChange = {(value) => this.setState({ querybyID: value })}
                         onRequestSearch={this.query.bind(this)}
-                        placeholder = {"Input batch ID here to query result"}
+                        placeholder = {"ID to get result"}
                         style = {{
                             width: '90%',
                             margin: '0 auto',
@@ -356,15 +329,6 @@ class Upload_contigs extends React.Component {
                         <br />
                         <br />
                         <br />
-                        <div style={{ display:'flex', justifyContent:'center', alignItems:'center' }}>
-                            <Link to="/" style={{ textDecoration:'none' }}>
-                                <Button variant="contained" color="default" onClick={this.back.bind(this)}>
-                                    <ReplyIcon />
-                                    &nbsp;&nbsp;
-                                    Back
-                                </Button>
-                            </Link>
-                        </div>
                         <br />
                         <br />
                     </div>

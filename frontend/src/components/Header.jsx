@@ -8,7 +8,9 @@ export default class Header extends React.Component {
         return (
             <header>
                 <br />
-                <font size="5" color="white">cgMLST@TAIWAN</font>
+                <a href="http://localhost:8000" style={{ textDecoration:'none' }} target='_blank'>
+                	<font size="5" color="white">BENGA cgMLST@TAIWAN</font>
+                </a>
                 <br />
             </header>
         );

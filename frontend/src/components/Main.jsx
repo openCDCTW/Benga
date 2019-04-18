@@ -1,6 +1,6 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
-import { BrowserRouter as Router, Route } from "react-router-dom";
+import { BrowserRouter as Router, Route, HashRouter } from "react-router-dom";
 import Header from './Header.jsx';
 import Navigation from './Navigation.jsx'
 import Footer from './Footer.jsx';
@@ -13,6 +13,7 @@ import Example from './Example.jsx';
 import Tutorial from './Tutorial.jsx';
 import Tracking_result from './TrackingResult.jsx';
 import About from './About.jsx';
+import Popup from './Popup.jsx';
 
 class Main extends React.Component {
 
@@ -48,4 +49,12 @@ class Main extends React.Component {
     }
 }
 
-ReactDOM.render(<Main /> ,document.getElementById('root'));
+ReactDOM.render((
+  <Router getUserConfirmation={(message, callback) => {
+      ReactDOM.render((
+        <Popup message={message} callback={callback} />
+      ), document.getElementById('modal'))
+    }}>
+    <Main />
+  </Router>
+), document.getElementById('root'));

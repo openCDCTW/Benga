@@ -15,7 +15,7 @@ import { withStyles } from '@material-ui/core/styles';
 import CloudUploadIcon from '@material-ui/icons/CloudUpload';
 import Icon from '@material-ui/core/Icon';
 import DeleteIcon from '@material-ui/icons/Delete';
-import green from '@material-ui/core/colors/green';
+import blue from '@material-ui/core/colors/blue';
 //search
 import TextField from '@material-ui/core/TextField';
 import Paper from '@material-ui/core/Paper';
@@ -27,10 +27,10 @@ import OutlinedInput from '@material-ui/core/OutlinedInput';
 
 const styles = theme => ({
     buttoncss:{
-        color: theme.palette.getContrastText(green[600]),
-        backgroundColor: green[500],
+        color: theme.palette.getContrastText(blue[600]),
+        backgroundColor: blue[900],
         '&:hover': {
-            backgroundColor:green[600],
+            backgroundColor:blue[600],
         },
     },
     selectcss: {
@@ -77,8 +77,6 @@ class Tracking extends React.Component {
         let nowYear = new Date();
 
 		this.state = {
-			to: "/tracking",
-            upload_confirm: false,
             allele_db:"Vibrio_cholerae",
             profile_db:"Vibrio_cholerae",
             yearError: false,
@@ -96,6 +94,9 @@ class Tracking extends React.Component {
             parallelUploads: 1,
             init:function(){
                 this.on("addedfile", function(on_load_header_data){
+                });
+                this.on("sending", function(file, xhr, formData){
+                    formData.append("profile_db", "Vibrio_cholerae");
                 });
                 this.on("success", function(file,response){
                     file._removeLink.remove();
@@ -128,38 +129,12 @@ class Tracking extends React.Component {
 	        alert('Please upload only 1 file');
 	        return ;
 	    }
-
 	    this.dropzone.processQueue();
-	    this.setState(state => ({ 
-	    	upload_confirm: true,
-	    	to: '/tracking_result' }));
-
-	}
-
-	submit(){
-
-	    if (this.state.upload_confirm == false){
-	        alert('Please upload a file first!');
-	        return ;
-	    }
-
-	    var scheme = {};
-	    scheme.id = window.trackingID ;
-        scheme.profile_db = this.state.profile_db;
-	    fetch('api/tracking/tracking/', {
-	        method:'POST',
-	        headers: new Headers({'content-type': 'application/json'}),
-	        body: JSON.stringify(scheme)
-	    })
-        .then(response => response.json());
-
-        window.tabSwitch = true;
+        this.props.history.push("/tracking_result")
 	}
 
 	remove(){
 	    this.dropzone.removeAllFiles();
-	    this.setState(state => ({ to: '/tracking', upload_confirm: false }));
-
 	}
 
 	select_handleChange(event){
@@ -299,18 +274,10 @@ class Tracking extends React.Component {
                 <div style={{ display:'flex', justifyContent:'center', alignItems:'center'}}>
                     <Button variant="contained" className ={classes.buttoncss} 
                      onClick={this.handlePost.bind(this)}>
-                        Upload
+                        Submit
                         &nbsp;&nbsp;
                         <CloudUploadIcon />
                     </Button>
-                    &nbsp;&nbsp;&nbsp;&nbsp;
-                    <Link to={this.state.to} style={{ textDecoration:'none' }}>
-                        <Button variant="contained" color="primary" onClick={this.submit.bind(this)}>
-                            Tracking
-                            &nbsp;&nbsp;
-                            <Icon>send</Icon>
-                        </Button>
-                    </Link>
                 </div>
                 <br />
                 <br />
