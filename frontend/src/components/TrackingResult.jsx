@@ -18,6 +18,9 @@ import FormControl from '@material-ui/core/FormControl';
 import Select from '@material-ui/core/Select';
 import MenuItem from '@material-ui/core/MenuItem';
 import InputLabel from '@material-ui/core/InputLabel';
+//
+import CircularProgress from '@material-ui/core/CircularProgress';
+import { Prompt } from 'react-router';
 
 const TrackingResultTable = withStyles(theme => ({
 	head:{
@@ -75,8 +78,7 @@ class Tracking_result extends React.Component {
 	}
 
 	componentDidMount(){
-		this.query_track_result(); //delete after testing
-		this.interval = setInterval(this.query_track_result, 10000);
+		this.interval = setInterval(this.query_track_result, 3000);
 	}
 
 	handleChange(event){
@@ -89,10 +91,6 @@ class Tracking_result extends React.Component {
 		this.setState(state => ({ tracking_result_shown: tmp }));
 	};
 
-	turn_on_Tabs(){
-		window.tabSwitch = false;
-	}
-
 	downloadProfiles(){
 
 	}
@@ -104,25 +102,39 @@ class Tracking_result extends React.Component {
     	if(this.state.tracking_result == undefined){
     		return(
     			<div>
-				<br />
-				<br />
-				<br />
-				<div style={{ display:'flex', justifyContent:'center', alignItems:'center'}}>
-					<font> Please hold on ... </font>
+    				<Prompt 
+                            when={true} 
+                            message="Are you sure to leave now?"/>
+					<br />
+					<br />
+					<br />
+					<div style={{ display:'flex', justifyContent:'center', alignItems:'center'}}>
+                        <font size="6"> ID : {window.trackingID}</font>
+                    </div>
+                    <br />
+					<br />
+					<div style={{ display:'flex', justifyContent:'center', alignItems:'center'}}>
+						<font size="6"> Please hold on ... </font>
+					</div>
+					<br />
+					<br />
+					<br />
+					<div style={{ display:'flex', justifyContent:'center', alignItems:'center'}}>
+						<CircularProgress size={175} />
+	                </div>
+					<br />
+					<br />
+					<br />
 				</div>
-				<br />
-				<div style={{ display:'flex', justifyContent:'center', alignItems:'center'}}>
-					<img src={require('./static/waiting.svg')} />
-				</div>
-				<br />
-				<br />
-				<br />
-			</div>
 		);
     	
     	}else{
     		return (
 				<div>
+					<Prompt 
+                            when={true} 
+                            message="You are leaving the page. Please save ID to get result. Are you sure to leave now?"/>
+					<br />
 					<br />
 					<div style={{ display:'flex', justifyContent:'center', alignItems:'center'}}>
 						<Paper className={classes.root}>
@@ -186,7 +198,7 @@ class Tracking_result extends React.Component {
 					<br />
 					<div style={{ display:'flex', justifyContent:'center', alignItems:'center'}}>
 						<Link to="/tracking" style={{ textDecoration:'none' }}>
-							<Button variant="contained" color="default" onClick={this.turn_on_Tabs}>
+							<Button variant="contained" color="default">
 								<ReplyIcon />
 								&nbsp;&nbsp;
 								Back

@@ -58,9 +58,9 @@ class Options extends React.Component {
                   className={classes.selectEmpty}
                   >
                   <MenuItem value={'Vibrio_cholerae'}>Vibrio cholerae</MenuItem>
-                  <MenuItem style={{ color:'#d0d0d0'}} value={'Campylobacter_jejuni'}>Campylobacter jejuni</MenuItem>
-                  <MenuItem style={{ color:'#d0d0d0'}} value={'Listeria_monocytogenes'}>Listeria monocytogenes</MenuItem>
-                  <MenuItem style={{ color:'#d0d0d0'}} value={'Salmonella_enterica'}>Salmonella_enterica</MenuItem>
+                  <MenuItem value={'Campylobacter_jejuni'} disabled>Campylobacter jejuni</MenuItem>
+                  <MenuItem value={'Listeria_monocytogenes'} disabled>Listeria monocytogenes</MenuItem>
+                  <MenuItem value={'Salmonella_enterica'} disabled>Salmonella_enterica</MenuItem>
                 </Select>
               <FormHelperText>Required</FormHelperText>
             </FormControl>
@@ -74,3 +74,5 @@ Options.propTypes = {
 };
 
 export default withStyles(styles)(Options);
+
+// style={{ color:'#d0d0d0'}}

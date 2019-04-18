@@ -36,7 +36,7 @@ export default class Navigation extends React.Component {
                     label="Clustering" component={Link} to="/upload_profile" />
                     <Tab style={{ fontSize:'16px',textTransform:'none' }} disabled={window.tabSwitch} 
                     label="Example" component={Link} to="/demo" />
-                    <Tab style={{ fontSize:'16px',textTransform:'none' }} disabled={true} 
+                    <Tab style={{ fontSize:'16px',textTransform:'none' }} disabled={window.tabSwitch}
                     label="Tutorial" component={Link} to="/tutorial" />
                 </Tabs>
             </Paper>
