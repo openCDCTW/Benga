@@ -7,17 +7,18 @@ import { withStyles } from '@material-ui/core/styles';
 import CloudUploadIcon from '@material-ui/icons/CloudUpload';
 import Icon from '@material-ui/core/Icon';
 import DeleteIcon from '@material-ui/icons/Delete';
-import green from '@material-ui/core/colors/green';
 import blue from '@material-ui/core/colors/blue';
 //
 import Radio from '@material-ui/core/Radio';
+import SearchBar from './SearchBar.jsx';
+import ReplyIcon from '@material-ui/icons/Reply';
 
 const styles = theme => ({
     cssRoot:{
-        color: theme.palette.getContrastText(green[600]),
-        backgroundColor: green[500],
+        color: theme.palette.getContrastText(blue[600]),
+        backgroundColor: blue[900],
         '&:hover': {
-            backgroundColor:green[600],
+            backgroundColor:blue[600],
         },
     },
     radio:{
@@ -49,13 +50,11 @@ class Upload_profile extends React.Component {
         // fetch API once.
 
         this.state = {
-            to: "/upload_profile",
-            upload_confirm: false,
-            algorithm: 'singal_linkage'
+            algorithm: 'single'
         };
 
         this.djsConfig = {
-            dictDefaultMessage:"Drop cgMLST profiles here",
+            dictDefaultMessage:"Drag cgMLST profiles here (up to 500 files)",
             dictRemoveFile:"Remove",
             addRemoveLinks: true,
             acceptedFiles: ".tsv",
@@ -98,34 +97,23 @@ class Upload_profile extends React.Component {
         }
 
         this.dropzone.processQueue();
-        this.setState(state => ({ to: '/dendrogram_view', upload_confirm: true}));
-    
-    }
-
-    submit(){
-
-        if (this.state.upload_confirm == false ){
-            alert('Please upload files first! (At least 1 files)');
-            return ;
-        }
 
         var scheme = {};
-        scheme.id = window.clusteringID;
+        scheme.prof_num = fileCheck;
         scheme.linkage = this.state.algorithm;
-        fetch('api/dendrogram/plot/', {
-            method:'POST',
+        fetch('api/dendrogram/upload/' + window.clusteringID + '/', { 
+            method:'PATCH',
             headers: new Headers({'content-type': 'application/json'}),
             body: JSON.stringify(scheme)
         });
 
-        window.tabSwitch = true;
+        this.props.history.push("/dendrogram_view");
     }
 
     remove(){
 
         this.dropzone.removeAllFiles();
-        
-        this.setState(state => ({ to: '/upload_profile', upload_confirm: false}));
+
         fetch('api/dendrogram/upload/', {method:'POST'})
         .then(function(res){
            return res.json();
@@ -143,6 +131,19 @@ class Upload_profile extends React.Component {
         this.setState({ algorithm: event.target.value });
     }
 
+    query(){
+
+        fetch('api/dendrogram/dendrogram/' + this.state.querybyID + '/', { method:'GET'})
+        .then(response => response.json())
+        .then(result => this.setState(state => ({
+                png_file: result.png_file, 
+                pdf_file: result.pdf_file,
+                svg_file: result.svg_file, 
+                emf_file: result.emf_file, 
+                newick_file: result.newick_file })))
+        .catch(error => alert("Data not found"));
+    }
+
     render() {
         const config = this.componentConfig;
         const djsConfig = this.djsConfig;
@@ -151,68 +152,114 @@ class Upload_profile extends React.Component {
         }
         const { classes } = this.props;
 
-        return (
-            <div>
+        if(this.state.png_file == undefined){
+            return (
                 <div>
-                    <div style={{ float:'right', marginTop:'35px', marginRight:'25px' }}>
-                        <Button variant="contained" color="secondary" onClick={this.remove.bind(this)}>
-                            Remove all files
+                    <div>
+                        <div style={{ float:'right', marginTop:'35px', marginRight:'25px' }}>
+                            <Button variant="contained" color="secondary" onClick={this.remove.bind(this)}>
+                                Remove all files
+                                &nbsp;&nbsp;
+                                <DeleteIcon />
+                            </Button>
+                        </div>
+                    </div>
+                    <br />
+                    <br />
+                    <br />
+                    <br />
+                    <br />
+                    <div style = {{ display:'flex', justifyContent:'center', alignItems:'center' }}>
+                        <DropzoneComponent config={config} eventHandlers={eventHandlers} 
+                        djsConfig={djsConfig} />
+                    </div>
+                    <br />
+                    <div style={{ display:'flex', justifyContent:'center', alignItems:'center' }}>
+                        <font>Algorithms : </font>
+                        &nbsp;&nbsp;
+                        <Radio
+                            color='primary'
+                            checked={this.state.algorithm === 'single'}
+                            onChange={this.handleChange.bind(this)}
+                            value="single"
+                        />
+                        <font>Single linkage</font>
+                        <Radio
+                            color='primary'
+                            checked={this.state.algorithm === 'average'}
+                            onChange={this.handleChange.bind(this)}
+                            value="average"
+                        />
+                        <font>UPGMA</font>
+                    </div>
+                    <br />
+                    <div style = {{ display:'flex', justifyContent:'center', alignItems:'center' }}>
+                        <Button variant="contained" className ={classes.cssRoot}
+                        onClick={this.handlePost.bind(this)}>
+                            Submit
                             &nbsp;&nbsp;
-                            <DeleteIcon />
+                            <CloudUploadIcon />
                         </Button>
                     </div>
+                    <br />
+                    <br />
+                    <div style={{ display:'flex', justifyContent:'center', alignItems:'center'}}>
+                        <SearchBar
+                            onChange = {(value) => this.setState({ querybyID: value })}
+                            onRequestSearch={this.query.bind(this)}
+                            placeholder = {"ID to get result"}
+                            style = {{
+                                width: '90%',
+                                margin: '0 auto',
+                            }}
+                        />
+                    </div>
+                    <br />
+                    <br />
+                    <br />
+                    <br />
+                    <br />
                 </div>
-                <br />
-                <br />
-                <br />
-                <br />
-                <br />
-                <div style = {{ display:'flex', justifyContent:'center', alignItems:'center' }}>
-                    <DropzoneComponent config={config} eventHandlers={eventHandlers} 
-                    djsConfig={djsConfig} />
+            );
+        }else{
+            return (
+                <div>
+                    <br />
+                    <br />
+                    <div style={{ display:'flex', justifyContent:'center', alignItems:'center'}}>
+                        <img src={this.state.svg_file} />
+                    </div>
+                    <br />
+                    <div style={{ display:'flex', justifyContent:'center', alignItems:'center'}}>
+                        <font>Download</font>
+                    </div>
+                    <br />
+                    <div style={{ display:'flex', justifyContent:'center', alignItems:'center'}}>
+                        <a download href={this.state.png_file} style={{ textDecoration:'none' }}>
+                            <Button variant="contained" color="default">Png</Button>
+                        </a>
+                        &nbsp;&nbsp;&nbsp;&nbsp;
+                        <a download href={this.state.pdf_file} style={{ textDecoration:'none' }}>
+                            <Button variant="contained" color="default">Pdf</Button>
+                        </a>
+                        &nbsp;&nbsp;&nbsp;&nbsp;
+                        <a download href={this.state.svg_file} style={{ textDecoration:'none' }}>
+                            <Button variant="contained" color="default">Svg</Button>
+                        </a>
+                        &nbsp;&nbsp;&nbsp;&nbsp;
+                        <a download href={this.state.emf_file} style={{ textDecoration:'none' }}>
+                            <Button variant="contained" color="default">emf</Button>
+                        </a>
+                        &nbsp;&nbsp;&nbsp;&nbsp;
+                        <a download href={this.state.newick_file} style={{ textDecoration:'none' }}>
+                            <Button variant="contained" color="default">newick</Button>
+                        </a>
+                    </div>
+                    <br />
+                    <br />
                 </div>
-                <br />
-                <div style={{ display:'flex', justifyContent:'center', alignItems:'center' }}>
-                    <font>Algorithms : </font>
-                    &nbsp;&nbsp;
-                    <Radio
-                        color='primary'
-                        checked={this.state.algorithm === 'singal_linkage'}
-                        onChange={this.handleChange.bind(this)}
-                        value="singal_linkage"
-                    />
-                    <font>Singal linkage</font>
-                    <Radio
-                        color='primary'
-                        checked={this.state.algorithm === 'average_linkage'}
-                        onChange={this.handleChange.bind(this)}
-                        value="average_linkage"
-                    />
-                    <font>Average linkage</font>
-                </div>
-                <br />
-                <div style = {{ display:'flex', justifyContent:'center', alignItems:'center' }}>
-                    <Button variant="contained" className ={classes.cssRoot}
-                    onClick={this.handlePost.bind(this)}>
-                        Upload
-                        &nbsp;&nbsp;
-                        <CloudUploadIcon />
-                    </Button>
-                    &nbsp;&nbsp;&nbsp;&nbsp;
-                    <Link to={this.state.to} style={{ textDecoration:'none' }}>
-                        <Button variant="contained" color="primary" onClick={this.submit.bind(this)}>
-                            Draw &nbsp; dendrogram
-                            &nbsp;&nbsp;
-                            <Icon>send</Icon>
-                        </Button>
-                    </Link>
-                </div>
-                <br />
-                <br />
-                <br />
-                <br />
-            </div>
-        );
+            );
+        }
     }
 }
 

@@ -1,9 +1,11 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 import { Link } from 'react-router-dom';
+import { Prompt } from 'react-router';
 import Button from '@material-ui/core/Button';
 import { withStyle } from '@material-ui/core/styles';
 import ReplyIcon from '@material-ui/icons/Reply';
+import CircularProgress from '@material-ui/core/CircularProgress';
 
 export default class Dendrogram_view extends React.Component {
 
@@ -32,12 +34,7 @@ export default class Dendrogram_view extends React.Component {
 	}
 
 	componentDidMount(){
-		this.query_dengrogram();
-		this.interval = setInterval(this.query_dengrogram, 5000);
-	}
-
-	turn_on_Tabs(){
-		window.tabSwitch = false;
+		this.interval = setInterval(this.query_dengrogram, 1000);
 	}
 
     render() {
@@ -45,27 +42,45 @@ export default class Dendrogram_view extends React.Component {
     	if(this.state.png_file == undefined){
 
     		return(
-    			<div>
-				<br />
-				<br />
-				<br />
-				<div style={{ display:'flex', justifyContent:'center', alignItems:'center'}}>
-					<font> Please hold on ... </font>
+	    		<div>
+	    			<Prompt 
+                            when={true} 
+                            message="Are you sure to leave now?"/>
+					<br />
+					<br />
+					<br />
+					<div style={{ display:'flex', justifyContent:'center', alignItems:'center'}}>
+                        <font size="6"> ID : {window.clusteringID}</font>
+                    </div>
+                    <br />
+					<br />
+					<div style={{ display:'flex', justifyContent:'center', alignItems:'center'}}>
+						<font size="6"> Please hold on ... </font>
+					</div>
+					<br />
+					<br />
+					<br />
+					<div style={{ display:'flex', justifyContent:'center', alignItems:'center'}}>
+						<CircularProgress size={175} />
+	                </div>
+					<br />
+					<br />
+					<br />
 				</div>
-				<br />
-				<div style={{ display:'flex', justifyContent:'center', alignItems:'center'}}>
-					<img src="https://svgshare.com/i/9N5.svg" />
-				</div>
-				<br />
-				<br />
-				<br />
-			</div>
 		);
     	
     	}else{
     		return (
 				<div>
+					<Prompt 
+                            when={true} 
+                            message="You are leaving the page. Please save ID to get result. Are you sure to leave now?"/>
 					<br />
+					<br />
+					<div style={{ display:'flex', justifyContent:'center', alignItems:'center'}}>
+                        <font size="6"> ID : {window.clusteringID}</font>
+                    </div>
+                    <br />
 					<br />
 					<div style={{ display:'flex', justifyContent:'center', alignItems:'center'}}>
 						<img src={this.state.svg_file} />
@@ -101,7 +116,7 @@ export default class Dendrogram_view extends React.Component {
 					<br />
 					<div style={{ display:'flex', justifyContent:'center', alignItems:'center'}}>
 						<Link to="/upload_profile" style={{ textDecoration:'none' }}>
-							<Button variant="contained" color="default" onClick={this.turn_on_Tabs}>
+							<Button variant="contained" color="default">
 								<ReplyIcon />
 								&nbsp;&nbsp;
 								Back

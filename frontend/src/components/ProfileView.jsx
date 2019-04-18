@@ -7,6 +7,7 @@ import ReplyIcon from '@material-ui/icons/Reply';
 import DownloadIcon from '@material-ui/icons/CloudDownload';
 import CircularProgress from '@material-ui/core/CircularProgress';
 import download from 'downloadjs';
+import { Prompt } from 'react-router';
 
 export default class Profile_view extends React.Component {
 
@@ -44,13 +45,8 @@ export default class Profile_view extends React.Component {
     }
 
 	componentDidMount(){
-		this.query_result();
 		this.interval = setInterval(this.query_result, 60000);
 	}
-
-    turn_on_Tabs(){
-        window.tabSwitch = false;
-    }
 
     render() {
 
@@ -58,6 +54,9 @@ export default class Profile_view extends React.Component {
 
     		return(
     			<div>
+                    <Prompt 
+                        when={true} 
+                        message="You are leaving the page. Please save ID to get result. Are you sure to leave now?"/>
                     <br />
                     <br />
                     <div style={{ display:'flex', justifyContent:'center', alignItems:'center'}}>
@@ -85,12 +84,19 @@ export default class Profile_view extends React.Component {
                     <br />
                     <br />
                     <br />
+                    <br />
+                    <br />
+                    <br />
     			</div>
     			);
     	
     	}else{
     		return (
     				<div>
+                        <Prompt 
+                            when={true} 
+                            message="You are leaving the page. Please save ID to get result. Are you sure to leave now?"/>
+                        <br />
                         <br />
                         <br />
     					<br />
@@ -123,7 +129,7 @@ export default class Profile_view extends React.Component {
                         <br />
                         <div style={{ display:'flex', justifyContent:'center', alignItems:'center'}}>
                             <Link to="/" style={{ textDecoration:'none' }}>
-                                <Button variant="contained" color="default" onClick={this.turn_on_Tabs}>
+                                <Button variant="contained" color="default">
                                     <ReplyIcon />
                                     &nbsp;&nbsp;
                                     Back
