@@ -11,4 +11,4 @@ class ProfileSerializer(serializers.ModelSerializer):
 class TrackedResultsSerializer(serializers.ModelSerializer):
     class Meta:
         model = TrackedResults
-        fields = ('id', 'json')
+        fields = ('id', 'json', 'zip')
