@@ -131,15 +131,23 @@ class Upload_contigs extends React.Component {
     query(){
 
         fetch('api/profiling/profile/' + this.state.querybyID + '/', { method:'GET'})
-        .then(response => response.json())
-        .then(result => this.setState(state => ({
-                profile_result_zip: result.zip })))
-        .catch(error => alert("Not found"));
+        .then(function(response){
+            if(response.status != 404){
+                return response.json();
+            }else{
+                return response.status;
+            }
+        }).then(res => this.setState(state => ({ tmp: res })));
 
-        // fetch('api/profiling/profile/' + this.state.querybyID + '/', { method:'GET'})
-        //     .then(response => response.json())
-        //     .then(result => this.setState(state => ({
-        //         profile_result_zip: result.zip })));
+        function result(){
+            if(this.state.tmp.zip != undefined){
+                this.setState(state => ({ profile_result_zip : this.state.tmp.zip }))
+            }else{
+                alert("Data not found. Please input correct ID or try again later.");
+            }
+            clearInterval(interval);
+        }
+        let interval = setInterval(result.bind(this),50);
     }
 
     upload_example_data(){
@@ -229,6 +237,10 @@ class Upload_contigs extends React.Component {
         };
 
         let interval = setInterval(submit.bind(this),500);
+    }
+
+    back(){
+        this.setState(state => ({ profile_result_zip: undefined }));
     }
     
     render() {
@@ -327,6 +339,13 @@ class Upload_contigs extends React.Component {
                         <br />
                         <br />
                         <br />
+                        <div style={{ display:'flex', justifyContent:'center', alignItems:'center'}}>
+                            <Button variant="contained" color="default" onClick={this.back.bind(this)}>
+                                <ReplyIcon />
+                                &nbsp;&nbsp;
+                                Back
+                            </Button>
+                        </div>
                         <br />
                     </div>
                 );

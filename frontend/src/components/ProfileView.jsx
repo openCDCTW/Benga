@@ -98,8 +98,13 @@ export default class Profile_view extends React.Component {
                             message="You are leaving the page. Please save results, or it will lose. Are you sure to leave now?"/>
                         <br />
                         <br />
-                        <br />
-                        <br />
+                        <div style={{ display:'flex', justifyContent:'center', alignItems:'center'}}>
+                            <font size="6"> ID : {window.batchid}</font>
+                            &nbsp;&nbsp;&nbsp;&nbsp;
+                            <Button variant="contained" color="default" onClick={this.getIdFile}>
+                                Get ID
+                            </Button>
+                        </div>
                         <br />
                         <br />
                         <br />
@@ -116,6 +121,8 @@ export default class Profile_view extends React.Component {
                         </div>
     					<br />
     					<br />
+                        <br />
+                        <br />
                         <br />
                         <br />
                         <br />

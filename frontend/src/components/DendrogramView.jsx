@@ -6,6 +6,7 @@ import Button from '@material-ui/core/Button';
 import { withStyle } from '@material-ui/core/styles';
 import ReplyIcon from '@material-ui/icons/Reply';
 import CircularProgress from '@material-ui/core/CircularProgress';
+import download from 'downloadjs';
 
 export default class Dendrogram_view extends React.Component {
 
@@ -37,6 +38,10 @@ export default class Dendrogram_view extends React.Component {
 		this.interval = setInterval(this.query_dengrogram, 1000);
 	}
 
+	getIdFile(){
+        download(window.clusteringID,'clustering_JobID.txt',"text/tab-separated-values");
+    }
+
     render() {
 
     	if(this.state.png_file == undefined){
@@ -51,6 +56,10 @@ export default class Dendrogram_view extends React.Component {
 					<br />
 					<div style={{ display:'flex', justifyContent:'center', alignItems:'center'}}>
                         <font size="6"> ID : {window.clusteringID}</font>
+                        &nbsp;&nbsp;&nbsp;&nbsp;
+                        <Button variant="contained" color="default" onClick={this.getIdFile}>
+                            Get ID
+                        </Button>
                     </div>
                     <br />
 					<br />
@@ -79,6 +88,10 @@ export default class Dendrogram_view extends React.Component {
 					<br />
 					<div style={{ display:'flex', justifyContent:'center', alignItems:'center'}}>
                         <font size="6"> ID : {window.clusteringID}</font>
+                        &nbsp;&nbsp;&nbsp;&nbsp;
+                        <Button variant="contained" color="default" onClick={this.getIdFile}>
+                            Get ID
+                        </Button>
                     </div>
                     <br />
 					<br />
