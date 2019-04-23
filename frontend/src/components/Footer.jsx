@@ -16,7 +16,7 @@ export default class Footer extends React.Component {
                     </font>
                     <br />
                     <font style={{ fontSize: '14px'}}>
-                        We suggest one using Google Chrome, Firefox with resolution of 1024 x 768 (or above) for better experience.
+                        We recommend Google Chrome™ or Firefox® browser and set a screen resolution of minimum 1024 x 768 pixels for optimal performance.
                     </font>
                     <br />
                     <br />

@@ -95,7 +95,7 @@ export default class Profile_view extends React.Component {
     				<div>
                         <Prompt 
                             when={true} 
-                            message="You are leaving the page. Please save ID to get result. Are you sure to leave now?"/>
+                            message="You are leaving the page. Please save results, or it will lose. Are you sure to leave now?"/>
                         <br />
                         <br />
                         <br />
