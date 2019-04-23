@@ -75,10 +75,10 @@ class Tracking extends React.Component {
 		super(props);
 
         let nowYear = new Date();
+        window.profile_db = "Vibrio_cholerae";
 
 		this.state = {
             allele_db:"Vibrio_cholerae",
-            profile_db:"Vibrio_cholerae",
             yearError: false,
             country: '',
             labelWidth: 0,
@@ -92,17 +92,22 @@ class Tracking extends React.Component {
             acceptedFiles: ".tsv",
             autoProcessQueue: false,
             parallelUploads: 1,
+            maxFiles:1,
             init:function(){
                 this.on("addedfile", function(on_load_header_data){
                     
                 });
                 this.on("sending", function(file, xhr, formData){
-                    formData.append("profile_db", "Vibrio_cholerae");
+                    formData.append("profile_db", window.profile_db);
                 });
                 this.on("success", function(file,response){
                     file._removeLink.remove();
                     delete file._removeLink;
                     window.trackingID = response.id;
+                });
+                this.on("maxfilesexceeded", function(file){
+                    this.removeAllFiles();
+                    this.addFile(file);
                 });
             }
         }
@@ -116,11 +121,11 @@ class Tracking extends React.Component {
         this.dropzone = null;
 	}
 
-    componentDidMount() {
-        // this.setState({
-        //   labelWidth: ReactDOM.findDOMNode(this.InputLabelRef).offsetWidth,
-        // });
-    }
+    // componentDidMount() {
+    //     this.setState({
+    //       labelWidth: ReactDOM.findDOMNode(this.InputLabelRef).offsetWidth,
+    //     });
+    // }
 
     handlePost() {
     
@@ -141,84 +146,105 @@ class Tracking extends React.Component {
 	select_handleChange(event){
         if( event.target.value == 'Vibrio_cholerae'){
             this.setState(state => ({ 
-                [event.target.name]: event.target.value,
-                profile_db:"vibrio-profiles",
+                [event.target.name]: event.target.value
             }));
+            window.profile_db = "Vibrio_cholerae";
         }
     }
 
-    _onKeyPress(event){
-        if(event.charCode === 13){
-            event.preventDefault();
-        }
+    example(){
+
+        let encodeExampleData = require('./static/Example_data/V.cholerae_05.tsv');
+        let tmp = encodeExampleData.substring(38,encodeExampleData.length);
+        let decodeData = window.atob(tmp);
+        let VC01 = new File([decodeData],'V.cholerae_profile.tsv');
+
+
+        let form = new FormData();
+        form.append('file',VC01);
+        form.append('profile_db',"Vibrio_cholerae");
+        fetch('api/tracking/profile/', {
+            method:'POST',
+            body: form,
+        }).then(function(response){
+            return response.json();
+        }).then(res => window.trackingID = res.id);
+
+        this.props.history.push("/tracking_result");
     }
 
-    bioSampleHandleChange(event){
-        this.setState(state => ({ bioSampleID: this.biosample.value }));
-    }
+    // _onKeyPress(event){
+    //     if(event.charCode === 13){
+    //         event.preventDefault();
+    //     }
+    // }
 
-    strainHandleChange(event){
-        this.setState(state => ({ strain: this.strain.value }));
-    }
+    // bioSampleHandleChange(event){
+    //     this.setState(state => ({ bioSampleID: this.biosample.value }));
+    // }
 
-    yearFromHandleChange(event){
-        let year_from = Number.parseInt(this.yearFrom.value, 10);
+    // strainHandleChange(event){
+    //     this.setState(state => ({ strain: this.strain.value }));
+    // }
 
-        if( this.yearFrom.value == year_from ){
-            if( year_from > 0 && year_from <= this.state.nowYear ){
-                this.setState(state => ({ 
-                    yearFrom: this.yearFrom.value , 
-                    yearError:false
-                }));
-            }else{
-                this.yearFrom.value = '';
-                this.setState(state => ({ yearFrom: undefined }));
-            }
-        }else{
-            this.yearFrom.value = '';
-            this.setState(state => ({ yearFrom: undefined }));
-        }
-    }
+    // yearFromHandleChange(event){
+    //     let year_from = Number.parseInt(this.yearFrom.value, 10);
 
-    yearToHandleChange(event){
-        let year_To = Number.parseInt(this.yearTo.value, 10);
+    //     if( this.yearFrom.value == year_from ){
+    //         if( year_from > 0 && year_from <= this.state.nowYear ){
+    //             this.setState(state => ({ 
+    //                 yearFrom: this.yearFrom.value , 
+    //                 yearError:false
+    //             }));
+    //         }else{
+    //             this.yearFrom.value = '';
+    //             this.setState(state => ({ yearFrom: undefined }));
+    //         }
+    //     }else{
+    //         this.yearFrom.value = '';
+    //         this.setState(state => ({ yearFrom: undefined }));
+    //     }
+    // }
+
+    // yearToHandleChange(event){
+    //     let year_To = Number.parseInt(this.yearTo.value, 10);
         
-        if( this.yearTo.value == year_To ){
-            if( year_To > 0 && year_To <= this.state.nowYear ){
-                this.setState(state => ({ 
-                    yearTo: this.yearTo.value, 
-                    yearError: false
-                }));
-            }else{
-                this.yearTo.value = '';
-                this.setState(state => ({ yearTo: undefined }));
-            }
-        }else{
-            this.yearTo.value = '';
-            this.setState(state => ({ yearTo: undefined }));
-        }
-    }
+    //     if( this.yearTo.value == year_To ){
+    //         if( year_To > 0 && year_To <= this.state.nowYear ){
+    //             this.setState(state => ({ 
+    //                 yearTo: this.yearTo.value, 
+    //                 yearError: false
+    //             }));
+    //         }else{
+    //             this.yearTo.value = '';
+    //             this.setState(state => ({ yearTo: undefined }));
+    //         }
+    //     }else{
+    //         this.yearTo.value = '';
+    //         this.setState(state => ({ yearTo: undefined }));
+    //     }
+    // }
 
-    countryHandleChange(event){
-        this.setState(state => ({ [event.target.name]: event.target.value }));
-    }
+    // countryHandleChange(event){
+    //     this.setState(state => ({ [event.target.name]: event.target.value }));
+    // }
 
-    serotypeHandleChange(event){
-        this.setState(state => ({ serotype: this.serotype.value }));
-    }
+    // serotypeHandleChange(event){
+    //     this.setState(state => ({ serotype: this.serotype.value }));
+    // }
 
-    search(){
-        console.log(this.state.bioSampleID);
-        console.log(this.state.strain);
-        console.log(Number.parseInt(this.state.yearFrom, 10));
-        console.log(Number.parseInt(this.state.yearTo, 10));
-        console.log(this.state.serotype);
+    // search(){
+    //     console.log(this.state.bioSampleID);
+    //     console.log(this.state.strain);
+    //     console.log(Number.parseInt(this.state.yearFrom, 10));
+    //     console.log(Number.parseInt(this.state.yearTo, 10));
+    //     console.log(this.state.serotype);
 
-        if( this.state.yearFrom > this.state.yearTo ){
-            this.setState(state => ({ yearError: true }));
-            alert('Input year error');
-        }
-    }
+    //     if( this.state.yearFrom > this.state.yearTo ){
+    //         this.setState(state => ({ yearError: true }));
+    //         alert('Input year error');
+    //     }
+    // }
 
 	render() {
 
@@ -273,6 +299,13 @@ class Tracking extends React.Component {
                 <br />
                 <br />
                 <div style={{ display:'flex', justifyContent:'center', alignItems:'center'}}>
+                    <Button variant="contained" color="default" 
+                     onClick={this.example.bind(this)}>
+                        Example
+                        &nbsp;&nbsp;
+                        <CloudUploadIcon />
+                    </Button>
+                    &nbsp;&nbsp;&nbsp;&nbsp;
                     <Button variant="contained" className ={classes.buttoncss} 
                      onClick={this.handlePost.bind(this)}>
                         Submit
