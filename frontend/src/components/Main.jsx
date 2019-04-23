@@ -13,7 +13,6 @@ import Example from './Example.jsx';
 import Tutorial from './Tutorial.jsx';
 import Tracking_result from './TrackingResult.jsx';
 import About from './About.jsx';
-import Popup from './Popup.jsx';
 
 class Main extends React.Component {
 
@@ -49,12 +48,4 @@ class Main extends React.Component {
     }
 }
 
-ReactDOM.render((
-  <Router getUserConfirmation={(message, callback) => {
-      ReactDOM.render((
-        <Popup message={message} callback={callback} />
-      ), document.getElementById('modal'))
-    }}>
-    <Main />
-  </Router>
-), document.getElementById('root'));
+ReactDOM.render(<Main />, document.getElementById('root'));
