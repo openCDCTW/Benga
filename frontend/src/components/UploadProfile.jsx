@@ -229,14 +229,33 @@ class Upload_profile extends React.Component {
     query(){
 
         fetch('api/dendrogram/dendrogram/' + this.state.querybyID + '/', { method:'GET'})
-        .then(response => response.json())
-        .then(result => this.setState(state => ({
-                png_file: result.png_file, 
-                pdf_file: result.pdf_file,
-                svg_file: result.svg_file, 
-                emf_file: result.emf_file, 
-                newick_file: result.newick_file })))
-        .catch(error => alert("Data not found"));
+        .then(function(response){
+            if(response.status != 404){
+                return response.json();
+            }else{
+                return response.status;
+            }
+        }).then(res => this.setState(state => ({ tmp: res })));
+
+        function result(){
+
+            if(this.state.tmp.png_file != undefined){
+                this.setState(state => ({
+                png_file: this.state.tmp.png_file, 
+                pdf_file: this.state.tmp.pdf_file,
+                svg_file: this.state.tmp.svg_file, 
+                emf_file: this.state.tmp.emf_file, 
+                newick_file: this.state.tmp.newick_file }))
+            }else{
+                alert("Data not found. Please input correct ID or try again later.");
+            }
+            clearInterval(interval);
+        }
+        let interval = setInterval(result.bind(this),500);
+    }
+
+    back(){
+        this.setState(state => ({ png_file: undefined }));
     }
 
     render() {
@@ -359,6 +378,14 @@ class Upload_profile extends React.Component {
                     </div>
                     <br />
                     <br />
+                    <br />
+                    <div style={{ display:'flex', justifyContent:'center', alignItems:'center'}}>
+                            <Button variant="contained" color="default" onClick={this.back.bind(this)}>
+                                <ReplyIcon />
+                                &nbsp;&nbsp;
+                                Back
+                            </Button>
+                    </div>
                 </div>
             );
         }
