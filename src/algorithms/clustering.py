@@ -59,14 +59,15 @@ class Dendrogram:
         return self._newick
 
     def scipy_tree(self, file, distance_annotate=True, w=8, dpi=300):
-        plt.style.use("ggplot")
+        plt.style.use("fast")
+        matplotlib.rcParams['lines.linewidth'] = 0.5
         fig, ax = plt.subplots(1, 1, figsize=(w, int(len(self._nodes)*0.3)))
         ax.grid(False)
         ax.patch.set_facecolor('none')
         ax.xaxis.set_major_locator(MaxNLocator(integer=True))
         plt.rcParams['svg.fonttype'] = 'none'
         tree = hierarchy.dendrogram(self._linkage, labels=self._nodes, orientation="left",
-                                    leaf_font_size=10, above_threshold_color="#808080", color_threshold=0)
+                                    leaf_font_size=10, above_threshold_color="#000000", color_threshold=0)
         if distance_annotate:
             for i, d, in zip(tree['icoord'], tree['dcoord']):
                 x = 0.5 * sum(i[1:3])
