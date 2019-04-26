@@ -8,39 +8,34 @@ services:
       POSTGRES_PASSWORD: c!_test
     volumes:
       - ./test/data/pgdata:/var/lib/postgresql/data
-    ports:
-      - "5432:5432"
 
   mongo:
     image: mongo:4.0.5-xenial
     restart: always
     volumes:
       - ./test/data/mongodata:/data/db
-    ports:
-      - "27017:27017"
 
   rabbitmq:
     image: rabbitmq:3.7-management-alpine
     restart: always
     env_file: envs/rabbitmq.env
     ports:
-      - "5672:5672"
       - "15672:15672"
 
   celery:
     image: a504082002/benga:celery
     env_file: envs/web.env
-    command: bash -c "python3 manage.py migrate; export CELERY_BROKER_URL='amqp://celery:TEjcuCTK5SctrAca@127.0.0.1:5672/my_vhost'; celery -A benga worker -l info"
+    command: bash -c "python3 manage.py migrate; celery -A benga worker -l info"
     depends_on:
       - rabbitmq
       - postgres
 
   web:
     image: a504082002/benga:dev
+    environment:
+      SECRET_KEY: ${SECRET_KEY}
     env_file: envs/web.env
-    command: bash -c "cd /proj; python3 manage.py makemigrations; python3 manage.py migrate; bash run.sh"
-    volumes:
-      - .:/proj
+    command: bash -c "python3 manage.py makemigrations; python3 manage.py migrate; python3 manage.py test"
     depends_on:
       - postgres
       - mongo

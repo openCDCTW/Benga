@@ -57,8 +57,7 @@ class TrackedResultsDetail(APIView):
         results = self.get_object(pk)
         serializer = TrackedResultsSerializer(results)
         data = serializer.data.copy()
-        with open(serializer.data["json"]) as file:
-            data["json"] = json.loads(file.read())
+        data["json"] = json.loads(results.json.read().decode("utf-8"))
         return Response(data)
 
     def put(self, request, pk, format=None):

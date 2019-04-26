@@ -9,31 +9,26 @@ python:
 sudo: required
 
 services:
-  - postgresql
-  - rabbitmq
   - docker
 
 notifications:
   email: false
 
 addons:
-  postgresql: "9.6"
   apt:
     update: true
     packages:
     - docker-ce
-    - postgresql-9.6
-    - postgresql-client-9.6
-
-env:
-  global:
-    - secure: TkvScJMjqs2v/XosjI0yL7jmzmH01Oit2dBFp3A59W7XqA/EIcINM5nGZlPVvsJhUmBAfCAJjUwxQCL54olZBOIO+pX4Y97LVPfXJ4Gar75sF1iFOY6doOJzFJJIOBGls1DEXR8dLIEDEg6gxbW7vxIlOb6pt/F3YK6gJT3EOETTgjzfpP8yIWhZcTRtCe5Yr0YDNIo1iCd+sSioaKdk5ZC7VdjDD+3HglqXVnowJH7n4owqqkZhEPLSwQgH0bQ/ZSf44baV2QO9an5pUTwChk1rmcUazAhuewh0AVnGmG9hi4UfM0HrzLbxHCFfIT0Uoc6Mpgvk812OdLJogFwaDmmTYKS+kO0qaOAjmk6Z26xG0iLHFmrYIehYmJVK3AyJZY2QBKmRNRJ81fvoNkUTgRsYoUrO30Rtr8jaxYjKocv5l7SE3Np0uTscxo9GLEdOKE6cN4r887riwDFJcpg+MxeLvWq2vM9LTVrMfrjyIpnlPqU+JMcR9o28pG/Ze9/vZfSlkwWYVUxxzoP6lHDXHg0H89WM0oDeCNzsEMstDm4RzejS0V+PbS3xq6TwIYMJoI3mXWhf3DpiPl/+VYMwJKlMbI//eoz4R06KK+fgumUPYaTsAjlOK79vsE40P1na26zG4yWe7Qk92MPfuVTQnVqhPckWjHEw2z5mqPggtZ4=
 
 before_install:
   - docker pull a504082002/benga:dev
+  - docker pull postgres:9.6-alpine
+  - docker pull mongo:4.0.5-xenial
+  - docker pull rabbitmq:3.7-management-alpine
+  - docker pull a504082002/benga:celery
 
 before_script:
   - psql -U postgres -c 'create database travis_ci_test;'
 
 script:
-  - docker run --env-file envs/web.env a504082002/benga:dev /bin/sh -c "cd /benga; python3 manage.py makemigrations; python3 manage.py migrate; python3 manage.py test"
+  - docker-compose up
