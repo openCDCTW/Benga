@@ -120,12 +120,6 @@ class Tracking extends React.Component {
         this.dropzone = null;
 	}
 
-    // componentDidMount() {
-    //     this.setState({
-    //       labelWidth: ReactDOM.findDOMNode(this.InputLabelRef).offsetWidth,
-    //     });
-    // }
-
     handlePost() {
     
 	    let fileCheck = this.dropzone.files.length;
@@ -171,79 +165,6 @@ class Tracking extends React.Component {
 
         this.props.history.push("/tracking_result");
     }
-
-    // _onKeyPress(event){
-    //     if(event.charCode === 13){
-    //         event.preventDefault();
-    //     }
-    // }
-
-    // bioSampleHandleChange(event){
-    //     this.setState(state => ({ bioSampleID: this.biosample.value }));
-    // }
-
-    // strainHandleChange(event){
-    //     this.setState(state => ({ strain: this.strain.value }));
-    // }
-
-    // yearFromHandleChange(event){
-    //     let year_from = Number.parseInt(this.yearFrom.value, 10);
-
-    //     if( this.yearFrom.value == year_from ){
-    //         if( year_from > 0 && year_from <= this.state.nowYear ){
-    //             this.setState(state => ({ 
-    //                 yearFrom: this.yearFrom.value , 
-    //                 yearError:false
-    //             }));
-    //         }else{
-    //             this.yearFrom.value = '';
-    //             this.setState(state => ({ yearFrom: undefined }));
-    //         }
-    //     }else{
-    //         this.yearFrom.value = '';
-    //         this.setState(state => ({ yearFrom: undefined }));
-    //     }
-    // }
-
-    // yearToHandleChange(event){
-    //     let year_To = Number.parseInt(this.yearTo.value, 10);
-        
-    //     if( this.yearTo.value == year_To ){
-    //         if( year_To > 0 && year_To <= this.state.nowYear ){
-    //             this.setState(state => ({ 
-    //                 yearTo: this.yearTo.value, 
-    //                 yearError: false
-    //             }));
-    //         }else{
-    //             this.yearTo.value = '';
-    //             this.setState(state => ({ yearTo: undefined }));
-    //         }
-    //     }else{
-    //         this.yearTo.value = '';
-    //         this.setState(state => ({ yearTo: undefined }));
-    //     }
-    // }
-
-    // countryHandleChange(event){
-    //     this.setState(state => ({ [event.target.name]: event.target.value }));
-    // }
-
-    // serotypeHandleChange(event){
-    //     this.setState(state => ({ serotype: this.serotype.value }));
-    // }
-
-    // search(){
-    //     console.log(this.state.bioSampleID);
-    //     console.log(this.state.strain);
-    //     console.log(Number.parseInt(this.state.yearFrom, 10));
-    //     console.log(Number.parseInt(this.state.yearTo, 10));
-    //     console.log(this.state.serotype);
-
-    //     if( this.state.yearFrom > this.state.yearTo ){
-    //         this.setState(state => ({ yearError: true }));
-    //         alert('Input year error');
-    //     }
-    // }
 
 	render() {
 
