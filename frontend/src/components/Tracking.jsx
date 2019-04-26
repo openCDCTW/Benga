@@ -15,15 +15,22 @@ import { withStyles } from '@material-ui/core/styles';
 import CloudUploadIcon from '@material-ui/icons/CloudUpload';
 import Icon from '@material-ui/core/Icon';
 import DeleteIcon from '@material-ui/icons/Delete';
-import green from '@material-ui/core/colors/green';
-
+import blue from '@material-ui/core/colors/blue';
+//search
+import TextField from '@material-ui/core/TextField';
+import Paper from '@material-ui/core/Paper';
+import Tabs from '@material-ui/core/Tabs';
+import Tab from '@material-ui/core/Tab';
+import SearchIcon from '@material-ui/icons/Search';
+import Typography from '@material-ui/core/Typography';
+import OutlinedInput from '@material-ui/core/OutlinedInput';
 
 const styles = theme => ({
     buttoncss:{
-        color: theme.palette.getContrastText(green[600]),
-        backgroundColor: green[500],
+        color: theme.palette.getContrastText(blue[600]),
+        backgroundColor: blue[900],
         '&:hover': {
-            backgroundColor:green[600],
+            backgroundColor:blue[600],
         },
     },
     selectcss: {
@@ -37,6 +44,26 @@ const styles = theme => ({
 	selectEmpty: {
 	    marginTop: theme.spacing.unit * 2,
 	},
+        textField:{
+        marginLeft: '19px',
+        marginTop: '25px',
+        width:'22.5%'
+    },
+    container:{
+        display:'flex',
+        flexWrap:'wrap',
+    },
+    numberField:{
+        marginLeft: '19px',
+        marginTop: '20px',
+        marginRight: '10px',
+        width:'110px'
+    },
+    countrySelect:{
+        marginLeft: '19px',
+        marginTop: '25px',
+        width: '22.5%',
+    }
     
 })
 
@@ -46,28 +73,41 @@ class Tracking extends React.Component {
 	constructor(props) {
 
 		super(props);
+
+        let nowYear = new Date();
+        window.profile_db = "Vibrio_cholerae";
+
 		this.state = {
-			to: "/tracking",
-            upload_confirm: false,
             allele_db:"Vibrio_cholerae",
-            profile_db:"Vibrio_cholerae",
+            yearError: false,
+            country: '',
+            labelWidth: 0,
+            nowYear: nowYear.getFullYear(),
 		};
 
 		this.djsConfig = {
-            dictDefaultMessage:"Drop a cgMLST profile here",
+            dictDefaultMessage:"Drag a cgMLST profile here",
             dictRemoveFile:"Remove",
             addRemoveLinks: true,
             acceptedFiles: ".tsv",
             autoProcessQueue: false,
             parallelUploads: 1,
+            maxFiles:1,
             init:function(){
                 this.on("addedfile", function(on_load_header_data){
                     
+                });
+                this.on("sending", function(file, xhr, formData){
+                    formData.append("profile_db", window.profile_db);
                 });
                 this.on("success", function(file,response){
                     file._removeLink.remove();
                     delete file._removeLink;
                     window.trackingID = response.id;
+                });
+                this.on("maxfilesexceeded", function(file){
+                    this.removeAllFiles();
+                    this.addFile(file);
                 });
             }
         }
@@ -75,7 +115,7 @@ class Tracking extends React.Component {
         this.componentConfig = {
             iconFiletypes: ['.tsv'],
             showFiletypeIcon: true,
-            postUrl: 'api/tracking/sequence/'
+            postUrl: 'api/tracking/profile/'
         };
 
         this.dropzone = null;
@@ -89,48 +129,42 @@ class Tracking extends React.Component {
 	        alert('Please upload only 1 file');
 	        return ;
 	    }
-
 	    this.dropzone.processQueue();
-	    this.setState(state => ({ 
-	    	upload_confirm: true,
-	    	to: '/tracking_result' }));
-
-	}
-
-	submit(){
-
-	    if (this.state.upload_confirm == false){
-	        alert('Please upload a file first!');
-	        return ;
-	    }
-
-	    var scheme = {};
-	    scheme.id = window.trackingID ;
-	    scheme.allele_db = this.state.allele_db;
-        scheme.profile_db = this.state.profile_db;
-	    fetch('api/tracking/tracking/', {
-	        method:'POST',
-	        headers: new Headers({'content-type': 'application/json'}),
-	        body: JSON.stringify(scheme)
-	    })
-        .then(response => response.json());
-
-        window.tabSwitch = true;
+        this.props.history.push("/tracking_result")
 	}
 
 	remove(){
 	    this.dropzone.removeAllFiles();
-	    this.setState(state => ({ to: '/tracking', upload_confirm: false }));
-
 	}
 
 	select_handleChange(event){
         if( event.target.value == 'Vibrio_cholerae'){
             this.setState(state => ({ 
-                [event.target.name]: event.target.value,
-                profile_db:"vibrio-profiles",
+                [event.target.name]: event.target.value
             }));
+            window.profile_db = "Vibrio_cholerae";
         }
+    }
+
+    example(){
+
+        let encodeExampleData = require('./static/Example_data/V.cholerae_05.tsv');
+        let tmp = encodeExampleData.substring(38,encodeExampleData.length);
+        let decodeData = window.atob(tmp);
+        let VC01 = new File([decodeData],'V.cholerae_profile.tsv');
+
+
+        let form = new FormData();
+        form.append('file',VC01);
+        form.append('profile_db',"Vibrio_cholerae");
+        fetch('api/tracking/profile/', {
+            method:'POST',
+            body: form,
+        }).then(function(response){
+            return response.json();
+        }).then(res => window.trackingID = res.id);
+
+        this.props.history.push("/tracking_result");
     }
 
 	render() {
@@ -186,20 +220,19 @@ class Tracking extends React.Component {
                 <br />
                 <br />
                 <div style={{ display:'flex', justifyContent:'center', alignItems:'center'}}>
-                    <Button variant="contained" className ={classes.buttoncss} 
-                     onClick={this.handlePost.bind(this)}>
-                        Upload
+                    <Button variant="contained" color="default" 
+                     onClick={this.example.bind(this)}>
+                        Example
                         &nbsp;&nbsp;
                         <CloudUploadIcon />
                     </Button>
                     &nbsp;&nbsp;&nbsp;&nbsp;
-                    <Link to={this.state.to} style={{ textDecoration:'none' }}>
-                        <Button variant="contained" color="primary" onClick={this.submit.bind(this)}>
-                            Tracking
-                            &nbsp;&nbsp;
-                            <Icon>send</Icon>
-                        </Button>
-                    </Link>
+                    <Button variant="contained" className ={classes.buttoncss} 
+                     onClick={this.handlePost.bind(this)}>
+                        Submit
+                        &nbsp;&nbsp;
+                        <CloudUploadIcon />
+                    </Button>
                 </div>
                 <br />
                 <br />

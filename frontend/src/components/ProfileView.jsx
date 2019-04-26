@@ -5,7 +5,9 @@ import Button from '@material-ui/core/Button';
 import { withStyle } from '@material-ui/core/styles';
 import ReplyIcon from '@material-ui/icons/Reply';
 import DownloadIcon from '@material-ui/icons/CloudDownload';
-
+import CircularProgress from '@material-ui/core/CircularProgress';
+import download from 'downloadjs';
+import { Prompt } from 'react-router';
 
 export default class Profile_view extends React.Component {
 
@@ -21,17 +23,16 @@ export default class Profile_view extends React.Component {
             }
         };
 
-        this.state = { fileName :fileName_str};
+        this.state = { fileName :fileName_str };
 		this.query_result = this.query_result.bind(this);
     }
 
 	query_result(){
 
-		if(this.state.profile_result_all == undefined){
+		if(this.state.profile_result_zip == undefined){
 			fetch('api/profiling/profile/' + window.batchid, { method:'GET'})
 			.then(response => response.json())
 			.then(result => this.setState(state => ({
-                profile_result_all: result.file,
                 profile_result_zip: result.zip })));
 		}else{
 			clearInterval(this.interval);
@@ -39,25 +40,31 @@ export default class Profile_view extends React.Component {
 
 	}
 
+    getIdFile(){
+        download(window.batchid,'BatchId.txt',"text/tab-separated-values");
+    }
+
 	componentDidMount(){
-		this.query_result();
 		this.interval = setInterval(this.query_result, 60000);
 	}
 
-    turn_on_Tabs(){
-        window.tabSwitch = false;
-    }
-
     render() {
 
-    	if(this.state.profile_result_all == undefined){
+    	if(this.state.profile_result_zip == undefined){
 
     		return(
     			<div>
+                    <Prompt 
+                        when={true} 
+                        message="You are leaving the page. Please save ID to get result. Are you sure to leave now?"/>
                     <br />
                     <br />
                     <div style={{ display:'flex', justifyContent:'center', alignItems:'center'}}>
                         <font size="6"> ID : {window.batchid}</font>
+                        &nbsp;&nbsp;&nbsp;&nbsp;
+                        <Button variant="contained" color="default" onClick={this.getIdFile}>
+                            Get ID
+                        </Button>
                     </div>
                     <br />
                     <div style={{ display:'flex', justifyContent:'center', alignItems:'center'}}>
@@ -72,8 +79,11 @@ export default class Profile_view extends React.Component {
                     <br />
                     <br />
                     <div style={{ display:'flex', justifyContent:'center', alignItems:'center'}}>
-                        <img src={require('./static/waiting.svg')} />
+                        <CircularProgress size={175} />
                     </div>
+                    <br />
+                    <br />
+                    <br />
                     <br />
                     <br />
                     <br />
@@ -83,14 +93,18 @@ export default class Profile_view extends React.Component {
     	}else{
     		return (
     				<div>
+                        <Prompt 
+                            when={true} 
+                            message="You are leaving the page. Please save results, or it will lose. Are you sure to leave now?"/>
                         <br />
                         <br />
-    					<br />
-                        <br />
-                        <br />
-                        <br />
-                        <br />
-                        <br />
+                        <div style={{ display:'flex', justifyContent:'center', alignItems:'center'}}>
+                            <font size="6"> ID : {window.batchid}</font>
+                            &nbsp;&nbsp;&nbsp;&nbsp;
+                            <Button variant="contained" color="default" onClick={this.getIdFile}>
+                                Get ID
+                            </Button>
+                        </div>
                         <br />
                         <br />
                         <br />
@@ -104,16 +118,6 @@ export default class Profile_view extends React.Component {
                                 <DownloadIcon />
                                 </Button>
                             </a>
-                            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-                            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-                            <a download href={this.state.profile_result_all} 
-                             style={{ textDecoration:'none' }}>
-                                <Button variant="contained" color="default">
-                                Download profiles (.tsv)
-                                &nbsp;&nbsp;
-                                <DownloadIcon />
-                                </Button>
-                            </a>
                         </div>
     					<br />
     					<br />
@@ -121,9 +125,11 @@ export default class Profile_view extends React.Component {
                         <br />
                         <br />
                         <br />
+                        <br />
+                        <br />
                         <div style={{ display:'flex', justifyContent:'center', alignItems:'center'}}>
                             <Link to="/" style={{ textDecoration:'none' }}>
-                                <Button variant="contained" color="default" onClick={this.turn_on_Tabs}>
+                                <Button variant="contained" color="default">
                                     <ReplyIcon />
                                     &nbsp;&nbsp;
                                     Back

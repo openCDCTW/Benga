@@ -1,6 +1,6 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
-import { BrowserRouter as Router, Route } from "react-router-dom";
+import { BrowserRouter as Router, Route, HashRouter } from "react-router-dom";
 import Header from './Header.jsx';
 import Navigation from './Navigation.jsx'
 import Footer from './Footer.jsx';
@@ -12,7 +12,6 @@ import Tracking from './Tracking.jsx';
 import Example from './Example.jsx';
 import Tutorial from './Tutorial.jsx';
 import Tracking_result from './TrackingResult.jsx';
-import Tracking_search from './TrackingSearch.jsx';
 import About from './About.jsx';
 
 class Main extends React.Component {
@@ -39,7 +38,6 @@ class Main extends React.Component {
                     <Route path="/dendrogram_view" component={Dendrogram_view} />
                     <Route path="/tracking" component={Tracking} />
                     <Route path="/tracking_result" component={Tracking_result} />
-                    <Route path="/tracking_search" component={Tracking_search} />
                     <Route path="/about" exact component={About} />
                     <Route path="/demo" component={Example} />
                     <Route path="/tutorial" component={Tutorial} />
@@ -50,4 +48,4 @@ class Main extends React.Component {
     }
 }
 
-ReactDOM.render(<Main /> ,document.getElementById('root'));
+ReactDOM.render(<Main />, document.getElementById('root'));

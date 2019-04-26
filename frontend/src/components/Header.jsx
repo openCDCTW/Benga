@@ -8,7 +8,15 @@ export default class Header extends React.Component {
         return (
             <header>
                 <br />
-                <font size="5" color="white">cgMLST@TAIWAN</font>
+                <div style={{ display:'flex', justifyContent:'center', 
+                alignItems:'center'}}>
+                    <a href="http://192.168.30.240:8000" target='_blank'>
+                        <img src={require('./static/benga.png')} />
+                    </a>
+                </div>
+                <a href="http://192.168.30.240:8000" style={{ textDecoration:'none' }} target='_blank'>
+                	<font size="5" color="white">cgMLST@TAIWAN</font>
+                </a>
                 <br />
             </header>
         );

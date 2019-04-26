@@ -1,16 +1,19 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 import { Link } from 'react-router-dom';
+import { Prompt } from 'react-router';
 import Paper from '@material-ui/core/Paper';
 import Button from '@material-ui/core/Button';
 import { withStyles } from '@material-ui/core/styles';
 import ReplyIcon from '@material-ui/icons/Reply';
-//Table
+import CloudDownloadIcon from '@material-ui/icons/CloudDownload';
+
 import Table from '@material-ui/core/Table';
 import TableBody from '@material-ui/core/TableBody';
 import TableCell from '@material-ui/core/TableCell';
 import TableHead from '@material-ui/core/TableHead';
 import TableRow from '@material-ui/core/TableRow';
+import CircularProgress from '@material-ui/core/CircularProgress';
 //Scrollbar
 import { Scrollbars } from 'react-custom-scrollbars';
 //
@@ -18,6 +21,8 @@ import FormControl from '@material-ui/core/FormControl';
 import Select from '@material-ui/core/Select';
 import MenuItem from '@material-ui/core/MenuItem';
 import InputLabel from '@material-ui/core/InputLabel';
+
+import green from '@material-ui/core/colors/green';
 
 const TrackingResultTable = withStyles(theme => ({
 	head:{
@@ -52,6 +57,13 @@ const styles = theme => ({
 	selectEmpty: {
 		marginTop: theme.spacing.unit * 2,
 	},
+	downloadButton:{
+        color: theme.palette.getContrastText(green[900]),
+        backgroundColor: green[600],
+        '&:hover': {
+            backgroundColor:green[900],
+        },
+    },
 });
 
 class Tracking_result extends React.Component {
@@ -64,7 +76,7 @@ class Tracking_result extends React.Component {
 
 	query_track_result(){
 		if(this.state.tracking_result == undefined){
-			fetch('api/tracking/results/' + window.trackingID, { method:'GET'})
+			fetch('api/tracking/results/' + window.trackingID + '/', { method:'GET'})
 			.then(response => response.json())
 			.then(result => this.setState(state => ({
                 tracking_result: result.json,
@@ -75,8 +87,7 @@ class Tracking_result extends React.Component {
 	}
 
 	componentDidMount(){
-		this.query_track_result(); //delete after testing
-		this.interval = setInterval(this.query_track_result, 10000);
+		this.interval = setInterval(this.query_track_result, 3000);
 	}
 
 	handleChange(event){
@@ -89,11 +100,11 @@ class Tracking_result extends React.Component {
 		this.setState(state => ({ tracking_result_shown: tmp }));
 	};
 
-	turn_on_Tabs(){
-		window.tabSwitch = false;
-	}
+	// downloadProfiles(){
 
-	downloadProfiles(){
+	// }
+
+	downloadTable(){
 
 	}
 
@@ -104,44 +115,64 @@ class Tracking_result extends React.Component {
     	if(this.state.tracking_result == undefined){
     		return(
     			<div>
-				<br />
-				<br />
-				<br />
-				<div style={{ display:'flex', justifyContent:'center', alignItems:'center'}}>
-					<font> Please hold on ... </font>
+    				<Prompt 
+                            when={true} 
+                            message="Are you sure to leave now?"/>
+					<br />
+					<br />
+					<br />
+					<div style={{ display:'flex', justifyContent:'center', alignItems:'center'}}>
+						<font size="6"> Please hold on ... </font>
+					</div>
+					<br />
+					<br />
+					<br />
+					<div style={{ display:'flex', justifyContent:'center', alignItems:'center'}}>
+						<CircularProgress size={175} />
+	                </div>
+					<br />
+					<br />
+					<br />
 				</div>
-				<br />
-				<div style={{ display:'flex', justifyContent:'center', alignItems:'center'}}>
-					<img src={require('./static/waiting.svg')} />
-				</div>
-				<br />
-				<br />
-				<br />
-			</div>
 		);
     	
     	}else{
     		return (
 				<div>
+					<Prompt 
+                            when={true} 
+                            message="You are leaving the page. Please save result, or it will lose. Are you sure to leave now?"/>
+					<br />
 					<br />
 					<div style={{ display:'flex', justifyContent:'center', alignItems:'center'}}>
 						<Paper className={classes.root}>
-							<form autoComplete="off">
-								<FormControl className={classes.formControl}>
-									<InputLabel>Display rows (Default:100)</InputLabel>
-										<Select
-										value={this.state.rownumber}
-										onChange={this.handleChange.bind(this)}
-										name="rownumber"
-										className={classes.selectEmpty}
-										>
-										<MenuItem value={100}>100</MenuItem>
-										<MenuItem value={50}>50</MenuItem>
-										<MenuItem value={20}>20</MenuItem>
-										<MenuItem value={10}>10</MenuItem>
-										</Select>
-								</FormControl>
-							</form>
+							<div>
+								<div>
+									<form autoComplete="off">
+										<FormControl className={classes.formControl}>
+											<InputLabel>Display rows (Default:100)</InputLabel>
+												<Select
+												value={this.state.rownumber}
+												onChange={this.handleChange.bind(this)}
+												name="rownumber"
+												className={classes.selectEmpty}
+												>
+												<MenuItem value={100}>100</MenuItem>
+												<MenuItem value={50}>50</MenuItem>
+												<MenuItem value={20}>20</MenuItem>
+												<MenuItem value={10}>10</MenuItem>
+												</Select>
+										</FormControl>
+									</form>
+								</div>
+								<div style={{ float:'right', marginTop:'-35px', marginRight:'35px' }}>
+	                        		<Button variant="contained" className={classes.downloadButton} onClick={this.downloadTable.bind(this)}>
+	                                	Download
+	                                	&nbsp;&nbsp;
+	                                	<CloudDownloadIcon />
+	                        		</Button>
+	                    		</div>
+	                    	</div>
 							<Scrollbars 
 							style={{ width: '93%', height: 600, margin:30}}>
 								<Table className={classes.table}>
@@ -149,11 +180,13 @@ class Tracking_result extends React.Component {
 										<TableRow>
 											<TrackingResultTable align="right">Difference(loci)</TrackingResultTable>
 											<TrackingResultTable align="right">BioSample</TrackingResultTable>
-											<TrackingResultTable align="right">Strain</TrackingResultTable>
-											<TrackingResultTable align="right">Country</TrackingResultTable>
-											<TrackingResultTable align="right">Year</TrackingResultTable>
+											<TrackingResultTable align="right">Strain ID/Alias</TrackingResultTable>
+											<TrackingResultTable align="right">SourceSeq</TrackingResultTable>
+											<TrackingResultTable align="right">Source country</TrackingResultTable>
+											<TrackingResultTable align="right">Isolated year</TrackingResultTable>
 											<TrackingResultTable align="right">ST</TrackingResultTable>
-											<TrackingResultTable align="right">Serogroup_serotype</TrackingResultTable>
+											<TrackingResultTable align="right">Serogroup_type</TrackingResultTable>
+											<TrackingResultTable align="right">Number of void loci</TrackingResultTable>
 										</TableRow>
 									</TableHead>
 									<TableBody>
@@ -167,10 +200,12 @@ class Tracking_result extends React.Component {
 													</a>
 												</TrackingResultTable>
 												<TrackingResultTable align="right">{row.Strain}</TrackingResultTable>
-												<TrackingResultTable align="right">{row.Country}</TrackingResultTable>
-												<TrackingResultTable align="right">{row.Year}</TrackingResultTable>
+												<TrackingResultTable align="right">{row.SourceSeq}</TrackingResultTable>
+												<TrackingResultTable align="right">{row.SourceCountry}</TrackingResultTable>
+												<TrackingResultTable align="right">{row.IsolatYear}</TrackingResultTable>
 												<TrackingResultTable align="right">{row.ST}</TrackingResultTable>
-												<TrackingResultTable align="right">{row.Serogroup_serotype}</TrackingResultTable>
+												<TrackingResultTable align="right">{row.Serogroup_type}</TrackingResultTable>
+												<TrackingResultTable align="right">{row.Number_of_void_loci}</TrackingResultTable>
 											</TableRow>
 										))}
 									</TableBody>
@@ -182,7 +217,7 @@ class Tracking_result extends React.Component {
 					<br />
 					<div style={{ display:'flex', justifyContent:'center', alignItems:'center'}}>
 						<Link to="/tracking" style={{ textDecoration:'none' }}>
-							<Button variant="contained" color="default" onClick={this.turn_on_Tabs}>
+							<Button variant="contained" color="default">
 								<ReplyIcon />
 								&nbsp;&nbsp;
 								Back
