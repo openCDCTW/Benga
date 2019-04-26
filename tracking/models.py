@@ -14,6 +14,10 @@ def result_path(instance, filename):
     return "tracked_results/{0}/{1}".format(str(instance.id.id), instance.json.name)
 
 
+def result_zip_path(instance, filename):
+    return "tracked_results_zip/{0}/{1}".format(str(instance.id.id), instance.zip.name)
+
+
 class Profile(models.Model):
     id = models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, null=False, auto_created=True)
     created = models.DateTimeField(auto_now_add=True)
@@ -24,3 +28,4 @@ class Profile(models.Model):
 class TrackedResults(models.Model):
     id = models.OneToOneField(Profile, on_delete=models.CASCADE, primary_key=True)
     json = models.FileField(upload_to=result_path, null=False, max_length=250)
+    zip = models.FileField(upload_to=result_zip_path, null=False, max_length=250)
