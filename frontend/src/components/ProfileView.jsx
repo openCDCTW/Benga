@@ -60,10 +60,10 @@ export default class Profile_view extends React.Component {
                     <br />
                     <br />
                     <div style={{ display:'flex', justifyContent:'center', alignItems:'center'}}>
-                        <font size="6"> ID : {window.batchid}</font>
+                        <font size="6">Job ID : {window.batchid}</font>
                         &nbsp;&nbsp;&nbsp;&nbsp;
                         <Button variant="contained" color="default" onClick={this.getIdFile}>
-                            Get ID
+                            Get job ID
                         </Button>
                     </div>
                     <br />
@@ -99,10 +99,10 @@ export default class Profile_view extends React.Component {
                         <br />
                         <br />
                         <div style={{ display:'flex', justifyContent:'center', alignItems:'center'}}>
-                            <font size="6"> ID : {window.batchid}</font>
+                            <font size="6">Job ID : {window.batchid}</font>
                             &nbsp;&nbsp;&nbsp;&nbsp;
                             <Button variant="contained" color="default" onClick={this.getIdFile}>
-                                Get ID
+                                Get job ID
                             </Button>
                         </div>
                         <br />

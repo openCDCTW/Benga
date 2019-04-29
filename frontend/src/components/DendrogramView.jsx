@@ -50,15 +50,15 @@ export default class Dendrogram_view extends React.Component {
 	    		<div>
 	    			<Prompt 
                             when={true} 
-                            message="Are you sure to leave now?"/>
+                            message="You are leaving the page. Please save ID to get result. Are you sure to leave now?"/>
 					<br />
 					<br />
 					<br />
 					<div style={{ display:'flex', justifyContent:'center', alignItems:'center'}}>
-                        <font size="6"> ID : {window.clusteringID}</font>
+                        <font size="6"> Job ID : {window.clusteringID}</font>
                         &nbsp;&nbsp;&nbsp;&nbsp;
                         <Button variant="contained" color="default" onClick={this.getIdFile}>
-                            Get ID
+                            Get job ID
                         </Button>
                     </div>
                     <br />
@@ -83,14 +83,14 @@ export default class Dendrogram_view extends React.Component {
 				<div>
 					<Prompt 
                             when={true} 
-                            message="You are leaving the page. Please save ID to get result. Are you sure to leave now?"/>
+                            message="You are leaving the page. Please save results, or it will lose. Are you sure to leave now?"/>
 					<br />
 					<br />
 					<div style={{ display:'flex', justifyContent:'center', alignItems:'center'}}>
-                        <font size="6"> ID : {window.clusteringID}</font>
+                        <font size="6">Job ID : {window.clusteringID}</font>
                         &nbsp;&nbsp;&nbsp;&nbsp;
                         <Button variant="contained" color="default" onClick={this.getIdFile}>
-                            Get ID
+                            Get job ID
                         </Button>
                     </div>
                     <br />
