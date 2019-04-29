@@ -36,8 +36,6 @@ export default class Navigation extends React.Component {
                     label="Search Database" component={Link} to="/tracking_search" />
                     <Tab style={{ fontSize:'16px',textTransform:'none' }} disabled={window.tabSwitch} 
                     label="Clustering" component={Link} to="/upload_profile" />
-                    <Tab style={{ fontSize:'16px',textTransform:'none' }} disabled={window.tabSwitch} 
-                    label="Example" component={Link} to="/demo" />
                     <Tab style={{ fontSize:'16px',textTransform:'none' }} disabled={window.tabSwitch}
                     label="Tutorial" component={Link} to="/tutorial" />
                 </Tabs>
