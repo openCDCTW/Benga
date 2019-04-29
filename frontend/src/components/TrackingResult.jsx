@@ -80,7 +80,8 @@ class Tracking_result extends React.Component {
 			.then(response => response.json())
 			.then(result => this.setState(state => ({
                 tracking_result: result.json,
-                tracking_result_shown: result.json })));
+                tracking_result_shown: result.json,
+                trackingZip: result.zip })));
 		}else{
 			clearInterval(this.interval);
 		}
@@ -99,10 +100,6 @@ class Tracking_result extends React.Component {
 		};
 		this.setState(state => ({ tracking_result_shown: tmp }));
 	};
-
-	turn_on_Tabs(){
-		window.tabSwitch = false;
-	}
 
     render() {
     	const { classes } = this.props;
@@ -162,11 +159,13 @@ class Tracking_result extends React.Component {
 									</form>
 								</div>
 								<div style={{ float:'right', marginTop:'-35px', marginRight:'35px' }}>
-	                        		<Button variant="contained" className={classes.downloadButton} onClick={this.downloadTable.bind(this)}>
-	                                	Download
-	                                	&nbsp;&nbsp;
-	                                	<CloudDownloadIcon />
-	                        		</Button>
+	                        		<a download href={this.state.trackingZip} style={{ textDecoration:'none' }}>
+		                        		<Button variant="contained" className={classes.downloadButton}>
+		                                	Download
+		                                	&nbsp;&nbsp;
+		                                	<CloudDownloadIcon />
+		                        		</Button>
+	                        		</a>
 	                    		</div>
 	                    	</div>
 							<Scrollbars 
