@@ -1,5 +1,17 @@
-from django.shortcuts import render
+from django.views.generic import TemplateView
 
-# Create your views here.
-def index(request):
-	return render(request,'frontend/index.html')
+
+class IndexView(TemplateView):
+    template_name = "frontend/index.html"
+
+
+class ProfileResultView(TemplateView):
+    template_name = "frontend/profile-result.html"
+
+
+class ClusteringResultView(TemplateView):
+    template_name = "frontend/clustering-result.html"
+
+
+class TrackingResultView(TemplateView):
+    template_name = "frontend/tracking-result.html"
