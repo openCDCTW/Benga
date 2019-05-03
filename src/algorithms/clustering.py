@@ -65,6 +65,12 @@ class Dendrogram:
         ax.grid(False)
         ax.patch.set_facecolor('none')
         ax.xaxis.set_major_locator(MaxNLocator(integer=True))
+
+        ax.spines['right'].set_visible(False)
+        ax.spines['top'].set_visible(False)
+        ax.spines['left'].set_visible(False)
+        ax.spines['bottom'].set_visible(False)
+        
         plt.rcParams['svg.fonttype'] = 'none'
         tree = hierarchy.dendrogram(self._linkage, labels=self._nodes, orientation="left",
                                     leaf_font_size=10, above_threshold_color="#000000", color_threshold=0)
