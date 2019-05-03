@@ -216,7 +216,7 @@ def annotate_configs(input_dir, output_dir, logger=None, threads=8):
     genome_dir = os.path.join(output_dir, "Genomes")
     os.makedirs(genome_dir, exist_ok=True)
     contighandler = files.ContigHandler()
-    contighandler.new_format(input_dir, genome_dir, replace_ext=False)
+    contighandler.new_format(input_dir, genome_dir)
     namemap = contighandler.namemap
     with open(os.path.join(output_dir, "namemap.json"), "w") as f:
         f.write(json.dumps(namemap))
