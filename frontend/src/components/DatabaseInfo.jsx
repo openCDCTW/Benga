@@ -19,10 +19,15 @@ export default class DatabaseInfo extends React.Component {
 					margin:'auto',fontSize:16 }}>
 						&nbsp;&nbsp;&nbsp;&nbsp;cgMLST@Taiwan provides allele database, cgMLST database, 
 						and tools for cgMLST profiling of whole genome sequences, strain tracking, 
-						and clustering of cgMLST profiles of Vibrio cholerae via the internet. 
-						cgMLST profiling is based on 2,951 V. cholerae core genes, 
-						which are identified from 1,647 V. 
-						cholerae genomes from the NCBI database. 
+						and clustering of cgMLST profiles of 
+						<font style={{ fontStyle:'italic' }}> Vibrio cholerae </font>
+						via the internet. 
+						cgMLST profiling is based on 2,951
+						<font style={{ fontStyle:'italic' }}> V. cholerae </font>
+						core genes, 
+						which are identified from 1,647
+						<font style={{ fontStyle:'italic' }}> V. cholerae </font>
+						genomes from the NCBI database. 
 						Core genes are designated for those existing in more than 95% of the 1,647 genomes. 
 					</Typography>
 					<br />
@@ -33,7 +38,9 @@ export default class DatabaseInfo extends React.Component {
 	            	<br />
 	            	<Typography component="p" style={{ width:'90%',textAlign: 'center',
 					margin:'auto',fontSize:16 }}>
-						Figure. Frequency of loci (genes) over 1,647 V. cholerae genomes.
+						Figure. Frequency of loci (genes) over 1,647
+						<font style={{ fontStyle:'italic' }}> V. cholerae </font>
+						genomes.
 					</Typography>
 					<br />
 					<Typography component="p" style={{ width:'90%',textAlign: 'justify',
@@ -63,7 +70,9 @@ export default class DatabaseInfo extends React.Component {
 					margin:'auto',fontSize:16 }}>
 						Yueh-Hua Tu, Yi-Syong Chen, Bo-Han Chen, Yen-Yi Liu, Yu-Ping Hong, 
 						Ru-Hsiou Teng, You-Wun Wang, and Chien-Shun Chiou. cgMLST@Taiwan: 
-						A web service for Vibrio cholerae cgMLST profiling and global strain tracking. 
+						A web service for 
+						<font style={{ fontStyle:'italic' }}> Vibrio cholerae </font>
+						cgMLST profiling and global strain tracking. 
 						J Clin Microbiol. 2019.
 					</Typography>
 					<br />

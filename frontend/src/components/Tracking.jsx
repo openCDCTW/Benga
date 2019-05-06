@@ -114,7 +114,7 @@ class Tracking extends React.Component {
         this.componentConfig = {
             iconFiletypes: ['.tsv'],
             showFiletypeIcon: true,
-            postUrl: 'api/tracking/sequence/'
+            postUrl: 'api/tracking/profile/'
         };
 
         this.dropzone = null;

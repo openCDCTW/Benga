@@ -230,7 +230,7 @@ class Upload_profile extends React.Component {
 
         fetch('api/dendrogram/dendrogram/' + this.state.querybyID + '/', { method:'GET'})
         .then(function(response){
-            if(response.status != 404){
+            if(response.status == 200){
                 return response.json();
             }else{
                 return response.status;
@@ -255,7 +255,7 @@ class Upload_profile extends React.Component {
     }
 
     back(){
-        this.setState(state => ({ png_file: undefined }));
+        this.setState(state => ({ png_file: undefined, tmp: undefined }));
     }
 
     render() {

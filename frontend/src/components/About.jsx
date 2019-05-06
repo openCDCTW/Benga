@@ -48,7 +48,7 @@ class About extends React.Component {
     			<br />
     			<div style={{ justifyContent:'center',margin:'auto',display:'flex'}}>
 	    			<Paper className={classes.paper_root} elevation={4}>
-	    				<h2>&nbsp;Database Information</h2>
+	    				<h2 style={{ marginLeft:'30px' }}>&nbsp;Database Information</h2>
                     	<br />
                     	<div>
                     		<DatabaseInfo database={this.state.databaseInfo}/>

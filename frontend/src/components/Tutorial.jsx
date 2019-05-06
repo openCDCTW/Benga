@@ -24,20 +24,6 @@ class Tutorial extends React.Component {
 				<br />
 				<div style={{ justifyContent:'center',margin:'auto',display:'flex'}}>
 					<Paper className={classes.paper_root} elevation={4}>
-						<h2>&nbsp;About</h2>			
-						<Typography component="p" style={{ width:'90%',textAlign: 'justify',
-						margin:'auto',fontSize:16 }}>
-							&nbsp;&nbsp;&nbsp;&nbsp;It’s a web-basde analysis tool for bacterial 
-							genomes. This website has three main features. One is upload sequences 
-							to get cgMLST profiles. Another is upload cgMLST profiles to get 
-							dendrogram. The other is upload a cgMLST profile to compare cgMLST 
-							profiles of global outbreak strains.
-						</Typography>
-					</Paper>
-				</div>
-				<br/>
-				<div style={{ justifyContent:'center',margin:'auto',display:'flex'}}>
-					<Paper className={classes.paper_root} elevation={4}>
 						<h2>&nbsp;How to use?</h2>
 						<Typography component="p" style={{ width:'90%',textAlign: 'justify',
 						margin:'auto',fontSize:16 }}>
