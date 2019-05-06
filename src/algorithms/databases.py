@@ -216,15 +216,12 @@ def annotate_configs(input_dir, output_dir, logger=None, threads=8):
     genome_dir = os.path.join(output_dir, "Genomes")
     os.makedirs(genome_dir, exist_ok=True)
     contighandler = files.ContigHandler()
-    contighandler.new_format(input_dir, genome_dir, replace_ext=False)
-    namemap = contighandler.namemap
-    with open(os.path.join(output_dir, "namemap.json"), "w") as f:
-        f.write(json.dumps(namemap))
+    filenames = contighandler.new_format(input_dir, genome_dir)
 
     logger.info("Annotating...")
     annotate_dir = os.path.join(output_dir, "Annotated")
     os.makedirs(annotate_dir, exist_ok=True)
-    c = [cmds.form_prokka_cmd(x, genome_dir, annotate_dir) for x in namemap.keys()]
+    c = [cmds.form_prokka_cmd(x, genome_dir, annotate_dir) for x in filenames]
     with ProcessPoolExecutor(int(threads / 2)) as executor:
         executor.map(cmds.execute_cmd, c)
 

@@ -8,10 +8,10 @@ BINARIES_PATH = os.path.abspath(os.path.join(DIR_PATH, "..", "..", "binaries", "
 MODELS_PATH = os.path.abspath(os.path.join(DIR_PATH, "..", "..", 'models'))
 
 
-def form_prokka_cmd(newname, inpath, outpath):
-    name, ext = newname.split(".")
-    args = ["prokka", "--prefix", name, "--cpus", "2", "--outdir", os.path.join(outpath, name),
-            os.path.join(inpath, newname)]
+def form_prokka_cmd(filename, inpath, outpath):
+    prefix, ext = filename.split(".")
+    args = ["prokka", "--prefix", prefix, "--cpus", "2", "--outdir", os.path.join(outpath, prefix),
+            os.path.join(inpath, filename)]
     return " ".join(map(str, args))
 
 

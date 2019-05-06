@@ -32,11 +32,14 @@ class ContigHandler:
         SeqIO.write(records, sink_file, "fasta")
 
     def new_format(self, from_dir, to_dir):
+        filenames = []
         for filename in sorted(os.listdir(from_dir)):
             newname = self.replace_ext(filename) + ".fa"
             source_file = os.path.join(from_dir, filename)
             sink_file = os.path.join(to_dir, newname)
             self.__write_new_format(source_file, sink_file)
+            filenames.append(newname)
+        return filenames
 
 
 def drop_duplicate(l, idfun=None):
