@@ -39,9 +39,6 @@ class About extends React.Component {
 		};
 	}
 
-	handleChange(event){
-        this.setState(state => ({ [event.target.name]: event.target.value }));
-    }
 
 	render() {
 		const { classes } = this.props;
@@ -51,21 +48,7 @@ class About extends React.Component {
     			<br />
     			<div style={{ justifyContent:'center',margin:'auto',display:'flex'}}>
 	    			<Paper className={classes.paper_root} elevation={4}>
-	    				<h2>&nbsp;Database Information</h2>
-	    				<div style={{ float:'left', marginLeft:'15px' }}>
-	                        <form className={classes.selectcss} autoComplete="off">
-	                            <FormControl required className={classes.formControl} >
-	                              <InputLabel>Species</InputLabel>
-	                                <Select
-	                                  value={this.state.databaseInfo}
-	                                  onChange={this.handleChange.bind(this)}
-	                                  name="databaseInfo"
-	                                  >
-	                                  <MenuItem value={1}>Vibrio cholerae</MenuItem>
-	                                </Select>
-	                            </FormControl>
-	                        </form>
-                        </div>
+	    				<h2 style={{ marginLeft:'30px' }}>&nbsp;Database Information</h2>
                     	<br />
                     	<div>
                     		<DatabaseInfo database={this.state.databaseInfo}/>
