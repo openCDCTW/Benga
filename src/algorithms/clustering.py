@@ -1,11 +1,10 @@
 import fastcluster
 import pandas as pd
+import numpy as np
 from scipy.cluster import hierarchy
 from scipy.spatial.distance import squareform
 import matplotlib
-matplotlib.use('Agg')
 import matplotlib.pyplot as plt
-from collections import Counter
 from matplotlib.ticker import MaxNLocator
 
 
@@ -14,8 +13,8 @@ class DistanceMatrix:
     def __init__(self, profile):
         profile = profile.fillna('0')
         profile = profile.transpose()
-        self._profile_array = profile.values
-        self._profile_index = list(profile.index)
+        self._profile_values = profile.values
+        self._profile_index = np.asarray(profile.index)
         self._distances = None
 
     @property
@@ -25,17 +24,12 @@ class DistanceMatrix:
     @property
     def distance(self):
         if not self._distances:
-            pairs = []
-            for i in range(len(self._profile_index)):
-                data = (self._profile_index[i], self._profile_index[i], 0)
-                pairs.append(data)
-                for j in range(i+1, len(self._profile_index)):
-                    dist = hamming(self._profile_array[i], self._profile_array[j])
-                    data = (self._profile_index[i], self._profile_index[j], dist)
-                    pairs.append(data)
             self._distances = pd.DataFrame()
-            for pair in pairs:
-                self._distances.loc[pair[0], pair[1]] = self._distances.loc[pair[1], pair[0]] = pair[2]
+            for index_1, item_1 in enumerate(self._profile_index, 0):
+                for index_2, item_2 in enumerate(self._profile_index[index_1::], index_1):
+                    self._distances.loc[item_1, item_2] = self._distances.loc[item_2, item_1] = hamming(
+                        self._profile_values[index_1], self._profile_values[index_2]
+                    )
         return self._distances
 
 
@@ -87,8 +81,8 @@ class Dendrogram:
             file.write(self.newick)
 
 
-def hamming(array_1, array_2):
-    return Counter(array_1 == array_2)[False]
+def hamming(item_1, item_2):
+    return (item_1 != item_2).sum()
 
 
 def make_newick(node, newick, parentdist, leaf_names):
