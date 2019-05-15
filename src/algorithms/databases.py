@@ -21,27 +21,6 @@ def move_file(annotate_dir, dest_dir, ext):
                 os.rename(current_file, os.path.join(dest_dir, file))
 
 
-def create_noncds(database_dir, gff_dir):
-    noncds = defaultdict(list)
-    for file in os.listdir(gff_dir):
-        name, ext = file.split(".")
-        for line in open(os.path.join(gff_dir, file), "r").read().splitlines():
-            if line.startswith("##sequence") or line.startswith("##gff"):
-                continue
-            if line.startswith("##FASTA"):
-                break
-
-            token = line.split("\t")
-            seq_type, annotation = token[2], token[8]
-
-            if annotation.startswith("ID="):
-                prokkaid = annotation.split(";")[0][3:]
-                if seq_type != "CDS":
-                    noncds[name].append(prokkaid)
-    with open(os.path.join(database_dir, "nonCDS.json"), "w") as file:
-        file.write(json.dumps(noncds))
-
-
 def filter_tRNA(matrix):
     c = re.compile(r"tRNA-\w+\(\w{3}\)")
     is_trna = []
@@ -234,9 +213,6 @@ def annotate_configs(input_dir, output_dir, logger=None, threads=8):
     gff_dir = os.path.join(output_dir, "GFF")
     os.makedirs(gff_dir, exist_ok=True)
     move_file(annotate_dir, gff_dir, ".gff")
-
-    logger.info("Creating nonCDS.json...")
-    create_noncds(output_dir, gff_dir)
 
 
 def make_database(output_dir, drop_by_occur, logger=None, threads=2):
