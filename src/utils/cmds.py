@@ -9,7 +9,7 @@ MODELS_PATH = os.path.abspath(os.path.join(DIR_PATH, "..", "..", 'models'))
 
 
 def form_prokka_cmd(filename, inpath, outpath):
-    prefix, ext = filename.split(".")
+    prefix, ext = os.path.splitext(filename)
     args = ["prokka", "--prefix", prefix, "--cpus", "2", "--outdir", os.path.join(outpath, prefix),
             os.path.join(inpath, filename)]
     return " ".join(map(str, args))
