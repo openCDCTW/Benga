@@ -9,7 +9,7 @@ module.exports = {
         }
       },
       {
-        test:/\.(png|jpg|svg|emf|zip|pdf|tsv|newick|css|fa)$/,
+        test:/\.(png|jpg|svg|emf|zip|pdf|tsv|newick|css|fa|gif)$/,
         use: {
           loader: "url-loader",
         },
