@@ -5,7 +5,7 @@ from scipy.cluster import hierarchy
 from scipy.spatial.distance import squareform
 import matplotlib
 import matplotlib.pyplot as plt
-from matplotlib.ticker import MaxNLocator
+from matplotlib.ticker import MaxNLocator, FuncFormatter
 
 
 class DistanceMatrix:
@@ -59,6 +59,7 @@ class Dendrogram:
         ax.grid(False)
         ax.patch.set_facecolor('none')
         ax.xaxis.set_major_locator(MaxNLocator(integer=True))
+        ax.get_xaxis().set_major_formatter(FuncFormatter(lambda x, p: format(int(x), ',')))
 
         ax.spines['right'].set_visible(False)
         ax.spines['top'].set_visible(False)
