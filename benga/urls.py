@@ -23,10 +23,10 @@ from rest_framework import routers
 router = routers.DefaultRouter()
 
 urlpatterns = [
-    path('', include('frontend.urls')),
-    path('api/', include(router.urls)),
-    path('admin/', admin.site.urls),
-    path('api/profiling/', include("profiling.urls")),
-    path('api/dendrogram/', include("dendrogram.urls")),
-    path('api/tracking/', include("tracking.urls")),
+    path('cgMLST/', include('frontend.urls')),
+    path('cgMLST/api/', include(router.urls)),
+    path('cgMLST/admin/', admin.site.urls),
+    path('cgMLST/api/profiling/', include("profiling.urls")),
+    path('cgMLST/api/dendrogram/', include("dendrogram.urls")),
+    path('cgMLST/api/tracking/', include("tracking.urls")),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
