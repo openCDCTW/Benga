@@ -18,4 +18,4 @@ RUN curl -o- https://raw.githubusercontent.com/creationix/nvm/v0.33.11/install.s
     export NODE_OPTIONS=--max_old_space_size=4096 && \
     npm run build
 
-CMD ["/bin/sh"]
+CMD ["gunicorn", "benga.wsgi:application", "-w", "2", "-k", "uvicorn.workers.UvicornWorker"]
