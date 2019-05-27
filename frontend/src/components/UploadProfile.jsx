@@ -64,7 +64,7 @@ class Upload_profile extends React.Component {
         this.componentConfig = {
             iconFiletypes: ['.tsv'],
             showFiletypeIcon: true,
-            postUrl: 'cgMLST/api/dendrogram/profile/'
+            postUrl: 'api/dendrogram/profile/'
         };
 
         this.dropzone = null;
@@ -82,7 +82,7 @@ class Upload_profile extends React.Component {
             return ;
         }
 
-        fetch('cgMLST/api/dendrogram/upload/', {method:'POST'})
+        fetch('api/dendrogram/upload/', {method:'POST'})
             .then(function(res){
                return res.json();
             }).then(batch => window.clusteringID = batch.id);
@@ -95,13 +95,13 @@ class Upload_profile extends React.Component {
                 let scheme = {};
                 scheme.prof_num = this.dropzone.files.length;
                 scheme.linkage = this.state.algorithm;
-                fetch('cgMLST/api/dendrogram/upload/' + window.clusteringID + '/', { 
+                fetch('api/dendrogram/upload/' + window.clusteringID + '/', { 
                     method:'PATCH',
                     headers: new Headers({'content-type': 'application/json'}),
                     body: JSON.stringify(scheme)
                 });
 
-                this.props.history.push("/dendrogram_view");
+                this.props.history.push("/cgMLST/clustering_result");
                 clearInterval(interval);
             }
         };
@@ -119,7 +119,7 @@ class Upload_profile extends React.Component {
 
     example(){
 
-        fetch('cgMLST/api/dendrogram/upload/', {method:'POST'})
+        fetch('api/dendrogram/upload/', {method:'POST'})
             .then(function(res){
                return res.json();
             }).then(batch => window.clusteringID = batch.id);
@@ -145,7 +145,7 @@ class Upload_profile extends React.Component {
                 var scheme = {};
                 scheme.prof_num = 12;
                 scheme.linkage = this.state.algorithm;
-                fetch('cgMLST/api/dendrogram/upload/' + window.clusteringID + '/', { 
+                fetch('api/dendrogram/upload/' + window.clusteringID + '/', { 
                     method:'PATCH',
                     headers: new Headers({'content-type': 'application/json'}),
                     body: JSON.stringify(scheme)
@@ -211,13 +211,13 @@ class Upload_profile extends React.Component {
                     form.append('file',decodeExampleFile[k]);
                     form.append('batch_id', window.clusteringID);
 
-                    fetch('cgMLST/api/dendrogram/profile/', {
+                    fetch('api/dendrogram/profile/', {
                         method:'POST',
                         body:form ,
                     });
                 };
 
-                this.props.history.push("/dendrogram_view");
+                this.props.history.push("/cgMLST/clustering_result");
                 clearInterval(interval);
 
                 }
@@ -228,7 +228,7 @@ class Upload_profile extends React.Component {
 
     query(){
 
-        fetch('cgMLST/api/dendrogram/dendrogram/' + this.state.querybyID + '/', { method:'GET'})
+        fetch('api/dendrogram/dendrogram/' + this.state.querybyID + '/', { method:'GET'})
         .then(function(response){
             if(response.status == 200){
                 return response.json();

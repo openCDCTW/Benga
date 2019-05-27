@@ -114,7 +114,7 @@ class Tracking extends React.Component {
         this.componentConfig = {
             iconFiletypes: ['.tsv'],
             showFiletypeIcon: true,
-            postUrl: 'cgMLST/api/tracking/profile/'
+            postUrl: 'api/tracking/profile/'
         };
 
         this.dropzone = null;
@@ -129,7 +129,7 @@ class Tracking extends React.Component {
 	        return ;
 	    }
 	    this.dropzone.processQueue();
-        this.props.history.push("/tracking_result")
+        this.props.history.push("/cgMLST/tracking_result")
 	}
 
 	remove(){
@@ -156,14 +156,14 @@ class Tracking extends React.Component {
         let form = new FormData();
         form.append('file',VC01);
         form.append('profile_db',"Vibrio_cholerae");
-        fetch('cgMLST/api/tracking/profile/', {
+        fetch('api/tracking/profile/', {
             method:'POST',
             body: form,
         }).then(function(response){
             return response.json();
         }).then(res => window.trackingID = res.id);
 
-        this.props.history.push("/tracking_result");
+        this.props.history.push("/cgMLST/tracking_result");
     }
 
 	render() {

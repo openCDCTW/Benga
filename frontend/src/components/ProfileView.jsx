@@ -30,7 +30,7 @@ export default class Profile_view extends React.Component {
 	query_result(){
 
 		if(this.state.profile_result_zip == undefined){
-			fetch('cgMLST/api/profiling/profile/' + window.batchid, { method:'GET'})
+			fetch('api/profiling/profile/' + window.batchid, { method:'GET'})
 			.then(response => response.json())
 			.then(result => this.setState(state => ({
                 profile_result_zip: result.zip })));
@@ -128,7 +128,7 @@ export default class Profile_view extends React.Component {
                         <br />
                         <br />
                         <div style={{ display:'flex', justifyContent:'center', alignItems:'center'}}>
-                            <Link to="/" style={{ textDecoration:'none' }}>
+                            <Link to="/cgMLST" style={{ textDecoration:'none' }}>
                                 <Button variant="contained" color="default">
                                     <ReplyIcon />
                                     &nbsp;&nbsp;

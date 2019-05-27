@@ -27,15 +27,15 @@ export default class Navigation extends React.Component {
                 textColor="primary" scrollButtons="auto" scrollable={true} 
                 onChange={this.handleChange.bind(this)} disabled={window.tabSwitch}>
                     <Tab style={{ fontSize:'16px', textTransform:'none' }} disabled={window.tabSwitch} 
-                    label="About" component={Link} to="/about" />
+                    label="About" component={Link} to="/cgMLST/about" />
                     <Tab style={{ fontSize:'16px', textTransform:'none' }} disabled={window.tabSwitch} 
                     label="cgMLST Profiling" component={Link} to="/cgMLST" />
                     <Tab style={{ fontSize:'16px',textTransform:'none' }} disabled={window.tabSwitch} 
-                    label="Strain Tracking" component={Link} to="/tracking" />
+                    label="Strain Tracking" component={Link} to="/cgMLST/tracking" />
                     <Tab style={{ fontSize:'16px',textTransform:'none' }} disabled={window.tabSwitch}
-                    label="Clustering" component={Link} to="/upload_profile" />
+                    label="Clustering" component={Link} to="/cgMLST/clustering" />
                     <Tab style={{ fontSize:'16px',textTransform:'none' }} disabled={window.tabSwitch}
-                    label="Tutorial" component={Link} to="/tutorial" />
+                    label="Tutorial" component={Link} to="/cgMLST/tutorial" />
                 </Tabs>
             </Paper>
         );

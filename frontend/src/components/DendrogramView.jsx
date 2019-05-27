@@ -19,7 +19,7 @@ export default class Dendrogram_view extends React.Component {
 	query_dengrogram(){
 		
 		if(this.state.png_file == undefined){
-			fetch('cgMLST/api/dendrogram/dendrogram/' + window.clusteringID, { method: 'GET'})
+			fetch('api/dendrogram/dendrogram/' + window.clusteringID, { method: 'GET'})
 			.then(response => response.json())
 			.then(result => this.setState(state => ({
 				png_file: result.png_file, 
@@ -128,7 +128,7 @@ export default class Dendrogram_view extends React.Component {
 					<br />
 					<br />
 					<div style={{ display:'flex', justifyContent:'center', alignItems:'center'}}>
-						<Link to="/upload_profile" style={{ textDecoration:'none' }}>
+						<Link to="/cgMLST/clustering" style={{ textDecoration:'none' }}>
 							<Button variant="contained" color="default">
 								<ReplyIcon />
 								&nbsp;&nbsp;
