@@ -29,7 +29,7 @@ export default class Navigation extends React.Component {
                     <Tab style={{ fontSize:'16px', textTransform:'none' }} disabled={window.tabSwitch} 
                     label="About" component={Link} to="/about" />
                     <Tab style={{ fontSize:'16px', textTransform:'none' }} disabled={window.tabSwitch} 
-                    label="cgMLST Profiling" component={Link} to="/" />
+                    label="cgMLST Profiling" component={Link} to="/cgMLST" />
                     <Tab style={{ fontSize:'16px',textTransform:'none' }} disabled={window.tabSwitch} 
                     label="Strain Tracking" component={Link} to="/tracking" />
                     <Tab style={{ fontSize:'16px',textTransform:'none' }} disabled={window.tabSwitch}

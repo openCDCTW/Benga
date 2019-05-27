@@ -31,7 +31,7 @@ class Main extends React.Component {
                 <div>
                     <Header />
                     <Navigation />
-                    <Route path="/" exact component={upload_contigs} />
+                    <Route path="/cgMLST" exact component={upload_contigs} />
                     <Route path="/profile_view" component={Profile_view} />
                     <Route path="/upload_profile" component={Upload_profile} />
                     <Route path="/dendrogram_view" component={Dendrogram_view} />

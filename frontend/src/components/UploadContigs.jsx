@@ -70,7 +70,7 @@ class Upload_contigs extends React.Component {
         this.componentConfig = {
             iconFiletypes: ['.fasta','.fna','.fa'],
             showFiletypeIcon: true,
-            postUrl: 'api/profiling/sequence/'
+            postUrl: 'cgMLST/api/profiling/sequence/'
         };
 
         this.dropzone = null;
@@ -96,7 +96,7 @@ class Upload_contigs extends React.Component {
 
         this.setState(state => ({ switch: true }));
 
-        fetch('api/profiling/upload/', {method:'POST'})
+        fetch('cgMLST/api/profiling/upload/', {method:'POST'})
             .then(function(res){
                return res.json();
             }).then(batch => window.batchid = batch.id);
@@ -108,7 +108,7 @@ class Upload_contigs extends React.Component {
 
                 var scheme = {};
                 scheme.seq_num = fileCheck;
-                fetch('api/profiling/upload/' + window.batchid + '/', { 
+                fetch('cgMLST/api/profiling/upload/' + window.batchid + '/', { 
                     method:'PATCH',
                     headers: new Headers({'content-type': 'application/json'}),
                     body: JSON.stringify(scheme)
@@ -130,7 +130,7 @@ class Upload_contigs extends React.Component {
 
     query(){
 
-        fetch('api/profiling/profile/' + this.state.querybyID + '/', { method:'GET'})
+        fetch('cgMLST/api/profiling/profile/' + this.state.querybyID + '/', { method:'GET'})
         .then(function(response){
             if(response.status != 404){
                 return response.json();
@@ -152,7 +152,7 @@ class Upload_contigs extends React.Component {
 
     upload_example_data(){
 
-        fetch('api/profiling/upload/', {method:'POST'})
+        fetch('cgMLST/api/profiling/upload/', {method:'POST'})
             .then(function(res){
                return res.json();
             }).then(batch => window.batchid = batch.id);
@@ -171,7 +171,7 @@ class Upload_contigs extends React.Component {
 
                 var scheme = {};
                 scheme.seq_num = 6;
-                fetch('api/profiling/upload/' + window.batchid + '/', { 
+                fetch('cgMLST/api/profiling/upload/' + window.batchid + '/', { 
                     method:'PATCH',
                     headers: new Headers({'content-type': 'application/json'}),
                     body: JSON.stringify(scheme)
@@ -224,7 +224,7 @@ class Upload_contigs extends React.Component {
                     form.append('occurrence',"95");
                     form.append('database',window.databaseName);
 
-                    fetch('api/profiling/sequence/', {
+                    fetch('cgMLST/api/profiling/sequence/', {
                         method:'POST',
                         body:form ,
                     });

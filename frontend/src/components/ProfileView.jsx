@@ -30,7 +30,7 @@ export default class Profile_view extends React.Component {
 	query_result(){
 
 		if(this.state.profile_result_zip == undefined){
-			fetch('api/profiling/profile/' + window.batchid, { method:'GET'})
+			fetch('cgMLST/api/profiling/profile/' + window.batchid, { method:'GET'})
 			.then(response => response.json())
 			.then(result => this.setState(state => ({
                 profile_result_zip: result.zip })));

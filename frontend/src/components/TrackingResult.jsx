@@ -76,7 +76,7 @@ class Tracking_result extends React.Component {
 
 	query_track_result(){
 		if(this.state.tracking_result == undefined){
-			fetch('api/tracking/results/' + window.trackingID + '/', { method:'GET'})
+			fetch('cgMLST/api/tracking/results/' + window.trackingID + '/', { method:'GET'})
 			.then(response => response.json())
 			.then(result => this.setState(state => ({
                 tracking_result: result.json,
