@@ -31,14 +31,14 @@ class Main extends React.Component {
                 <div>
                     <Header />
                     <Navigation />
-                    <Route path="/" exact component={upload_contigs} />
-                    <Route path="/profile_view" component={Profile_view} />
-                    <Route path="/upload_profile" component={Upload_profile} />
-                    <Route path="/dendrogram_view" component={Dendrogram_view} />
-                    <Route path="/tracking" component={Tracking} />
-                    <Route path="/tracking_result" component={Tracking_result} />
-                    <Route path="/about" exact component={About} />
-                    <Route path="/tutorial" component={Tutorial} />
+                    <Route path="/cgMLST" exact component={upload_contigs} />
+                    <Route path="/cgMLST/profile_result" component={Profile_view} />
+                    <Route path="/cgMLST/clustering" component={Upload_profile} />
+                    <Route path="/cgMLST/clustering_result" component={Dendrogram_view} />
+                    <Route path="/cgMLST/tracking" component={Tracking} />
+                    <Route path="/cgMLST/tracking_result" component={Tracking_result} />
+                    <Route path="/cgMLST/about" exact component={About} />
+                    <Route path="/cgMLST/tutorial" component={Tutorial} />
                     <Footer />
                 </div>
             </Router>

@@ -114,7 +114,7 @@ class Upload_contigs extends React.Component {
                     body: JSON.stringify(scheme)
                 });
 
-                this.props.history.push("/profile_view");
+                this.props.history.push("/cgMLST/profile_result");
                 clearInterval(interval);
             }
         };
@@ -231,7 +231,7 @@ class Upload_contigs extends React.Component {
                 };
               
                 this.setState(state => ({ switch: true }));
-                this.props.history.push("/profile_view");
+                this.props.history.push("/cgMLST/profile_result");
                 clearInterval(interval);
             }
         };

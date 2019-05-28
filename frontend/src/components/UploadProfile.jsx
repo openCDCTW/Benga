@@ -101,7 +101,7 @@ class Upload_profile extends React.Component {
                     body: JSON.stringify(scheme)
                 });
 
-                this.props.history.push("/dendrogram_view");
+                this.props.history.push("/cgMLST/clustering_result");
                 clearInterval(interval);
             }
         };
@@ -217,7 +217,7 @@ class Upload_profile extends React.Component {
                     });
                 };
 
-                this.props.history.push("/dendrogram_view");
+                this.props.history.push("/cgMLST/clustering_result");
                 clearInterval(interval);
 
                 }

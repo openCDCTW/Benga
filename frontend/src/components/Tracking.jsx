@@ -129,7 +129,7 @@ class Tracking extends React.Component {
 	        return ;
 	    }
 	    this.dropzone.processQueue();
-        this.props.history.push("/tracking_result")
+        this.props.history.push("/cgMLST/tracking_result")
 	}
 
 	remove(){
@@ -163,7 +163,7 @@ class Tracking extends React.Component {
             return response.json();
         }).then(res => window.trackingID = res.id);
 
-        this.props.history.push("/tracking_result");
+        this.props.history.push("/cgMLST/tracking_result");
     }
 
 	render() {

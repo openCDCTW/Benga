@@ -128,7 +128,7 @@ export default class Profile_view extends React.Component {
                         <br />
                         <br />
                         <div style={{ display:'flex', justifyContent:'center', alignItems:'center'}}>
-                            <Link to="/" style={{ textDecoration:'none' }}>
+                            <Link to="/cgMLST" style={{ textDecoration:'none' }}>
                                 <Button variant="contained" color="default">
                                     <ReplyIcon />
                                     &nbsp;&nbsp;

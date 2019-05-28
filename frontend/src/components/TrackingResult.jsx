@@ -211,7 +211,7 @@ class Tracking_result extends React.Component {
 					</div>
 					<br />
 					<div style={{ display:'flex', justifyContent:'center', alignItems:'center'}}>
-						<Link to="/tracking" style={{ textDecoration:'none' }}>
+						<Link to="/cgMLST/tracking" style={{ textDecoration:'none' }}>
 							<Button variant="contained" color="default">
 								<ReplyIcon />
 								&nbsp;&nbsp;
