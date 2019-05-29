@@ -12,6 +12,4 @@ django
 celery
 django-celery-results
 djangorestframework
-channels
-gunicorn
-uvicorn
+uwsgi
