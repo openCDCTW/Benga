@@ -117,115 +117,6 @@ class Upload_profile extends React.Component {
         this.setState({ algorithm: event.target.value });
     }
 
-    example(){
-
-        fetch('api/dendrogram/upload/', {method:'POST'})
-            .then(function(res){
-               return res.json();
-            }).then(batch => window.clusteringID = batch.id);
-
-        function submit(){
-
-            if( window.clusteringID != undefined ){
-                let exampleFile = [
-                    { name:"V.cholerae_01.tsv" },
-                    { name:"V.cholerae_02.tsv" },
-                    { name:"V.cholerae_03.tsv" },
-                    { name:"V.cholerae_04.tsv" },
-                    { name:"V.cholerae_05.tsv" },
-                    { name:"V.cholerae_06.tsv" },
-                    { name:"V.cholerae_07.tsv" },
-                    { name:"V.cholerae_08.tsv" },
-                    { name:"V.cholerae_09.tsv" },
-                    { name:"V.cholerae_10.tsv" },
-                    { name:"V.cholerae_11.tsv" },
-                    { name:"V.cholerae_12.tsv" },
-                ];
-
-                var scheme = {};
-                scheme.prof_num = 12;
-                scheme.linkage = this.state.algorithm;
-                fetch('api/dendrogram/upload/' + window.clusteringID + '/', { 
-                    method:'PATCH',
-                    headers: new Headers({'content-type': 'application/json'}),
-                    body: JSON.stringify(scheme)
-                });
-
-                let i = 0;
-                for(i; i < exampleFile.length; i++){
-                    this.dropzone.emit("addedfile", exampleFile[i]);
-                    this.dropzone.emit("success", exampleFile[i]);
-                    this.dropzone.emit("complete", exampleFile[i]);
-                    this.dropzone.files.push(exampleFile[i]);
-                    window.fileName.push(exampleFile[i].name);
-                };
-
-                let encodeExampleData = [
-                    require('./static/Example_data/V.cholerae_01.tsv'), 
-                    require('./static/Example_data/V.cholerae_02.tsv'), 
-                    require('./static/Example_data/V.cholerae_03.tsv'), 
-                    require('./static/Example_data/V.cholerae_04.tsv'), 
-                    require('./static/Example_data/V.cholerae_05.tsv'), 
-                    require('./static/Example_data/V.cholerae_06.tsv'),
-                    require('./static/Example_data/V.cholerae_07.tsv'), 
-                    require('./static/Example_data/V.cholerae_08.tsv'), 
-                    require('./static/Example_data/V.cholerae_09.tsv'), 
-                    require('./static/Example_data/V.cholerae_10.tsv'), 
-                    require('./static/Example_data/V.cholerae_11.tsv'), 
-                    require('./static/Example_data/V.cholerae_12.tsv'), 
-
-                ];
-
-                let decodeExampleData = [];
-                let j = 0;
-
-                for(j; j < encodeExampleData.length; j++){
-                    let tmp = encodeExampleData[j].substring(38,encodeExampleData[j].length);
-                    tmp = window.atob(tmp);
-                    decodeExampleData.push(tmp);
-                };
-
-                let VC01 = new File([decodeExampleData[0]],'V.cholerae_01.tsv');
-                let VC02 = new File([decodeExampleData[1]],'V.cholerae_02.tsv');
-                let VC03 = new File([decodeExampleData[2]],'V.cholerae_03.tsv');
-                let VC04 = new File([decodeExampleData[3]],'V.cholerae_04.tsv');
-                let VC05 = new File([decodeExampleData[4]],'V.cholerae_05.tsv');
-                let VC06 = new File([decodeExampleData[5]],'V.cholerae_06.tsv');
-                let VC07 = new File([decodeExampleData[6]],'V.cholerae_07.tsv');
-                let VC08 = new File([decodeExampleData[7]],'V.cholerae_08.tsv');
-                let VC09 = new File([decodeExampleData[8]],'V.cholerae_09.tsv');
-                let VC10 = new File([decodeExampleData[9]],'V.cholerae_10.tsv');
-                let VC11 = new File([decodeExampleData[10]],'V.cholerae_11.tsv');
-                let VC12 = new File([decodeExampleData[11]],'V.cholerae_12.tsv');
-
-                let decodeExampleFile = [ 
-                    VC01, VC02, VC03, VC04, VC05, VC06, 
-                    VC07, VC08, VC09, VC10, VC11, VC12
-                ];
-
-                let k = 0;
-                let upload_status = [];
-
-                for(k; k < decodeExampleFile.length; k++){
-                    let form = new FormData();
-                    form.append('file',decodeExampleFile[k]);
-                    form.append('batch_id', window.clusteringID);
-
-                    fetch('api/dendrogram/profile/', {
-                        method:'POST',
-                        body:form ,
-                    });
-                };
-
-                this.props.history.push("/cgMLST/clustering_result");
-                clearInterval(interval);
-
-                }
-            };
-
-            let interval = setInterval(submit.bind(this),500);
-    }
-
     query(){
 
         fetch('api/dendrogram/dendrogram/' + this.state.querybyID + '/', { method:'GET'})
@@ -307,14 +198,8 @@ class Upload_profile extends React.Component {
                         <font>UPGMA</font>
                     </div>
                     <br />
+                    <br />
                     <div style = {{ display:'flex', justifyContent:'center', alignItems:'center' }}>
-                        <Button variant="contained" color="default" 
-                         onClick={this.example.bind(this)}>
-                            Example
-                            &nbsp;&nbsp;
-                            <CloudUploadIcon />
-                        </Button>
-                        &nbsp;&nbsp;&nbsp;&nbsp;
                         <Button variant="contained" className ={classes.cssRoot}
                         onClick={this.handlePost.bind(this)}>
                             Submit

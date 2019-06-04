@@ -32,12 +32,13 @@ class Main extends React.Component {
                     <Header />
                     <Navigation />
                     <Route path="/cgMLST" exact component={upload_contigs} />
+                    <Route path="/cgMLST/profiling" exact component={upload_contigs} />
                     <Route path="/cgMLST/profile_result" component={Profile_view} />
                     <Route path="/cgMLST/clustering" component={Upload_profile} />
                     <Route path="/cgMLST/clustering_result" component={Dendrogram_view} />
                     <Route path="/cgMLST/tracking" component={Tracking} />
                     <Route path="/cgMLST/tracking_result" component={Tracking_result} />
-                    <Route path="/cgMLST/about" exact component={About} />
+                    <Route path="/cgMLST/about" component={About} />
                     <Route path="/cgMLST/tutorial" component={Tutorial} />
                     <Footer />
                 </div>
