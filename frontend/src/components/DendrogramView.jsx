@@ -24,8 +24,7 @@ export default class Dendrogram_view extends React.Component {
 			.then(result => this.setState(state => ({
 				png_file: result.png_file, 
 				pdf_file: result.pdf_file,
-				svg_file: result.svg_file, 
-				emf_file: result.emf_file, 
+				svg_file: result.svg_file,
 				newick_file: result.newick_file })));
 			
 		}else {
@@ -114,10 +113,6 @@ export default class Dendrogram_view extends React.Component {
 						&nbsp;&nbsp;&nbsp;&nbsp;
 						<a download href={this.state.svg_file} style={{ textDecoration:'none' }}>
 							<Button variant="contained" color="default">Svg</Button>
-						</a>
-						&nbsp;&nbsp;&nbsp;&nbsp;
-						<a download href={this.state.emf_file} style={{ textDecoration:'none' }}>
-							<Button variant="contained" color="default">emf</Button>
 						</a>
 						&nbsp;&nbsp;&nbsp;&nbsp;
 						<a download href={this.state.newick_file} style={{ textDecoration:'none' }}>

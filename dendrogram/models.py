@@ -57,5 +57,5 @@ class Dendrogram(models.Model):
     png_file = models.FileField(upload_to=dendrograms_png_path, null=False)
     pdf_file = models.FileField(upload_to=dendrograms_pdf_path, null=False)
     svg_file = models.FileField(upload_to=dendrograms_svg_path, null=False)
-    emf_file = models.FileField(upload_to=dendrograms_emf_path, null=False)
+    emf_file = models.FileField(upload_to=dendrograms_emf_path)
     newick_file = models.FileField(upload_to=dendrograms_newick_path, null=False)
