@@ -150,95 +150,6 @@ class Upload_contigs extends React.Component {
         let interval = setInterval(result.bind(this),50);
     }
 
-    upload_example_data(){
-
-        fetch('api/profiling/upload/', {method:'POST'})
-            .then(function(res){
-               return res.json();
-            }).then(batch => window.batchid = batch.id);
-
-        function submit(){
-
-            if( window.batchid != undefined ){
-                let exampleFile = [
-                    { name:"V.cholerae_01.fa" },
-                    { name:"V.cholerae_02.fa" },
-                    { name:"V.cholerae_03.fa" },
-                    { name:"V.cholerae_04.fa" },
-                    { name:"V.cholerae_05.fa" },
-                    { name:"V.cholerae_06.fa" },
-                ];
-
-                var scheme = {};
-                scheme.seq_num = 6;
-                fetch('api/profiling/upload/' + window.batchid + '/', { 
-                    method:'PATCH',
-                    headers: new Headers({'content-type': 'application/json'}),
-                    body: JSON.stringify(scheme)
-                });
-
-                let i = 0;
-                for(i; i < exampleFile.length; i++){
-                    this.dropzone.emit("addedfile", exampleFile[i]);
-                    this.dropzone.emit("success", exampleFile[i]);
-                    this.dropzone.emit("complete", exampleFile[i]);
-                    this.dropzone.files.push(exampleFile[i]);
-                    window.fileName.push(exampleFile[i].name);
-                };
-
-                let encodeExampleData = [
-                    require('./static/Example_data/V.cholerae_01.fa'), 
-                    require('./static/Example_data/V.cholerae_02.fa'), 
-                    require('./static/Example_data/V.cholerae_03.fa'), 
-                    require('./static/Example_data/V.cholerae_04.fa'), 
-                    require('./static/Example_data/V.cholerae_05.fa'), 
-                    require('./static/Example_data/V.cholerae_06.fa'), 
-                ];
-
-                let decodeExampleData = [];
-                let j = 0;
-
-                for(j; j < encodeExampleData.length; j++){
-                    let tmp = encodeExampleData[j].substring(13,encodeExampleData[j].length);
-                    tmp = window.atob(tmp);
-                    decodeExampleData.push(tmp);
-                };
-
-                let VC01 = new File([decodeExampleData[0]],'V.cholerae_01.fa');
-                let VC02 = new File([decodeExampleData[1]],'V.cholerae_02.fa');
-                let VC03 = new File([decodeExampleData[2]],'V.cholerae_03.fa');
-                let VC04 = new File([decodeExampleData[3]],'V.cholerae_04.fa');
-                let VC05 = new File([decodeExampleData[4]],'V.cholerae_05.fa');
-                let VC06 = new File([decodeExampleData[5]],'V.cholerae_06.fa');
-
-                let decodeExampleFile = [ VC01, VC02, VC03, VC04, VC05, VC06 ];
-
-                let k = 0;
-
-                window.databaseName = "Vibrio_cholerae";
-
-                for(k; k < decodeExampleFile.length; k++){
-                    let form = new FormData();
-                    form.append('file',decodeExampleFile[k]);
-                    form.append('batch_id',window.batchid);
-                    form.append('occurrence',"95");
-                    form.append('database',window.databaseName);
-
-                    fetch('api/profiling/sequence/', {
-                        method:'POST',
-                        body:form ,
-                    });
-                };
-              
-                this.setState(state => ({ switch: true }));
-                this.props.history.push("/cgMLST/profile_result");
-                clearInterval(interval);
-            }
-        };
-
-        let interval = setInterval(submit.bind(this),500);
-    }
-
     back(){
         this.setState(state => ({ profile_result_zip: undefined }));
     }
@@ -280,13 +191,6 @@ class Upload_contigs extends React.Component {
                 <br />
                 <br />
                 <div style = {{ display:'flex', justifyContent:'center', alignItems:'center' }}>
-                    <Button variant="contained" color="default" 
-                     onClick={this.upload_example_data.bind(this)}>
-                        Example
-                        &nbsp;&nbsp;
-                        <CloudUploadIcon />
-                    </Button>
-                    &nbsp;&nbsp;&nbsp;&nbsp;
                     <Button variant="contained" className ={classes.cssRoot} 
                      onClick={this.handlePost.bind(this)}>
                         Submit

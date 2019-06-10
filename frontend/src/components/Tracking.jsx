@@ -145,27 +145,6 @@ class Tracking extends React.Component {
         }
     }
 
-    example(){
-
-        let encodeExampleData = require('./static/Example_data/V.cholerae_05.tsv');
-        let tmp = encodeExampleData.substring(38,encodeExampleData.length);
-        let decodeData = window.atob(tmp);
-        let VC01 = new File([decodeData],'V.cholerae_profile.tsv');
-
-
-        let form = new FormData();
-        form.append('file',VC01);
-        form.append('profile_db',"Vibrio_cholerae");
-        fetch('api/tracking/profile/', {
-            method:'POST',
-            body: form,
-        }).then(function(response){
-            return response.json();
-        }).then(res => window.trackingID = res.id);
-
-        this.props.history.push("/cgMLST/tracking_result");
-    }
-
 	render() {
 
 		const config = this.componentConfig;
@@ -217,15 +196,7 @@ class Tracking extends React.Component {
                 </div>
                 <br />
                 <br />
-                <br />
                 <div style={{ display:'flex', justifyContent:'center', alignItems:'center'}}>
-                    <Button variant="contained" color="default" 
-                     onClick={this.example.bind(this)}>
-                        Example
-                        &nbsp;&nbsp;
-                        <CloudUploadIcon />
-                    </Button>
-                    &nbsp;&nbsp;&nbsp;&nbsp;
                     <Button variant="contained" className ={classes.buttoncss} 
                      onClick={this.handlePost.bind(this)}>
                         Submit
