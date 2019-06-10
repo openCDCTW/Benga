@@ -1,7 +1,6 @@
 import os
 import zipfile
 import numpy as np
-from collections import Counter
 from celery import shared_task
 import pandas as pd
 from django.conf import settings
@@ -18,11 +17,10 @@ def get_profile(track, biosample):
 
 def distance_against_all(query_profile, track, top_n=100):
     distances = pd.Series()
-    df = pd.DataFrame()
-    df["query_profile"] = query_profile
     for profile in track.find():
-        df["ref_profile"] = pd.Series(data=profile["profile"])
-        distances.at[profile['BioSample']] = Counter(df["query_profile"] == df["ref_profile"])[0]
+        ref_profile = pd.Series(data=profile["profile"])
+        query_profile = query_profile.reindex(ref_profile.index).fillna('')
+        distances.at[profile['BioSample']] = (query_profile != ref_profile).sum()
     top_n_dist = distances.sort_values()[0:top_n]
     return top_n_dist
 

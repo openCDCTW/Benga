@@ -14,7 +14,7 @@ class DistanceMatrix:
         profile = profile.fillna('0')
         profile = profile.transpose()
         self._profile_values = profile.values
-        self._profile_index = np.asarray(profile.index)
+        self._profile_index = profile.index
         self._distances = None
 
     @property
@@ -24,12 +24,11 @@ class DistanceMatrix:
     @property
     def distance(self):
         if not self._distances:
-            self._distances = pd.DataFrame()
-            for index_1, item_1 in enumerate(self._profile_index, 0):
-                for index_2, item_2 in enumerate(self._profile_index[index_1::], index_1):
-                    self._distances.loc[item_1, item_2] = self._distances.loc[item_2, item_1] = hamming(
-                        self._profile_values[index_1], self._profile_values[index_2]
-                    )
+            data = np.zeros((len(self._profile_index), len(self._profile_index)))
+            for index_1, value_1 in enumerate(self._profile_values):
+                for index_2, value_2 in enumerate(self._profile_values[index_1::], index_1):
+                    data[index_1, index_2] = data[index_2, index_1] = hamming(value_1, value_2)
+        self._distances = pd.DataFrame(data, self._profile_index, self._profile_index)
         return self._distances
 
 
@@ -73,8 +72,13 @@ class Dendrogram:
             for i, d, in zip(tree['icoord'], tree['dcoord']):
                 x = 0.5 * sum(i[1:3])
                 y = d[1]
-                plt.annotate(int(y), (y, x), xytext=(-2, 8), textcoords='offset points',
-                             va='top', ha='right', fontsize=8)
+                if y.is_integer():
+                    node_info = int(y)
+                else:
+                    node_info = round(y, 2)
+                plt.annotate(
+                    node_info, (y, x), xytext=(-2, 8), textcoords='offset points', va='top', ha='right', fontsize=8
+                    )
         fig.savefig(file, dpi=dpi, bbox_inches='tight', pad_inches=1)
 
     def to_newick(self, file):
@@ -82,8 +86,8 @@ class Dendrogram:
             file.write(self.newick)
 
 
-def hamming(item_1, item_2):
-    return (item_1 != item_2).sum()
+def hamming(value_1, value_2):
+    return (value_1 != value_2).sum()
 
 
 def make_newick(node, newick, parentdist, leaf_names):
