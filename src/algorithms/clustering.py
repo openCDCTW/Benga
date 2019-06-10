@@ -28,7 +28,7 @@ class DistanceMatrix:
             for index_1, value_1 in enumerate(self._profile_values):
                 for index_2, value_2 in enumerate(self._profile_values[index_1::], index_1):
                     data[index_1, index_2] = data[index_2, index_1] = hamming(value_1, value_2)
-        self._distances = pd.DataFrame(data, self._profile_index, self._profile_index)
+            self._distances = pd.DataFrame(data, self._profile_index, self._profile_index)
         return self._distances
 
 
