@@ -6,7 +6,7 @@ os.environ.setdefault("DJANGO_SETTINGS_MODULE", "benga.settings")
 
 app = Celery("benga")
 
-app.config_from_object("django.conf:settings")
+app.config_from_object("django.conf:settings", namespace='CELERY')
 
 app.autodiscover_tasks(["profiling", "dendrogram", "tracking"])
 
