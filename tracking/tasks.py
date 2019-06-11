@@ -16,12 +16,12 @@ def get_profile(track, biosample):
 
 
 def distance_against_all(query_profile, track, top_n=100):
-    distances = pd.Series()
+    distances = {}
     for profile in track.find():
         ref_profile = pd.Series(data=profile["profile"])
-        query_profile = query_profile.reindex(ref_profile.index).fillna('')
-        distances.at[profile['BioSample']] = (query_profile != ref_profile).sum()
-    top_n_dist = distances.sort_values()[0:top_n]
+        df = pd.concat([ref_profile, query_profile], axis=1, keys=['ref_profile', 'query_profile']).fillna('')
+        distances[profile['BioSample']] = (df['query_profile'] != df['ref_profile']).sum()
+    top_n_dist = pd.Series(distances).sort_values()[0:top_n]
     return top_n_dist
 
 
