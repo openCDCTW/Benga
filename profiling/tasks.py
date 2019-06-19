@@ -11,7 +11,6 @@ from django.core.files import File
 from profiling.serializers import ProfileSerializer
 from profiling.models import Batch, Sequence
 from src.algorithms import profiling
-import dendrogram.tasks as tree
 
 
 def separate_profiles(profile, profile_dir):
@@ -80,30 +79,3 @@ def zip_save(args):
         save(batch_id, database, occr_level, zip_filename)
         shutil.rmtree(output_dir)
 
-
-@shared_task
-def batch_profiling(batch_id, database, occr_level):
-    input_dir = os.path.join(settings.MEDIA_ROOT, "uploads", batch_id)
-    output_dir = os.path.join(settings.MEDIA_ROOT, "temp", batch_id)
-    os.makedirs(output_dir, exist_ok=True)
-
-    _, zip_filename = profile(batch_id, database, input_dir, occr_level, output_dir)
-    save(batch_id, database, occr_level, zip_filename)
-    shutil.rmtree(output_dir)
-
-
-@shared_task
-def profile_and_tree(batch_id, database, occr_level):
-    input_dir = os.path.join(settings.MEDIA_ROOT, "uploads", batch_id)
-    output_dir = os.path.join(settings.MEDIA_ROOT, "temp", batch_id)
-    os.makedirs(output_dir, exist_ok=True)
-
-    # profile
-    profile_filename, zip_filename = profile(batch_id, database, input_dir, occr_level, output_dir)
-    save(batch_id, database, occr_level, profile_filename, zip_filename)
-
-    # plot dendrogram
-    emf_filename, newick_filename, pdf_filename, png_filename, svg_filename = tree.plot(output_dir, output_dir)
-    tree.save(batch_id, emf_filename, newick_filename, pdf_filename, png_filename, svg_filename)
-
-    shutil.rmtree(output_dir)
