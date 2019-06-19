@@ -3,12 +3,11 @@ from __future__ import absolute_import, unicode_literals
 import os
 import shutil
 import zipfile
+import binascii
+import requests
 import pandas as pd
 from celery import shared_task
 from django.conf import settings
-from django.core.files import File
-
-from profiling.serializers import ProfileSerializer
 from profiling.models import Batch, Sequence
 from src.algorithms import profiling
 
@@ -40,20 +39,12 @@ def profile(batch_id, database, input_dir, occr_level, output_dir):
     return profile_filename, zip_filename
 
 
-def save(batch_id, database, occr_level, zip_filename):
-    profile_data = {"id": batch_id, "zip": File(open(zip_filename, "rb")),
-                    "occurrence": occr_level, "database": database}
-    serializer = ProfileSerializer(data=profile_data)
-    if serializer.is_valid():
-        serializer.save()
-
-
-def get_filename(seq_id):
-    return os.path.basename(Sequence.objects.get(pk=seq_id).file.name)
-
-
-def get_seq_number(batch_id):
-    return Batch.objects.get(pk=batch_id).seq_num
+def save(batch_id, database, occr_level, zip_filename, url):
+    profile_data = {"id": batch_id, "occurrence": occr_level, "database": database}
+    files = {"zip": open(zip_filename, "rb")}
+    r = requests.post(url, data=profile_data, files=files)
+    if r.status_code != 201:
+        print(r.status_code)
 
 
 def get_file_number(dir, ext=".tsv"):
@@ -61,21 +52,24 @@ def get_file_number(dir, ext=".tsv"):
 
 
 @shared_task
-def single_profiling(seq_id, batch_id, database, occr_level):
-    input_dir = os.path.join(settings.MEDIA_ROOT, "uploads", batch_id, seq_id)
-    output_dir = os.path.join(settings.MEDIA_ROOT, "temp", batch_id)
+def single_profiling(seq_id, batch_id, database, occr_level, seq_num, profile_file, sequence, filename, url):
+    input_dir = os.path.join(settings.CELERY_ROOT, "uploads", batch_id, seq_id)
+    os.makedirs(input_dir, exist_ok=True)
+    with open(os.path.join(input_dir, filename), "wb") as file:
+        file.write(binascii.a2b_base64(sequence))
+
+    output_dir = os.path.join(settings.CELERY_ROOT, "temp", batch_id)
     os.makedirs(output_dir, exist_ok=True)
     profiling.profiling(output_dir, input_dir, database, occr_level=occr_level,
-                        threads=2, profile_file=get_filename(seq_id), generate_bn=False)
-    return batch_id, output_dir, database, occr_level
+                        threads=2, profile_file=profile_file, generate_bn=False)
+    return batch_id, output_dir, database, occr_level, seq_num, url
 
 
 @shared_task
 def zip_save(args):
-    batch_id, output_dir, database, occr_level = args
-    seq_num = get_seq_number(batch_id)
+    batch_id, output_dir, database, occr_level, seq_num, url = args
     if os.path.exists(output_dir) and seq_num == get_file_number(output_dir):
         zip_filename = zip_folder(output_dir)
-        save(batch_id, database, occr_level, zip_filename)
+        save(batch_id, database, occr_level, zip_filename, url)
         shutil.rmtree(output_dir)
 
