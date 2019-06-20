@@ -147,3 +147,5 @@ STATIC_ROOT = '/var/www/benga/cgMLST/static/'
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+
+CELERY_ROOT = os.path.join(MEDIA_ROOT, 'celery')

@@ -3,7 +3,10 @@ from rest_framework import generics
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
+from django.contrib.sites.models import Site
+from django.urls import reverse
 from django.http import Http404
+from django.core.files import File
 from tracking.serializers import ProfileSerializer, TrackedResultsSerializer
 from tracking.tasks import track
 from tracking.models import Profile, TrackedResults
@@ -19,7 +22,9 @@ class ProfileList(generics.ListCreateAPIView):
         serializer = ProfileSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
-            track.delay(str(serializer.data["id"]), str(serializer.data["profile_db"]))
+            url = Site.objects.get_current().domain + reverse("results-list")
+            track.delay(str(serializer.data["id"]), str(serializer.data["profile_db"]),
+                        File(open(serializer.data["file"], "rb")), url)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 

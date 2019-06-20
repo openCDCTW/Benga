@@ -3,12 +3,10 @@ from __future__ import absolute_import, unicode_literals
 import os
 import pandas as pd
 import shutil
+import binascii
+import requests
 from celery import shared_task
 from django.conf import settings
-from django.core.files import File
-
-from dendrogram.serializers import DendrogramSerializer
-from dendrogram.models import Batch
 from src.algorithms import clustering
 
 
@@ -28,34 +26,25 @@ def plot(input_dir, output_dir, linkage):
     profiles = read_profiles(input_dir)
     dm = clustering.DistanceMatrix(profiles)
     dendro = clustering.Dendrogram(dm, linkage)
-    newick_filename = os.path.join(output_dir, "dendrogram.newick")
-    dendro.to_newick(newick_filename)
-    pdf_filename = os.path.join(output_dir, "dendrogram.pdf")
-    dendro.scipy_tree(pdf_filename)
-    svg_filename = os.path.join(output_dir, "dendrogram.svg")
-    dendro.scipy_tree(svg_filename)
-    png_filename = os.path.join(output_dir, "dendrogram.png")
-    dendro.scipy_tree(png_filename)
-    return newick_filename, pdf_filename, png_filename, svg_filename
+    filenames = {}
+    filenames["newick"] = os.path.join(output_dir, "dendrogram.newick")
+    dendro.to_newick(filenames["newick"])
+    filenames["pdf"] = os.path.join(output_dir, "dendrogram.pdf")
+    dendro.scipy_tree(filenames["pdf"])
+    filenames["svg"] = os.path.join(output_dir, "dendrogram.svg")
+    dendro.scipy_tree(filenames["svg"])
+    filenames["png"] = os.path.join(output_dir, "dendrogram.png")
+    dendro.scipy_tree(filenames["png"])
+    return filenames
 
 
-def save(batch_id, linkage, newick_filename, pdf_filename, png_filename, svg_filename):
-    dendrogram_data = {"id": batch_id, "linkage": linkage, "png_file": File(open(png_filename, "rb")),
-                       "pdf_file": File(open(pdf_filename, "rb")), "svg_file": File(open(svg_filename, "rb")),
-                       "newick_file": File(open(newick_filename, "rb"))}
-    serializer = DendrogramSerializer(data=dendrogram_data)
-    if serializer.is_valid():
-        serializer.save()
-    else:
-        print(serializer.errors)
-
-
-def get_prof_number(batch_id):
-    return Batch.objects.get(pk=batch_id).prof_num
-
-
-def get_linkage(batch_id):
-    return Batch.objects.get(pk=batch_id).linkage
+def save(batch_id, linkage, filenames, url):
+    dendrogram_data = {"id": batch_id, "linkage": linkage}
+    files = {"png_file": open(filenames["png"], "rb"), "pdf_file": open(filenames["pdf"], "rb"),
+             "svg_file": open(filenames["svg"], "rb"), "newick_file": open(filenames["newick"], "rb")}
+    r = requests.post(url, data=dendrogram_data, files=files)
+    if r.status_code != 201:
+        print(r.status_code)
 
 
 def get_file_number(dir, ext=".tsv"):
@@ -63,13 +52,15 @@ def get_file_number(dir, ext=".tsv"):
 
 
 @shared_task
-def plot_dendrogram(batch_id):
-    input_dir = os.path.join(settings.MEDIA_ROOT, "uploads", batch_id)
-    output_dir = os.path.join(settings.MEDIA_ROOT, "temp", batch_id)
+def plot_dendrogram(batch_id, linkage, prof_num, profile, filename, url):
+    input_dir = os.path.join(settings.CELERY_ROOT, "uploads", batch_id)
+    os.makedirs(input_dir, exist_ok=True)
+    with open(os.path.join(input_dir, filename), "wb") as file:
+        file.write(binascii.a2b_base64(profile))
+
+    output_dir = os.path.join(settings.CELERY_ROOT, "temp", batch_id)
     os.makedirs(output_dir, exist_ok=True)
-    prof_num = get_prof_number(batch_id)
     if prof_num == get_file_number(input_dir):
-        linkage = get_linkage(batch_id)
-        newick_file, pdf_file, png_file, svg_file = plot(input_dir, output_dir, linkage)
-        save(batch_id, linkage, newick_file, pdf_file, png_file, svg_file)
+        filenames = plot(input_dir, output_dir, linkage)
+        save(batch_id, linkage, filenames, url)
         shutil.rmtree(output_dir)

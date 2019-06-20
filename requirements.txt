@@ -8,8 +8,10 @@ biopython
 psycopg2-binary
 sqlalchemy
 pymongo
+requests
 django
 celery
 django-celery-results
 djangorestframework
 uwsgi
+librabbitmq

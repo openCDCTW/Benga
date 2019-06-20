@@ -1,14 +1,12 @@
 import os
 import zipfile
+import binascii
+import requests
 import numpy as np
 from celery import shared_task
 import pandas as pd
 from django.conf import settings
-from django.core.files import File
 from src.utils import nosql
-from src.algorithms import profiling
-from src.utils import files
-from tracking.serializers import TrackedResultsSerializer
 
 
 def get_profile(track, biosample):
@@ -43,14 +41,31 @@ def add_metadata(distances, track):
     return results
 
 
-def to_db(id, results_json, results_zip):
-    results = {"id": id, "json": File(open(results_json, "rb")),
-               "zip": File(open(results_zip, "rb"))}
-    serializer = TrackedResultsSerializer(data=results)
-    if serializer.is_valid():
-        serializer.save()
-    else:
-        print(serializer.errors)
+def calculate_distances(profile_filename, track):
+    query_profile = pd.read_csv(profile_filename, sep="\t", index_col=0)
+    query_profile = query_profile[query_profile.columns[0]]
+    distances = distance_against_all(query_profile, track)
+    results = add_metadata(distances, track)
+    results.replace(np.nan, "", regex=True, inplace=True)
+    return distances, results
+
+
+def calculate_tracking_results(id, database, output_dir, profile_filename):
+    track = nosql.get_dbtrack(database)
+    distances, results = calculate_distances(profile_filename, track)
+    results_json = to_json(id, output_dir, results)
+
+    results_file = os.path.join(output_dir, id[0:8] + ".tsv")
+    results.to_csv(results_file, sep="\t")
+
+    prof_dir = os.path.join(output_dir, "profiles")
+    os.makedirs(prof_dir, exist_ok=True)
+    save_profiles(distances.index, track, prof_dir)
+
+    results_zip = os.path.join(output_dir, id[0:8] + '.zip')
+    to_zip(results_zip, results_file, prof_dir)
+
+    return results_json, results_zip
 
 
 def to_json(id, output_dir, results):
@@ -70,51 +85,23 @@ def to_zip(filename, results_file, prof_dir):
     return filename
 
 
+def save(id, results_json, results_zip, url):
+    tracking_data = {"id": id}
+    files = {"json": open(results_json, "rb"), "zip": open(results_zip, "rb")}
+    r = requests.post(url, data=tracking_data, files=files)
+    if r.status_code != 201:
+        print(r.status_code)
+
+
 @shared_task
-def track(id, database):
-    input_dir = os.path.join(settings.MEDIA_ROOT, "tracking", id)
+def track(id, database, profile, url):
+    input_dir = os.path.join(settings.CELERY_ROOT, "tracking", id)
     profile_filename = os.path.join(input_dir, "profile.tsv")
-    output_dir = os.path.join(settings.MEDIA_ROOT, "temp", id)
+    with open(profile_filename, "wb") as file:
+        file.write(binascii.a2b_base64(profile))
+
+    output_dir = os.path.join(settings.CELERY_ROOT, "temp", id)
     os.makedirs(output_dir, exist_ok=True)
 
-    # Prepare tracking result in json format
-    query_profile = pd.read_csv(profile_filename, sep="\t", index_col=0)
-    query_profile = query_profile[query_profile.columns[0]]
-    track = nosql.get_dbtrack(database)
-    distances = distance_against_all(query_profile, track)
-    results = add_metadata(distances, track)
-    results.replace(np.nan, "", regex=True, inplace=True)
-    results_json = to_json(id, output_dir, results)
-
-    # Prepare tracking result in tsv format and profiles
-    results_file = os.path.join(output_dir, id[0:8] + ".tsv")
-    results.to_csv(results_file, sep="\t")
-    prof_dir = os.path.join(output_dir, "profiles")
-    os.makedirs(prof_dir, exist_ok=True)
-    save_profiles(distances.index, track, prof_dir)
-    results_zip = os.path.join(output_dir, id[0:8] + '.zip')
-    to_zip(results_zip, results_file, prof_dir)
-
-    to_db(id, results_json, results_zip)
-
-
-@shared_task
-def profile_and_track(id, allele_db, occr_level, profile_db):
-    input_dir = os.path.join(settings.MEDIA_ROOT, "tracking", id)
-    output_dir = os.path.join(settings.MEDIA_ROOT, "temp", id)
-    os.makedirs(output_dir, exist_ok=True)
-
-    profile_filename = os.path.join(output_dir, "profile.tsv")
-    profiling.profiling(output_dir, input_dir, allele_db, occr_level=occr_level, threads=2)
-
-    query_profile = pd.read_csv(profile_filename, sep="\t", index_col=0)
-    query_profile = query_profile[query_profile.columns[0]]
-    track = nosql.get_dbtrack(profile_db)
-    distances = distance_against_all(query_profile, track)
-    results = add_metadata(distances, track)
-    results.replace(np.nan, "", regex=True, inplace=True)
-
-    results_file = os.path.join(output_dir, id[0:8] + ".json")
-    with open(results_file, "w") as file:
-        file.write(results.to_json(orient='records'))
-    to_db(id, results_file)
+    json_file, zip_file = calculate_tracking_results(id, database, output_dir, profile_filename)
+    save(id, json_file, zip_file, url)
