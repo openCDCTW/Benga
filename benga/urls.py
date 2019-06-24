@@ -23,9 +23,9 @@ from rest_framework import routers
 router = routers.DefaultRouter()
 
 urlpatterns = [
+    path('admin/', admin.site.urls),
     path('cgMLST/', include('frontend.urls')),
     path('cgMLST/api/', include(router.urls)),
-    path('cgMLST/admin/', admin.site.urls),
     path('cgMLST/api/profiling/', include("profiling.urls")),
     path('cgMLST/api/dendrogram/', include("dendrogram.urls")),
     path('cgMLST/api/tracking/', include("tracking.urls")),
