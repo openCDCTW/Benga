@@ -43,6 +43,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'django.contrib.sites',
     'rest_framework',
     'django_celery_results',
     'profiling.apps.ProfilingConfig',
@@ -149,3 +150,5 @@ MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 CELERY_ROOT = os.path.join(MEDIA_ROOT, 'celery')
+
+SITE_ID = 1
