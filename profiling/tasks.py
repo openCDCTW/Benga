@@ -8,7 +8,6 @@ import requests
 import pandas as pd
 from celery import shared_task
 from django.conf import settings
-from profiling.models import Batch, Sequence
 from src.algorithms import profiling
 
 
@@ -52,7 +51,7 @@ def get_file_number(dir, ext=".tsv"):
 
 
 @shared_task
-def single_profiling(seq_id, batch_id, database, occr_level, seq_num, profile_file, sequence, filename, url):
+def single_profiling(seq_id, batch_id, database, occr_level, seq_num, filename, sequence, url):
     input_dir = os.path.join(settings.CELERY_ROOT, "uploads", batch_id, seq_id)
     os.makedirs(input_dir, exist_ok=True)
     with open(os.path.join(input_dir, filename), "wb") as file:
@@ -61,7 +60,7 @@ def single_profiling(seq_id, batch_id, database, occr_level, seq_num, profile_fi
     output_dir = os.path.join(settings.CELERY_ROOT, "temp", batch_id)
     os.makedirs(output_dir, exist_ok=True)
     profiling.profiling(output_dir, input_dir, database, occr_level=occr_level,
-                        threads=2, profile_file=profile_file, generate_bn=False)
+                        threads=2, profile_file=filename, generate_bn=False)
     return batch_id, output_dir, database, occr_level, seq_num, url
 
 

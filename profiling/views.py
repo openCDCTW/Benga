@@ -1,3 +1,4 @@
+import binascii
 import os.path
 from rest_framework import mixins, generics
 from rest_framework.views import APIView
@@ -6,14 +7,9 @@ from rest_framework import status
 from django.contrib.sites.models import Site
 from django.urls import reverse
 from django.http import Http404
-from django.core.files import File
 from profiling.models import Batch, Sequence, Profile
 from profiling.serializers import BatchSerializer, SequenceSerializer, ProfileSerializer
 from profiling.tasks import single_profiling, zip_save
-
-
-def get_filename(seq_id):
-    return os.path.basename(Sequence.objects.get(pk=seq_id).file.name)
 
 
 class BatchList(generics.ListCreateAPIView):
@@ -45,29 +41,25 @@ class SequenceList(generics.ListCreateAPIView):
         return Response(serializer.data)
 
     def post(self, request, format=None):
-        filename = request.data["file"].name
         serializer = SequenceSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
             seq_id = str(serializer.data["id"])
-            batch_id = str(serializer.data["batch_id"])
+            seq = SequenceDetail.get_object(pk=seq_id)
+            batch_id = str(seq.batch_id)
             seq_num = Batch.objects.get(pk=batch_id).seq_num
-            profile_file = get_filename(seq_id)
+            filename = os.path.basename(seq.file.name)
+            content = binascii.b2a_base64(seq.file.read()).decode("utf-8")
             url = Site.objects.get_current().domain + reverse("profile-list")
-            (single_profiling.s(seq_id,
-                                batch_id,
-                                serializer.data["database"],
-                                serializer.data["occurrence"],
-                                seq_num,
-                                profile_file,
-                                File(open(serializer.data["file"], "rb")),
-                                filename, url) | zip_save.s())()
+            (single_profiling.s(seq_id, batch_id, seq.database, seq.occurrence,
+                                seq_num, filename, content, url) | zip_save.s())()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 class SequenceDetail(APIView):
-    def get_object(self, pk):
+    @classmethod
+    def get_object(cls, pk):
         try:
             return Sequence.objects.get(pk=pk)
         except Sequence.DoesNotExist:
@@ -85,7 +77,8 @@ class SequenceDetail(APIView):
 
 
 class BatchSequenceDetail(APIView):
-    def get_object(self, batch_id):
+    @classmethod
+    def get_object(cls, batch_id):
         try:
             return Sequence.objects.get(batch_id=batch_id)
         except Sequence.DoesNotExist:
@@ -103,7 +96,8 @@ class ProfileList(generics.ListCreateAPIView):
 
 
 class ProfileDetail(APIView):
-    def get_object(self, pk):
+    @classmethod
+    def get_object(cls, pk):
         try:
             return Profile.objects.get(pk=pk)
         except Profile.DoesNotExist:

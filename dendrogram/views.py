@@ -1,10 +1,11 @@
+import binascii
+import os.path
 from django.http import Http404
 from rest_framework import mixins, generics, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from django.contrib.sites.models import Site
 from django.urls import reverse
-from django.core.files import File
 from dendrogram.models import Batch, Profile, Dendrogram
 from dendrogram.serializers import BatchSerializer, ProfileSerializer, DendrogramSerializer
 from dendrogram.tasks import plot_dendrogram
@@ -39,23 +40,25 @@ class ProfileList(generics.ListCreateAPIView):
         return Response(serializer.data)
 
     def post(self, request, format=None):
-        filename = request.data["file"].name
         serializer = ProfileSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
-            batch_id = str(serializer.data["batch_id"])
-            linkage = Batch.objects.get(pk=batch_id).prof_num
-            prof_num = Batch.objects.get(pk=batch_id).linkage
+            prof_id = str(serializer.data["id"])
+            profile = ProfileDetail.get_object(pk=prof_id)
+            batch_id = str(profile.batch_id)
+            batch = Batch.objects.get(pk=batch_id)
+            filename = os.path.basename(profile.file.name)
+            content = binascii.b2a_base64(profile.file.read()).decode("utf-8")
             url = Site.objects.get_current().domain + reverse("dendrogram-list")
-            plot_dendrogram.delay(batch_id, linkage, prof_num,
-                                  File(open(serializer.data["file"], "rb")),
-                                  filename, url)
+            plot_dendrogram.delay(batch_id, batch.linkage, batch.prof_num,
+                                  filename, content, url)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 class ProfileDetail(APIView):
-    def get_object(self, pk):
+    @classmethod
+    def get_object(cls, pk):
         try:
             return Profile.objects.get(pk=pk)
         except Profile.DoesNotExist:
@@ -78,7 +81,8 @@ class DendrogramList(generics.ListCreateAPIView):
 
 
 class DendrogramDetail(APIView):
-    def get_object(self, pk):
+    @classmethod
+    def get_object(cls, pk):
         try:
             return Dendrogram.objects.get(pk=pk)
         except Profile.DoesNotExist:

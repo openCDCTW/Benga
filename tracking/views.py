@@ -1,4 +1,5 @@
 import json
+import binascii
 from rest_framework import generics
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -6,7 +7,6 @@ from rest_framework import status
 from django.contrib.sites.models import Site
 from django.urls import reverse
 from django.http import Http404
-from django.core.files import File
 from tracking.serializers import ProfileSerializer, TrackedResultsSerializer
 from tracking.tasks import track
 from tracking.models import Profile, TrackedResults
@@ -22,15 +22,18 @@ class ProfileList(generics.ListCreateAPIView):
         serializer = ProfileSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
+            prof_id = str(serializer.data["id"])
+            profile = ProfileDetail.get_object(pk=prof_id)
+            content = binascii.b2a_base64(profile.file.read()).decode("utf-8")
             url = Site.objects.get_current().domain + reverse("results-list")
-            track.delay(str(serializer.data["id"]), str(serializer.data["profile_db"]),
-                        File(open(serializer.data["file"], "rb")), url)
+            track.delay(prof_id, str(profile.profile_db), content, url)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 class ProfileDetail(APIView):
-    def get_object(self, pk):
+    @classmethod
+    def get_object(cls, pk):
         try:
             return Profile.objects.get(pk=pk)
         except Profile.DoesNotExist:
@@ -53,7 +56,8 @@ class TrackedResultsList(generics.ListCreateAPIView):
 
 
 class TrackedResultsDetail(APIView):
-    def get_object(self, pk):
+    @classmethod
+    def get_object(cls, pk):
         try:
             return TrackedResults.objects.get(pk=pk)
         except TrackedResults.DoesNotExist:

@@ -52,7 +52,7 @@ def get_file_number(dir, ext=".tsv"):
 
 
 @shared_task
-def plot_dendrogram(batch_id, linkage, prof_num, profile, filename, url):
+def plot_dendrogram(batch_id, linkage, prof_num, filename, profile, url):
     input_dir = os.path.join(settings.CELERY_ROOT, "uploads", batch_id)
     os.makedirs(input_dir, exist_ok=True)
     with open(os.path.join(input_dir, filename), "wb") as file:
