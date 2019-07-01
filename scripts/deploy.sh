@@ -39,14 +39,5 @@ python manage.py collectstatic
 sudo chown -R www-data /var/www/benga
 sudo chmod -R 755 /var/www/benga
 
-# Setup rabbitmq
-sudo rabbitmq-plugins enable rabbitmq_management
-sudo rabbitmqctl add_user ${RABBITMQ_DEFAULT_USER} ${RABBITMQ_DEFAULT_PASS}
-sudo rabbitmqctl set_user_tags ${RABBITMQ_DEFAULT_USER} administrator
-sudo rabbitmqctl add_vhost benga
-sudo rabbitmqctl set_permissions -p benga ${RABBITMQ_DEFAULT_USER} ".*" ".*" ".*"
-
-# Configure celery and celery service
-
 # configure
 sudo systemctl restart benga.service
