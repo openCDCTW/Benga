@@ -46,7 +46,7 @@ class Upload_contigs extends React.Component {
             dictDefaultMessage:"Drag contig file(s) here (up to 100 files)",
             dictRemoveFile:"Remove",
             addRemoveLinks: true,
-            maxFilesize:5,
+            maxFilesize: 10,
             acceptedFiles: ".fasta,.fa,.fna",
             autoProcessQueue: false,
             timeout: 0,
