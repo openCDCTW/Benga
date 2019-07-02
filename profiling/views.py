@@ -6,7 +6,6 @@ from django.http import Http404
 from profiling.models import Batch, Sequence, Profile
 from profiling.serializers import BatchSerializer, SequenceSerializer, ProfileSerializer
 from profiling.tasks import single_profiling, zip_save
-import time
 
 
 class BatchList(generics.ListCreateAPIView):
@@ -41,16 +40,18 @@ class SequenceList(generics.ListCreateAPIView):
         serializer = SequenceSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
-            (single_profiling.s(str(serializer.data["id"]),
-                                str(serializer.data["batch_id"]),
-                                serializer.data["database"],
-                                serializer.data["occurrence"]) | zip_save.s())()
+            seq_id = str(serializer.data["id"])
+            seq = SequenceDetail.get_object(pk=seq_id)
+            batch_id = str(serializer.data["batch_id"])
+            (single_profiling.s(seq_id, batch_id,
+                                str(seq.database), str(seq.occurrence)) | zip_save.s())()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 class SequenceDetail(APIView):
-    def get_object(self, pk):
+    @classmethod
+    def get_object(cls, pk):
         try:
             return Sequence.objects.get(pk=pk)
         except Sequence.DoesNotExist:
@@ -68,7 +69,8 @@ class SequenceDetail(APIView):
 
 
 class BatchSequenceDetail(APIView):
-    def get_object(self, batch_id):
+    @classmethod
+    def get_object(cls, batch_id):
         try:
             return Sequence.objects.get(batch_id=batch_id)
         except Sequence.DoesNotExist:
@@ -86,7 +88,8 @@ class ProfileList(generics.ListCreateAPIView):
 
 
 class ProfileDetail(APIView):
-    def get_object(self, pk):
+    @classmethod
+    def get_object(cls, pk):
         try:
             return Profile.objects.get(pk=pk)
         except Profile.DoesNotExist:
