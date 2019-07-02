@@ -92,7 +92,8 @@ class Tracking extends React.Component {
             acceptedFiles: ".tsv",
             autoProcessQueue: false,
             parallelUploads: 1,
-            maxFiles:1,
+            maxFiles: 1,
+            timeout: 0,
             init:function(){
                 this.on("addedfile", function(on_load_header_data){
                 });
@@ -197,6 +198,12 @@ class Tracking extends React.Component {
                 <br />
                 <br />
                 <div style={{ display:'flex', justifyContent:'center', alignItems:'center'}}>
+                    <a download href='https://benga-samples.s3.amazonaws.com/tracking.zip' style={{ textDecoration:'none' }}>
+                        <Button variant="contained" color="default">
+                            Download &nbsp; Example
+                        </Button>
+                    </a>
+                    &nbsp;&nbsp;&nbsp;&nbsp;
                     <Button variant="contained" className ={classes.buttoncss} 
                      onClick={this.handlePost.bind(this)}>
                         Submit

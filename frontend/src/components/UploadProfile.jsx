@@ -46,6 +46,7 @@ class Upload_profile extends React.Component {
             acceptedFiles: ".tsv",
             autoProcessQueue: false,
             parallelUploads: 500,
+            timeout: 0,
             init:function(){
                 this.on("addedfile", function(on_load_header_data){
 
@@ -200,6 +201,12 @@ class Upload_profile extends React.Component {
                     <br />
                     <br />
                     <div style = {{ display:'flex', justifyContent:'center', alignItems:'center' }}>
+                        <a download href='https://benga-samples.s3.amazonaws.com/clustering.zip' style={{ textDecoration:'none' }}>
+                            <Button variant="contained" color="default">
+                                Download &nbsp; Example
+                            </Button>
+                        </a>
+                        &nbsp;&nbsp;&nbsp;&nbsp;
                         <Button variant="contained" className ={classes.cssRoot}
                         onClick={this.handlePost.bind(this)}>
                             Submit
