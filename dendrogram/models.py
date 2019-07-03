@@ -27,11 +27,6 @@ def dendrograms_svg_path(instance, filename):
                                             "dendrogram-" + str(instance.id.id)[0:8] + ".svg")
 
 
-def dendrograms_emf_path(instance, filename):
-    return "dendrograms_emf/{0}/{1}".format(str(instance.id.id),
-                                            "dendrogram-" + str(instance.id.id)[0:8] + ".emf")
-
-
 def dendrograms_newick_path(instance, filename):
     return "dendrograms_newick/{0}/{1}".format(str(instance.id.id),
                                                "dendrogram-" + str(instance.id.id)[0:8] + ".newick")
@@ -57,5 +52,4 @@ class Dendrogram(models.Model):
     png_file = models.FileField(upload_to=dendrograms_png_path, null=False)
     pdf_file = models.FileField(upload_to=dendrograms_pdf_path, null=False)
     svg_file = models.FileField(upload_to=dendrograms_svg_path, null=False)
-    emf_file = models.FileField(upload_to=dendrograms_emf_path)
     newick_file = models.FileField(upload_to=dendrograms_newick_path, null=False)
