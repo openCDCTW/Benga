@@ -93,8 +93,8 @@ def make_ref_blastpdb(ref_db_file, database):
     return ref_len
 
 
-def blast_for_new_alleles(candidates, alleles, ref_db, temp_dir, ref_len):
-    filename = "new_allele_candidates"
+def blast_for_new_alleles(candidates, alleles, ref_db, temp_dir, ref_len, pid):
+    filename = "new_allele_candidates_" + pid
     candidate_file = os.path.join(temp_dir, filename + ".fasta")
     recs = [seq.new_record(cand, alleles[cand][1], seqtype="protein") for cand in candidates]
     seq.save_records(recs, candidate_file)
@@ -123,11 +123,11 @@ def update_database(new_allele_pairs, alleles):
     return pairs
 
 
-def add_new_alleles(id_allele_list, ref_db, temp_dir, ref_len):
+def add_new_alleles(id_allele_list, ref_db, temp_dir, ref_len, pid):
     all_alleles = functools.reduce(lambda x, y: {**x, **y[1]}, id_allele_list, {})
     existed_alleles = db.from_sql("select allele_id from alleles;")["allele_id"].tolist()
     candidates = list(filter(lambda x: x not in existed_alleles, all_alleles.keys()))
-    new_allele_pairs = blast_for_new_alleles(candidates, all_alleles, ref_db, temp_dir, ref_len)
+    new_allele_pairs = blast_for_new_alleles(candidates, all_alleles, ref_db, temp_dir, ref_len, pid)
     if new_allele_pairs:
         update_database(new_allele_pairs, all_alleles)
 
@@ -135,13 +135,13 @@ def add_new_alleles(id_allele_list, ref_db, temp_dir, ref_len):
 def profiling(output_dir, input_dir, database, threads, occr_level=None, selected_loci=None,
               profile_file="profile", enable_adding_new_alleles=True, generate_profiles=True,
               generate_bn=True, logger=None, debug=False):
+    pid = uuid.uuid4().hex[0:8]
     if not logger:
         lf = logs.LoggerFactory()
         lf.addConsoleHandler()
-        lf.addFileHandler(os.path.join(output_dir, "profiling.log"))
+        lf.addFileHandler(os.path.join(output_dir, "profiling_" + pid + ".log"))
         logger = lf.create()
     db.load_database_config(logger=logger)
-    pid = uuid.uuid4().hex[0:8]
 
     logger.info("Formating contigs...")
     query_dir = os.path.join(output_dir, "query_{}".format(pid))
@@ -173,7 +173,7 @@ def profiling(output_dir, input_dir, database, threads, occr_level=None, selecte
 
     if enable_adding_new_alleles:
         logger.info("Adding new alleles to database...")
-        add_new_alleles(id_allele_list, ref_db, temp_dir, ref_len)
+        add_new_alleles(id_allele_list, ref_db, temp_dir, ref_len, pid)
 
     logger.info("Collecting allele profiles of each genomes...")
     allele_counts = Counter()

@@ -46,7 +46,8 @@ class ProfileList(generics.ListCreateAPIView):
 
 
 class ProfileDetail(APIView):
-    def get_object(self, pk):
+    @classmethod
+    def get_object(cls, pk):
         try:
             return Profile.objects.get(pk=pk)
         except Profile.DoesNotExist:
@@ -69,7 +70,8 @@ class DendrogramList(generics.ListCreateAPIView):
 
 
 class DendrogramDetail(APIView):
-    def get_object(self, pk):
+    @classmethod
+    def get_object(cls, pk):
         try:
             return Dendrogram.objects.get(pk=pk)
         except Profile.DoesNotExist:

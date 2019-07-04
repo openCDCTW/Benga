@@ -21,7 +21,7 @@ def read_profiles(input_dir):
         for filename in files:
             p = pd.read_csv(os.path.join(input_dir, filename), sep="\t", index_col=0)
             profiles.append(p)
-        return pd.concat(profiles, axis=1, join='inner', sort=False)
+        return pd.concat(profiles, axis=1, sort=False)
 
 
 def plot(input_dir, output_dir, linkage):

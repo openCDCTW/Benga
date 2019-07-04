@@ -19,13 +19,16 @@ class ProfileList(generics.ListCreateAPIView):
         serializer = ProfileSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
-            track.delay(str(serializer.data["id"]), str(serializer.data["profile_db"]))
+            id = str(serializer.data["id"])
+            profile = ProfileDetail.get_object(pk=id)
+            track.delay(id, str(profile.profile_db))
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 class ProfileDetail(APIView):
-    def get_object(self, pk):
+    @classmethod
+    def get_object(cls, pk):
         try:
             return Profile.objects.get(pk=pk)
         except Profile.DoesNotExist:
@@ -48,7 +51,8 @@ class TrackedResultsList(generics.ListCreateAPIView):
 
 
 class TrackedResultsDetail(APIView):
-    def get_object(self, pk):
+    @classmethod
+    def get_object(cls, pk):
         try:
             return TrackedResults.objects.get(pk=pk)
         except TrackedResults.DoesNotExist:

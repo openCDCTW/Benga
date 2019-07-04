@@ -13,4 +13,3 @@ celery
 django-celery-results
 djangorestframework
 uwsgi
-librabbitmq
