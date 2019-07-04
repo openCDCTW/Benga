@@ -135,13 +135,13 @@ def add_new_alleles(id_allele_list, ref_db, temp_dir, ref_len, pid):
 def profiling(output_dir, input_dir, database, threads, occr_level=None, selected_loci=None,
               profile_file="profile", enable_adding_new_alleles=True, generate_profiles=True,
               generate_bn=True, logger=None, debug=False):
+    pid = uuid.uuid4().hex[0:8]
     if not logger:
         lf = logs.LoggerFactory()
         lf.addConsoleHandler()
-        lf.addFileHandler(os.path.join(output_dir, "profiling.log"))
+        lf.addFileHandler(os.path.join(output_dir, "profiling_" + pid + ".log"))
         logger = lf.create()
     db.load_database_config(logger=logger)
-    pid = uuid.uuid4().hex[0:8]
 
     logger.info("Formating contigs...")
     query_dir = os.path.join(output_dir, "query_{}".format(pid))
