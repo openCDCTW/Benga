@@ -4,7 +4,7 @@ import re
 import shutil
 import uuid
 import subprocess
-from collections import Counter
+from collections import Counter, OrderedDict
 from concurrent.futures import ThreadPoolExecutor
 
 import pandas as pd
@@ -45,8 +45,11 @@ def identify_alleles(args):
     subprocess.run(cmds.form_prodigal_cmd(filename, out_dir, model), shell=True)
     genome_id = files.fasta_filename(filename)
     target_file = os.path.join(out_dir, genome_id + ".locus.fna")
-    alleles = {operations.make_seqid(rec.seq): (rec.seq, rec.seq.translate(table=11))
-               for rec in SeqIO.parse(target_file, "fasta")}
+    alleles = OrderedDict()
+    for rec in SeqIO.parse(target_file, "fasta"):
+        allele_id = operations.make_seqid(rec.seq)
+        content = (rec.seq, rec.seq.translate(table=11))
+        alleles[allele_id] = content
     return genome_id, alleles
 
 
@@ -67,6 +70,8 @@ def profile_by_query(alleles, genome_id, selected_loci, database):
     ))
     # ensure allele_id is mapped only once
     profile = db.from_sql(query, database=database).drop_duplicates("allele_id")
+    # rearrange allele_id by the original order
+    profile = profile.reindex(alleles.keys()).dropna()
     # ensure locus_id exists only once
     profile = profile.drop_duplicates("locus_id").set_index("locus_id")
     profile = profile.rename(columns={"allele_id": genome_id}).iloc[:, 0]
