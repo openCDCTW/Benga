@@ -75,7 +75,7 @@ class Dendrogram:
                 if y.is_integer():
                     node_info = int(y)
                 else:
-                    node_info = round(y, 2)
+                    node_info = round(y, 1)
                 plt.annotate(
                     node_info, (y, x), xytext=(-2, 8), textcoords='offset points', va='top', ha='right', fontsize=8
                     )

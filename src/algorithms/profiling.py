@@ -188,7 +188,7 @@ def profiling(output_dir, input_dir, database, threads, occr_level=None, selecte
             profile = profile_by_query(alleles, genome_id, selected_loci, database)
             collect.append(profile)
             allele_counts.update(alleles.keys())
-        result = pd.concat(collect, axis=1)
+        result = pd.concat(collect, axis=1, sort=False)
         result.to_csv(os.path.join(output_dir, profile_file + ".tsv"), sep="\t")
         if generate_bn:
             bio = to_bionumerics_format(result)
