@@ -71,7 +71,7 @@ def profile_by_query(alleles, genome_id, selected_loci, database):
     # ensure allele_id is mapped only once
     profile = db.from_sql(query, database=database).drop_duplicates("allele_id")
     # ensure locus_id exists only once
-    profile = profile.sort_values("allele_id").drop_duplicates("locus_id").set_index("locus_id")
+    profile = profile.sort_values("allele_id", kind='mergesort').drop_duplicates("locus_id").set_index("locus_id")
     profile = profile.rename(columns={"allele_id": genome_id}).iloc[:, 0]
     return profile
 
