@@ -10,12 +10,12 @@ def get_profile(track, biosample):
 
 
 def distance_against_all(query_profile, track, top_n=100):
+    query_profile = query_profile.to_dict()
     distances = {}
     for profile in track.find():
-        ref_profile = pd.Series(data=profile["profile"])
-        df = pd.concat([ref_profile, query_profile], axis=1, keys=['ref_profile', 'query_profile']).fillna('')
+        df = pd.DataFrame({'ref_profile': profile["profile"], 'query_profile': query_profile}).fillna('')
         distances[profile['BioSample']] = (df['query_profile'] != df['ref_profile']).sum()
-    top_n_dist = pd.Series(distances).sort_values()[0:top_n]
+    top_n_dist = pd.Series(distances, name='distance').sort_values()[0:top_n]
     return top_n_dist
 
 
@@ -27,13 +27,12 @@ def save_profiles(biosamples, track, prof_dir):
 
 
 def add_metadata(distances, track):
-    results = pd.DataFrame()
-    results['distance'] = distances
-    for sample in results.index:
-        metadata = track.find_one({'BioSample': sample})
-        for col in metadata:
-            if col != "profile" and col != "_id":
-                results.loc[sample, col] = metadata[col]
+    metadata_set = []
+    for sample in distances.index:
+        metadata = track.find_one({'BioSample': sample}, {'_id': 0, 'profile': 0})
+        metadata_set.append(metadata)
+    metadata_table = pd.DataFrame(metadata_set)
+    results = pd.merge(distances, metadata_table, left_index=True, right_on='BioSample')
     return results
 
 

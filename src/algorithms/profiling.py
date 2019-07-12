@@ -70,10 +70,8 @@ def profile_by_query(alleles, genome_id, selected_loci, database):
     ))
     # ensure allele_id is mapped only once
     profile = db.from_sql(query, database=database).drop_duplicates("allele_id")
-    # rearrange allele_id by the original order
-    profile = profile.set_index("allele_id").reindex(alleles.keys()).dropna().reset_index()
     # ensure locus_id exists only once
-    profile = profile.drop_duplicates("locus_id").set_index("locus_id")
+    profile = profile.sort_values("allele_id", kind='mergesort').drop_duplicates("locus_id").set_index("locus_id")
     profile = profile.rename(columns={"allele_id": genome_id}).iloc[:, 0]
     return profile
 
@@ -188,7 +186,7 @@ def profiling(output_dir, input_dir, database, threads, occr_level=None, selecte
             profile = profile_by_query(alleles, genome_id, selected_loci, database)
             collect.append(profile)
             allele_counts.update(alleles.keys())
-        result = pd.concat(collect, axis=1)
+        result = pd.concat(collect, axis=1, sort=False)
         result.to_csv(os.path.join(output_dir, profile_file + ".tsv"), sep="\t")
         if generate_bn:
             bio = to_bionumerics_format(result)
