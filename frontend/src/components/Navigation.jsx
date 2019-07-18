@@ -33,8 +33,6 @@ export default class Navigation extends React.Component {
                     label="Strain Tracking" component={Link} to="/cgMLST/tracking" />
                     <Tab style={{ fontSize:'16px',textTransform:'none' }} disabled={window.tabSwitch}
                     label="Clustering" component={Link} to="/cgMLST/clustering" />
-                    <Tab style={{ fontSize:'16px',textTransform:'none' }} disabled={window.tabSwitch}
-                    label="Tutorial" component={Link} to="/cgMLST/tutorial" />
                 </Tabs>
             </Paper>
         );
