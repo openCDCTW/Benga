@@ -1,6 +1,6 @@
 # backend
 sudo apt update
-sudo apt install -y git python3-pip virtualenv libpcre3 libpcre3-dev postgresql-client-10 rabbitmq-server
+sudo apt install -y git python3-pip virtualenv postgresql-client-10 rabbitmq-server
 git clone https://github.com/openCDCTW/Benga.git
 cd Benga/
 git checkout develop
