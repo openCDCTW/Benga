@@ -23,6 +23,7 @@ class DistanceMatrix:
 
     @property
     def distance(self):
+        """Calculate distance matrix."""
         if not self._distances:
             data = np.zeros((len(self._profile_index), len(self._profile_index)))
             for index_1, value_1 in enumerate(self._profile_values):
@@ -47,11 +48,13 @@ class Dendrogram:
 
     @property
     def newick(self):
+        """Generate newick format with dendrogram."""
         if not self._newick:
             self._newick = make_newick(self._tree, "", self._tree.dist, self._nodes)
         return self._newick
 
     def scipy_tree(self, file, distance_annotate=True, w=8, dpi=300):
+        """Generate dendrogram."""
         plt.style.use("fast")
         matplotlib.rcParams['lines.linewidth'] = 0.5
         fig, ax = plt.subplots(1, 1, figsize=(w, int(len(self._nodes)*0.3)))
@@ -91,6 +94,7 @@ def hamming(value_1, value_2):
 
 
 def make_newick(node, newick, parentdist, leaf_names):
+    """Convert scipy dendrogram to newick format."""
     if node.is_leaf():
         return "{}:{:.2f}{}".format(leaf_names[node.id], parentdist - node.dist, newick)
     else:
