@@ -16,31 +16,9 @@ from src.utils import files, cmds, operations, logs, seq
 from src.utils import db
 from src.utils.alleles import filter_duplicates
 
-# class Profiler(metaclass=abc.ABCMeta):
-#     def __init__(self):
-#         raise NotImplementedError()
-#
-# class BatchProfiler(Profiler):
-#     def __init__(self):
-#         self.__profile = None
-#
-#     def run(self, ):
-#
-#
-# class BatchSelector(metaclass=abc.ABCMeta):
-#     def __init__(self):
-#         raise NotImplementedError()
-#
-# class BatchSchemeSelector(BatchSelector):
-#     def __init__(self):
-#         pass
-#
-#     def
-#
-# class BatchGeneSelector(BatchSelector):
-
 
 def identify_alleles(args):
+    """Identify CDS from the outcome of prodigal."""
     filename, out_dir, model = args
     subprocess.run(cmds.form_prodigal_cmd(filename, out_dir, model), shell=True)
     genome_id = files.fasta_filename(filename)
@@ -54,6 +32,7 @@ def identify_alleles(args):
 
 
 def update_allele_counts(counter, database, tablename):
+    """Update allele count with new table, which will be add to original table."""
     db.table_to_sql(tablename, counter, database=database, append=False)
     query = "update alleles " \
             "set count = alleles.count + ba.count " \
@@ -64,6 +43,9 @@ def update_allele_counts(counter, database, tablename):
 
 
 def profile_by_query(alleles, genome_id, selected_loci, database):
+    """Profiling a genome by query database with allele id.
+    Ensure an allele is mapped to a locus.
+    """
     query = sa.select([db.PAIRS]).where(sa.and_(
         db.PAIRS.c['allele_id'].in_(alleles.keys()),
         db.PAIRS.c['locus_id'].in_(selected_loci)
@@ -76,7 +58,7 @@ def profile_by_query(alleles, genome_id, selected_loci, database):
     return profile
 
 
-def generate_allele_len(recs):
+def calculate_allele_len(recs):
     return {rec.id: len(rec.seq) for rec in recs}
 
 
@@ -89,7 +71,7 @@ def make_ref_blastpdb(ref_db_file, database):
     ref_recs = [seq.new_record(row["locus_id"], row["peptide_seq"], seqtype="protein") for _, row in refs.iterrows()]
     ref_fasta = ref_db_file + ".fasta"
     seq.save_records(ref_recs, ref_fasta)
-    ref_len = generate_allele_len(ref_recs)
+    ref_len = calculate_allele_len(ref_recs)
 
     seq.compile_blastpdb(ref_fasta, ref_db_file)
     os.remove(ref_fasta)
@@ -97,11 +79,12 @@ def make_ref_blastpdb(ref_db_file, database):
 
 
 def blast_for_new_alleles(candidates, alleles, ref_db, temp_dir, ref_len, pid):
+    """Blast unmapped alleles with existing locus and identify potentially new alleles."""
     filename = "new_allele_candidates_" + pid
     candidate_file = os.path.join(temp_dir, filename + ".fasta")
     recs = [seq.new_record(cand, alleles[cand][1], seqtype="protein") for cand in candidates]
     seq.save_records(recs, candidate_file)
-    allele_len = generate_allele_len(recs)
+    allele_len = calculate_allele_len(recs)
 
     blastp_out_file = os.path.join(temp_dir, "{}.blastp.out".format(filename))
     seq.query_blastpdb(candidate_file, ref_db, blastp_out_file, seq.BLAST_COLUMNS)
@@ -113,6 +96,7 @@ def blast_for_new_alleles(candidates, alleles, ref_db, temp_dir, ref_len, pid):
 
 
 def update_database(new_allele_pairs, alleles):
+    """Update new alleles to database."""
     collect = []
     for allele_id, locus_id in new_allele_pairs:
         dna = str(alleles[allele_id][0])
@@ -127,6 +111,7 @@ def update_database(new_allele_pairs, alleles):
 
 
 def add_new_alleles(id_allele_list, ref_db, temp_dir, ref_len, pid):
+    """Identify new alleles and add them to database."""
     all_alleles = functools.reduce(lambda x, y: {**x, **y[1]}, id_allele_list, {})
     existed_alleles = db.from_sql("select allele_id from alleles;")["allele_id"].tolist()
     candidates = list(filter(lambda x: x not in existed_alleles, all_alleles.keys()))

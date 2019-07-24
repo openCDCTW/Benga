@@ -1,4 +1,3 @@
-import json
 import os
 import re
 import subprocess
@@ -22,6 +21,7 @@ def move_file(annotate_dir, dest_dir, ext):
 
 
 def filter_tRNA(matrix):
+    """Filter out the locus of which description contains 'tRNA-***'."""
     c = re.compile(r"tRNA-\w+\(\w{3}\)")
     is_trna = []
     for x in matrix["description"]:
@@ -32,6 +32,7 @@ def filter_tRNA(matrix):
 
 
 def filter_rRNA(matrix):
+    """Filter out the locus of which description contains 'ribosomal RNA'."""
     c1 = re.compile("ribosomal RNA")
     c2 = re.compile("subunit")
     is_rrna = []
@@ -47,6 +48,7 @@ def filter_rRNA(matrix):
 
 
 def extract_profiles(roary_matrix_file, dbname, metadata_cols=13):
+    """Extract profiles from Roary outcome and identify the column names."""
     matrix = pd.read_csv(roary_matrix_file, low_memory=False)
     matrix["Gene"] = matrix["Gene"].str.replace("/", "_")
     matrix["Gene"] = matrix["Gene"].str.replace(" ", "_")
@@ -73,6 +75,10 @@ def save_locus_metadata(matrix, dbname, select_col=None, repeat_tol=1.2):
 
 
 def collect_allele_info(profiles, ffn_dir):
+    """Collect allele information from ffn files.
+    Collect all found loci, including paralogs, and generate allele id from allele sequence.
+    Allele frequency and locus frequency are calculated.
+    """
     freq = defaultdict(Counter)
     new_profiles = []
     for subject, profile in profiles.iteritems():
@@ -97,6 +103,7 @@ def collect_allele_info(profiles, ffn_dir):
 
 
 def reference_self_blastp(output_dir, freq):
+    """Blast reference alleles of locus with themselves."""
     ref_recs = [seq.new_record(locus, counter.most_common(1)[0][0].translate(table=11)) for locus, counter in freq.items()]
     ref_length = {rec.id: len(rec.seq) for rec in ref_recs}
     ref_faa = os.path.join(output_dir, "ref_seq.faa")
@@ -111,6 +118,7 @@ def reference_self_blastp(output_dir, freq):
 
 
 def identify_pairs(df):
+    """Remove duplicated locus pairs in qseqid and sseqid."""
     sseqids = df["sseqid"].tolist()
     pairs = []
     existed = set()
@@ -123,12 +131,14 @@ def identify_pairs(df):
 
 
 def select_drop_loci(df):
+    """Drop locus id started with 'group_' and end with '_\d'."""
     drop1 = df[df["locus_id"].str.contains("group_")]["locus_id"]
     drop2 = df[df["locus_id"].str.contains(r"_\d$")]["locus_id"]
     return set(drop1) | set(drop2)
 
 
 def collect_high_occurrence_loci(pairs, total_isolates, drop_by_occur):
+    """Collect locus. If duplicated, keep the high occurrence one."""
     occur = db.from_sql("select locus_id, num_isolates from locus_meta;")
     occur["occurrence"] = list(map(lambda x: round(x / total_isolates * 100, 2), occur["num_isolates"]))
     drops = set()
@@ -149,6 +159,7 @@ def filter_locus(blastp_out_file, ref_length, total_isolates, drop_by_occur):
 
 
 def to_allele_table(data, dbname):
+    """Save allele information to allele table in database."""
     df = pd.DataFrame(data, columns=["allele_id", "dna_seq", "peptide_seq", "count"])
     df = df.groupby("allele_id").agg({"dna_seq": "first", "peptide_seq": "first", "count": "sum"})
     df.reset_index(inplace=True)
@@ -156,11 +167,13 @@ def to_allele_table(data, dbname):
 
 
 def to_pair_table(data, dbname):
+    """Save allele-locus pair information to pair table in database."""
     df = pd.DataFrame(data, columns=["allele_id", "locus_id"])
     db.table_to_sql("pairs", df, dbname)
 
 
 def save_sequences(freq, refseqs, dbname):
+    """Collect sequence information and save into database."""
     alleles = []
     pairs = []
     for locus, counter in freq.items():
@@ -176,6 +189,7 @@ def save_sequences(freq, refseqs, dbname):
 
 
 def make_schemes(refseqs, total_isolates):
+    """Decide scheme and reference allele of a locus."""
     schemes = db.from_sql("select locus_id, num_isolates from locus_meta;")
     schemes = schemes[schemes["locus_id"].isin(refseqs.keys())]
     schemes["occurrence"] = list(map(lambda x: round(x/total_isolates * 100, 2), schemes["num_isolates"]))
