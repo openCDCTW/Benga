@@ -31,17 +31,6 @@ def identify_alleles(args):
     return genome_id, alleles
 
 
-def update_allele_counts(counter, database, tablename):
-    """Update allele count with new table, which will be add to original table."""
-    db.table_to_sql(tablename, counter, database=database, append=False)
-    query = "update alleles " \
-            "set count = alleles.count + ba.count " \
-            "from {} as ba " \
-            "where alleles.allele_id=ba.allele_id;".format(tablename)
-    db.to_sql(query, database=database)
-    db.to_sql("drop table {};".format(tablename), database=database)
-
-
 def profile_by_query(alleles, genome_id, selected_loci, database):
     """Profiling a genome by query database with allele id.
     Ensure an allele is mapped to a locus.
@@ -164,13 +153,11 @@ def profiling(output_dir, input_dir, database, threads, occr_level=None, selecte
         add_new_alleles(id_allele_list, ref_db, temp_dir, ref_len, pid)
 
     logger.info("Collecting allele profiles of each genomes...")
-    allele_counts = Counter()
     if generate_profiles:
         collect = []
         for genome_id, alleles in id_allele_list:
             profile = profile_by_query(alleles, genome_id, selected_loci, database)
             collect.append(profile)
-            allele_counts.update(alleles.keys())
         result = pd.concat(collect, axis=1, sort=False)
         result.to_csv(os.path.join(output_dir, profile_file + ".tsv"), sep="\t")
         if generate_bn:
@@ -178,12 +165,7 @@ def profiling(output_dir, input_dir, database, threads, occr_level=None, selecte
             bio.to_csv(os.path.join(output_dir, "bionumerics_{}.csv".format(pid)), index=False)
     else:
         logger.info("Not going to output profiles.")
-        for genome_id, alleles in id_allele_list:
-            allele_counts.update(alleles.keys())
 
-    allele_counts = pd.DataFrame(allele_counts, index=[0]).T\
-        .reset_index().rename(columns={"index": "allele_id", 0: "count"})
-    update_allele_counts(allele_counts, database, "batch_add_counts_{}".format(pid))
     if not debug and os.path.exists(query_dir):
         shutil.rmtree(query_dir)
     logger.info("Done!")
