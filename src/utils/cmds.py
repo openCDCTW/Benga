@@ -26,8 +26,7 @@ def form_prodigal_cmd(infile, outpath, model):
     args = [os.path.join(BINARIES_PATH, "prodigal"), "-c", "-m", "-q", "-g", "11",
             "-t", os.path.join(MODELS_PATH, model + '.trn'),
             "-i", infile,
-            "-d", os.path.join(outpath, filename + ".locus.fna"),
-            "-o", os.path.join(outpath, filename + ".gbk")]
+            "-d", os.path.join(outpath, filename + ".locus.fna")]
     return " ".join(map(str, args))
 
 

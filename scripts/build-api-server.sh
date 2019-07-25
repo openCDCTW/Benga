@@ -23,6 +23,5 @@ mongorestore --host 172.31.2.104:27017 -u centrallab -p ${PASSWORD} dump_${DBNAM
 # Setup rabbitmq
 sudo rabbitmq-plugins enable rabbitmq_management
 sudo rabbitmqctl add_user ${RABBITMQ_DEFAULT_USER} ${RABBITMQ_DEFAULT_PASS}
-sudo rabbitmqctl set_user_tags ${RABBITMQ_DEFAULT_USER} administrator
 sudo rabbitmqctl add_vhost benga
 sudo rabbitmqctl set_permissions -p benga ${RABBITMQ_DEFAULT_USER} ".*" ".*" ".*"
