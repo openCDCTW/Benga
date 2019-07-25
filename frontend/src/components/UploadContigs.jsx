@@ -50,9 +50,12 @@ class Upload_contigs extends React.Component {
             acceptedFiles: ".fasta,.fa,.fna",
             autoProcessQueue: false,
             timeout: 0,
+            parallelUploads: 100,
             init:function(){
-                this.on("addedfile", function(on_load_header_data){
-                    
+                this.on("addedfile", function(file){
+                    if(file.size < 100000){
+                        this.removeFile(file);
+                    }
                 });
                 this.on("sending", function(file, xhr, formData){
                     formData.append("batch_id", window.batchid);
