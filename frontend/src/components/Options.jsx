@@ -60,7 +60,7 @@ class Options extends React.Component {
                   <MenuItem value={'Vibrio_cholerae'}>Vibrio cholerae</MenuItem>
                   <MenuItem value={'Campylobacter_jejuni'} disabled>Campylobacter jejuni</MenuItem>
                   <MenuItem value={'Listeria_monocytogenes'} disabled>Listeria monocytogenes</MenuItem>
-                  <MenuItem value={'Salmonella_enterica'} disabled>Salmonella_enterica</MenuItem>
+                  <MenuItem value={'Salmonella_enterica'}>Salmonella enterica</MenuItem>
                 </Select>
               <FormHelperText>Required</FormHelperText>
             </FormControl>

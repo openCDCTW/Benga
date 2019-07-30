@@ -95,7 +95,10 @@ class Tracking extends React.Component {
             maxFiles: 1,
             timeout: 0,
             init:function(){
-                this.on("addedfile", function(on_load_header_data){
+                this.on("addedfile", function(file){
+                    if(file.size <100000){
+                        this.removeFile(file);
+                    }
                 });
                 this.on("sending", function(file, xhr, formData){
                     formData.append("profile_db", window.profile_db);
