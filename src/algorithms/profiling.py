@@ -20,7 +20,7 @@ from src.utils.alleles import filter_duplicates
 def identify_alleles(args):
     """Identify CDS from the outcome of prodigal."""
     filename, out_dir, model = args
-    subprocess.run(cmds.form_prodigal_cmd(filename, out_dir, model), shell=True)
+    subprocess.run(cmds.form_prodigal_cmd(filename, out_dir, model), shell=True, stdout=subprocess.DEVNULL)
     genome_id = files.fasta_filename(filename)
     target_file = os.path.join(out_dir, genome_id + ".locus.fna")
     alleles = OrderedDict()

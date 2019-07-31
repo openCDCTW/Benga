@@ -7,12 +7,13 @@ import matplotlib
 import matplotlib.pyplot as plt
 from matplotlib.ticker import MaxNLocator, FuncFormatter
 
+from ..utils.data import integer_encoding
+
 
 class DistanceMatrix:
 
     def __init__(self, profile):
-        profile = profile.fillna('0')
-        profile = profile.transpose()
+        profile = integer_encoding(profile).T
         self._profile_values = profile.values
         self._profile_index = profile.index
         self._distances = None
