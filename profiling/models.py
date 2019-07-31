@@ -1,6 +1,11 @@
 import uuid
 from django.db import models
 
+ALLELE_DB_CHOICES = (
+    ("Vibrio_cholerae", "Vibrio cholerae"),
+    ("Salmonella_enterica", "Salmonella_enterica"),
+)
+
 
 def sequences_path(instance, filename):
     return "uploads/{0}/{1}/{2}".format(instance.batch_id.id, str(instance.id),
@@ -23,7 +28,7 @@ class Sequence(models.Model):
     batch_id = models.ForeignKey(Batch, on_delete=models.CASCADE)
     file = models.FileField(upload_to=sequences_path, null=False)
     occurrence = models.SmallIntegerField(null=False)
-    database = models.TextField(null=False)
+    database = models.TextField(choices=ALLELE_DB_CHOICES, null=False)
 
 
 class Profile(models.Model):
@@ -31,4 +36,4 @@ class Profile(models.Model):
     created = models.DateTimeField(auto_now_add=True)
     zip = models.FileField(upload_to=zip_path, null=False, max_length=250)
     occurrence = models.SmallIntegerField(null=False)
-    database = models.TextField(null=False)
+    database = models.TextField(choices=ALLELE_DB_CHOICES, null=False)
