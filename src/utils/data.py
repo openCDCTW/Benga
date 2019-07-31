@@ -1,7 +1,7 @@
 import pandas as pd
 
 
-def convert_data_type(profile):
+def integer_encoding(profile):
     profile = profile.fillna(0)
     data = []
     for str_value in profile.values:
