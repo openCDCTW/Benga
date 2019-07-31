@@ -13,7 +13,7 @@ from ..utils.data import integer_encoding
 class DistanceMatrix:
 
     def __init__(self, profile):
-        profile = convert_data_type(profile).T
+        profile = integer_encoding(profile).T
         self._profile_values = profile.values
         self._profile_index = profile.index
         self._distances = None
