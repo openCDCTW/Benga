@@ -7,7 +7,7 @@ import matplotlib
 import matplotlib.pyplot as plt
 from matplotlib.ticker import MaxNLocator, FuncFormatter
 
-from ..utils.data import convert_data_type
+from ..utils.data import integer_encoding
 
 
 class DistanceMatrix:
