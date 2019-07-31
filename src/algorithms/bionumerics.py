@@ -1,4 +1,4 @@
-from ..utils.data import convert_data_type
+from ..utils.data import integer_encoding
 
 
 def to_bionumerics_format(profile):
