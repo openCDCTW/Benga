@@ -7,11 +7,13 @@ import matplotlib
 import matplotlib.pyplot as plt
 from matplotlib.ticker import MaxNLocator, FuncFormatter
 
+from ..utils.data import convert_data_type
+
 
 class DistanceMatrix:
 
     def __init__(self, profile):
-        profile = string_to_character(profile).T
+        profile = convert_data_type(profile).T
         self._profile_values = profile.values
         self._profile_index = profile.index
         self._distances = None
@@ -90,19 +92,6 @@ class Dendrogram:
 
 def hamming(value_1, value_2):
     return (value_1 != value_2).sum()
-
-
-def string_to_character(profile):
-    profile = profile.fillna(0)
-    data = []
-    for value in profile.values:
-        string_set = set(value)
-        string_set.discard(0)
-        encoder = {string: _ for _, string in enumerate(string_set, 1)}
-        character_value = [encoder.get(i, 0) for i in value]
-        data.append(character_value)
-    df = pd.DataFrame(data, index=profile.index, columns=profile.columns)
-    return df
 
 
 def make_newick(node, newick, parentdist, leaf_names):
