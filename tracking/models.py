@@ -3,6 +3,7 @@ from django.db import models
 
 PROFILE_DB_CHOICES = (
     ("Vibrio_cholerae", "Vibrio cholerae"),
+    ("Salmonella_enterica", "Salmonella_enterica"),
 )
 
 
