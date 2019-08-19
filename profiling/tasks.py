@@ -21,7 +21,7 @@ def separate_profiles(profile, profile_dir):
 
 def zip_folder(filepath):
     filename = filepath + '.zip'
-    with zipfile.ZipFile(filename, mode='w', compression=zipfile.ZIP_LZMA) as zip:
+    with zipfile.ZipFile(filename, mode='w', compression=zipfile.ZIP_DEFLATED) as zip:
         for root, folders, files in os.walk(filepath):
             for f in files:
                 if f.endswith(".fa.tsv"):
