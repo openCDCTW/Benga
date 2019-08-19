@@ -24,6 +24,7 @@ CELERY_BROKER_URL = os.environ['CELERY_BROKER_URL']
 CELERY_ACCEPT_CONTENT = ['json']
 CELERY_RESULT_BACKEND = 'django-db'
 CELERY_TASK_SERIALIZER = 'json'
+CELERYD_MAX_TASKS_PER_CHILD = 100
 
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = os.environ['SECRET_KEY']
