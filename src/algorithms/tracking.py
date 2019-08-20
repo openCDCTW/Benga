@@ -53,7 +53,7 @@ def to_json(id, output_dir, results):
 
 
 def to_zip(filename, results_file, prof_dir):
-    with zipfile.ZipFile(filename, mode='w', compression=zipfile.ZIP_LZMA) as zip:
+    with zipfile.ZipFile(filename, mode='w', compression=zipfile.ZIP_DEFLATED) as zip:
         zip.write(results_file, os.path.basename(results_file))
         for root, folders, files in os.walk(prof_dir):
             for f in files:
