@@ -10,11 +10,14 @@ def get_profile(track, biosample):
 
 
 def distance_against_all(query_profile, track, top_n=100):
-    query_alleles = set(query_profile.dropna().values)
+    query_alleles = query_profile.dropna().to_dict()
     distances = {}
     for profile in track.find():
-        ref_alleles = set(profile["profile"].values())
-        distances[profile['BioSample']] = len(query_alleles - ref_alleles) + len(ref_alleles - query_alleles)
+        ref_alleles = profile["profile"]
+        same_loci = query_alleles.keys() & ref_alleles.keys()
+        diff_alleles_count = sum(True if query_alleles[loci] != ref_alleles[loci] else False for loci in same_loci)
+        diff_loci_count = len((query_alleles.keys()|ref_alleles.keys()) - same_loci)
+        distances[profile['BioSample']] = diff_alleles_count + diff_loci_count
     top_n_dist = pd.Series(distances, name='distance').sort_values()[0:top_n]
     return top_n_dist
 
