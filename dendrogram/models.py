@@ -32,6 +32,11 @@ def dendrograms_newick_path(instance, filename):
                                                "dendrogram-" + str(instance.id.id)[0:8] + ".newick")
 
 
+def dendrograms_emf_path(instance, filename):
+    return "dendrograms_emf/{0}/{1}".format(str(instance.id.id),
+                                            "dendrogram-" + str(instance.id.id)[0:8] + ".emf")
+
+
 class Batch(models.Model):
     id = models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, null=False, auto_created=True)
     created = models.DateTimeField(auto_now_add=True)
@@ -53,3 +58,4 @@ class Dendrogram(models.Model):
     pdf_file = models.FileField(upload_to=dendrograms_pdf_path, null=False)
     svg_file = models.FileField(upload_to=dendrograms_svg_path, null=False)
     newick_file = models.FileField(upload_to=dendrograms_newick_path, null=False)
+    emf_file = models.FileField(upload_to=dendrograms_emf_path, null=False)
