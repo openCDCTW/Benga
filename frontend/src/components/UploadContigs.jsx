@@ -194,9 +194,9 @@ class Upload_contigs extends React.Component {
                 <br />
                 <br />
                 <div style = {{ display:'flex', justifyContent:'center', alignItems:'center' }}>
-                    <a download href='https://benga-samples.s3.amazonaws.com/profiling.zip' style={{ textDecoration:'none' }}>
-                        <Button variant="contained" color="default">
-                            Download &nbsp; Example
+                    <a download href='https://drive.google.com/uc?export=download&id=1XG-05Kim8gOOg1UU16oJ9saOwfCh-PZM' style={{ textDecoration:'none' }}>
+                        <Button style={{ textTransform:'none' }} variant="contained" color="default">
+                            Download &nbsp; example &nbsp; files
                         </Button>
                     </a>
                     &nbsp;&nbsp;&nbsp;&nbsp;

@@ -37,19 +37,18 @@ def plot(input_dir, output_dir, linkage):
     dendro.scipy_tree(svg_filename)
     png_filename = os.path.join(output_dir, "dendrogram.png")
     dendro.scipy_tree(png_filename)
-    emf_filename = os.path.join(output_dir, "dendrogram.emf")
-    subprocess.run(['libreoffice', '--headless', '--convert-to', 'emf', '--outdir', output_dir, svg_filename])
-    return newick_filename, pdf_filename, png_filename, svg_filename, emf_filename
+    #emf_filename = os.path.join(output_dir, "dendrogram.emf")
+    #subprocess.run(['libreoffice6.2', '--headless', '--convert-to', 'emf', '--outdir', output_dir, svg_filename])
+    return newick_filename, pdf_filename, png_filename, svg_filename
 
 
-def save(batch_id, linkage, newick_filename, pdf_filename, png_filename, svg_filename, emf_filename):
+def save(batch_id, linkage, newick_filename, pdf_filename, png_filename, svg_filename):
     dendrogram_data = {
         "id": batch_id, "linkage": linkage,
         "png_file": File(open(png_filename, "rb")),
         "pdf_file": File(open(pdf_filename, "rb")),
         "svg_file": File(open(svg_filename, "rb")),
         "newick_file": File(open(newick_filename, "rb")),
-        "emf_file": File(open(emf_filename, "rb")),
     }
     serializer = DendrogramSerializer(data=dendrogram_data)
     if serializer.is_valid():
@@ -74,10 +73,11 @@ def get_file_number(dir, ext=".tsv"):
 def plot_dendrogram(batch_id):
     input_dir = os.path.join(settings.MEDIA_ROOT, "uploads", batch_id)
     output_dir = os.path.join(settings.MEDIA_ROOT, "temp", batch_id)
+    os.umask(0)
     os.makedirs(output_dir, exist_ok=True)
     prof_num = get_prof_number(batch_id)
     if prof_num == get_file_number(input_dir):
         linkage = get_linkage(batch_id)
-        newick_file, pdf_file, png_file, svg_file, emf_file = plot(input_dir, output_dir, linkage)
-        save(batch_id, linkage, newick_file, pdf_file, png_file, svg_file, emf_file)
+        newick_file, pdf_file, png_file, svg_file = plot(input_dir, output_dir, linkage)
+        save(batch_id, linkage, newick_file, pdf_file, png_file, svg_file)
         shutil.rmtree(output_dir)

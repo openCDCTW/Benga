@@ -136,10 +136,6 @@ class Tracking extends React.Component {
         this.props.history.push("/cgMLST/tracking_result")
 	}
 
-	remove(){
-	    this.dropzone.removeAllFiles();
-	}
-
 	select_handleChange(event){
         if( event.target.value == 'Vibrio_cholerae'){
             this.setState(state => ({ 
@@ -181,13 +177,6 @@ class Tracking extends React.Component {
                             </FormControl>
                         </form>
                     </div>
-                    <div style={{ float:'right', marginTop:'35px', marginRight:'25px' }}>
-                        <Button variant="contained" color="secondary" onClick={this.remove.bind(this)}>
-                                Remove all files
-                                &nbsp;&nbsp;
-                                <DeleteIcon />
-                        </Button>
-                    </div>
                 </div>
                 <br />
                 <br />
@@ -201,9 +190,9 @@ class Tracking extends React.Component {
                 <br />
                 <br />
                 <div style={{ display:'flex', justifyContent:'center', alignItems:'center'}}>
-                    <a download href='https://benga-samples.s3.amazonaws.com/tracking.zip' style={{ textDecoration:'none' }}>
-                        <Button variant="contained" color="default">
-                            Download &nbsp; Example
+                    <a download href='https://drive.google.com/uc?export=download&id=1OgrY6Lt-93-gaYFEl7WbbUt6VLZ6eaC4' style={{ textDecoration:'none' }}>
+                        <Button style={{ textTransform:'none' }} variant="contained" color="default">
+                            Download &nbsp; example &nbsp; file
                         </Button>
                     </a>
                     &nbsp;&nbsp;&nbsp;&nbsp;
@@ -213,6 +202,22 @@ class Tracking extends React.Component {
                         &nbsp;&nbsp;
                         <CloudUploadIcon />
                     </Button>
+                </div>
+                <br />
+                <div style={{ display:'flex', justifyContent:'center', alignItems:'center'}}>
+                   <a download href='https://drive.google.com/uc?export=download&id=1onYjY5K4yE4BwjNAZ78S5ZpUgQ9wjyAw' style={{ textDecoration:'none' }}>
+			<Button style={{ textTransform:'none' }} variant="contained" color="default">
+                            Download &nbsp; cgMLST_tree_5048.pdf
+			</Button>
+                   </a>
+                </div>
+                <br />
+                <div style={{ display:'flex', justifyContent:'center', alignItems:'center'}}>
+                   <a download href='https://drive.google.com/uc?export=download&id=1EeQGJpJxSbMZr_V6cYXNkpccn5nbanZB' style={{ textDecoration:'none' }}>
+                        <Button style={{ textTransform:'none' }} variant="contained" color="default">
+                            Download &nbsp; V.cholerae_genomes_list.zip
+                        </Button>
+                   </a>
                 </div>
                 <br />
                 <br />
