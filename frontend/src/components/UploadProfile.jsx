@@ -138,7 +138,6 @@ class Upload_profile extends React.Component {
                 png_file: this.state.tmp.png_file, 
                 pdf_file: this.state.tmp.pdf_file,
                 svg_file: this.state.tmp.svg_file, 
-                emf_file: this.state.tmp.emf_file, 
                 newick_file: this.state.tmp.newick_file }))
             }else{
                 alert("Data not found. Please input correct ID or try again later.");
@@ -203,9 +202,9 @@ class Upload_profile extends React.Component {
                     <br />
                     <br />
                     <div style = {{ display:'flex', justifyContent:'center', alignItems:'center' }}>
-                        <a download href='https://benga-samples.s3.amazonaws.com/clustering.zip' style={{ textDecoration:'none' }}>
-                            <Button variant="contained" color="default">
-                                Download &nbsp; Example
+                        <a download href='https://drive.google.com/uc?export=download&id=1RyJl1yMrWRHPgYAbStjUtD2zmfQ8YMRb' style={{ textDecoration:'none' }}>
+                            <Button style={{ textTransform:'none' }} variant="contained" color="default">
+                                Download &nbsp; example &nbsp; files
                             </Button>
                         </a>
                         &nbsp;&nbsp;&nbsp;&nbsp;
@@ -260,10 +259,6 @@ class Upload_profile extends React.Component {
                         &nbsp;&nbsp;&nbsp;&nbsp;
                         <a download href={this.state.svg_file} style={{ textDecoration:'none' }}>
                             <Button variant="contained" color="default">Svg</Button>
-                        </a>
-                        &nbsp;&nbsp;&nbsp;&nbsp;
-                        <a download href={this.state.emf_file} style={{ textDecoration:'none' }}>
-                            <Button variant="contained" color="default">emf</Button>
                         </a>
                         &nbsp;&nbsp;&nbsp;&nbsp;
                         <a download href={this.state.newick_file} style={{ textDecoration:'none' }}>
