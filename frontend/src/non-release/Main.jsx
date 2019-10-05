@@ -9,6 +9,9 @@ import upload_contigs from './UploadContigs.jsx';
 import Profile_view from './ProfileView.jsx';
 import Tracking from './Tracking.jsx';
 import Tracking_result from './TrackingResult.jsx';
+import Upload_profile from './UploadProfile.jsx';
+import Dendrogram_view from './DendrogramView.jsx';
+
 
 class Main extends React.Component {
 
@@ -34,6 +37,8 @@ class Main extends React.Component {
                     <Route path="/cgMLST/non-release/profile_result" component={Profile_view} />
                     <Route path="/cgMLST/non-release/tracking" component={Tracking} />
                     <Route path="/cgMLST/non-release/tracking_result" component={Tracking_result} />
+                    <Route path="/cgMLST/non-release/clustering" component={Upload_profile} />
+                    <Route path="/cgMLST/non-release/clustering_result" component={Dendrogram_view} />
                     <Footer />
                 </div>
             </Router>
