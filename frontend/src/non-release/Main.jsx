@@ -2,9 +2,11 @@ import React from 'react';
 import ReactDOM from 'react-dom';
 import { BrowserRouter as Router, Route, HashRouter } from "react-router-dom";
 import Header from './Header.jsx';
-import Navigation from '../components/Navigation.jsx'
+import Navigation from './Navigation.jsx'
 import Footer from '../components/Footer.jsx';
-import upload_contigs from '../components/UploadContigs.jsx';
+import About from '../components/About.jsx';
+import upload_contigs from './UploadContigs.jsx';
+import Profile_view from './ProfileView.jsx'
 
 class Main extends React.Component {
 
@@ -25,7 +27,9 @@ class Main extends React.Component {
                     <Header />
                     <Navigation />
                     <Route path="/cgMLST/non-release/" exact component={upload_contigs} />
+                    <Route path="/cgMLST/non-release/about" component={About} />
                     <Route path="/cgMLST/non-release/profiling" exact component={upload_contigs} />
+                    <Route path="/cgMLST/non-release/profile_result" component={Profile_view} />
                     <Footer />
                 </div>
             </Router>

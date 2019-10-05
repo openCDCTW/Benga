@@ -205,7 +205,7 @@ class Tracking extends React.Component {
                 </div>
                 <br />
                 <div style={{ display:'flex', justifyContent:'center', alignItems:'center'}}>
-                   <a download href='https://drive.google.com/uc?export=download&id=1onYjY5K4yE4BwjNAZ78S5ZpUgQ9wjyAw' style={{ textDecoration:'none' }}>
+                   <a download href='https://drive.google.com/uc?export=download&id=1_eQgWuGZxJAtOWxEgvdINyAJmyuENrza' style={{ textDecoration:'none' }}>
 			<Button style={{ textTransform:'none' }} variant="contained" color="default">
                             Download &nbsp; cgMLST_tree_5048.pdf
 			</Button>
@@ -213,7 +213,7 @@ class Tracking extends React.Component {
                 </div>
                 <br />
                 <div style={{ display:'flex', justifyContent:'center', alignItems:'center'}}>
-                   <a download href='https://drive.google.com/uc?export=download&id=1EeQGJpJxSbMZr_V6cYXNkpccn5nbanZB' style={{ textDecoration:'none' }}>
+                   <a download href='https://drive.google.com/uc?export=download&id=1WwCoeIMBekda2z9BX1MMDqzW9y_pPfw7' style={{ textDecoration:'none' }}>
                         <Button style={{ textTransform:'none' }} variant="contained" color="default">
                             Download &nbsp; V.cholerae_genomes_list.zip
                         </Button>

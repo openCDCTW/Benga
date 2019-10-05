@@ -41,8 +41,8 @@ class DatabaseInfo extends React.Component {
 						<font style={{ fontStyle:'italic' }}> V. cholerae </font> 
 						core genes, which are identified from 1,647
 						<font style={{ fontStyle:'italic' }}> V. cholerae </font> 
-						genomes from the NCBI database. Core genes are designated 
-						or those existing in more than 95% of the 1,647 genomes.
+						genomes obtained from the NCBI database. Core genes are designated 
+						for those existing in more than 95% of the 1,647 genomes.
 					</Typography>
 					<br />
 					<div style={{ display:'flex', justifyContent:'center', alignItems:'center'}}>
@@ -64,7 +64,7 @@ class DatabaseInfo extends React.Component {
 						<font style={{ fontStyle:'italic' }}> V. cholerae </font> 
 						strains with genomic sequences deposited in the NCBI database. 
 						Nowadays, the database contains 5,048 cgMLST profiles and will be updated 
-						by time.
+						over time.
 					</Typography>
 					<br />
 					<Typography component="p" style={{ width:'90%',textAlign: 'justify',
@@ -87,7 +87,7 @@ class DatabaseInfo extends React.Component {
 					<br />
 					<Typography component="p" style={{ width:'90%',textAlign: 'justify',
 					margin:'auto',fontSize:16 }}>
-						For publication of results, please cite: 
+						For publication, please cite: 
 					</Typography>
 					<br />
 					<Typography component="p" style={{ width:'90%',textAlign: 'justify',

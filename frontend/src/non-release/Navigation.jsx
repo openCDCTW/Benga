@@ -26,13 +26,13 @@ export default class Navigation extends React.Component {
                 <Tabs value={this.state.value} indicatorColor="primary" 
                 textColor="primary" scrollButtons="auto" onChange={this.handleChange.bind(this)} disabled={window.tabSwitch} centered>
                     <Tab style={{ fontSize:'16px', textTransform:'none' }} disabled={window.tabSwitch} 
-                    label="About" component={Link} to="/cgMLST/non-release/profiling" />
+                    label="About" component={Link} to="/cgMLST/non-release/about" />
                     <Tab style={{ fontSize:'16px', textTransform:'none' }} disabled={window.tabSwitch} 
                     label="cgMLST Profiling" component={Link} to="/cgMLST/non-release/profiling" />
                     <Tab style={{ fontSize:'16px',textTransform:'none' }} disabled={window.tabSwitch} 
-                    label="Strain Tracking" component={Link} to="/cgMLST/non-release/profiling" />
+                    label="Strain Tracking" component={Link} to="/cgMLST/non-release/tracking" />
                     <Tab style={{ fontSize:'16px',textTransform:'none' }} disabled={window.tabSwitch}
-                    label="Clustering" component={Link} to="/cgMLST/non-release/profiling" />
+                    label="Clustering" component={Link} to="/cgMLST/non-release/clustering" />
                 </Tabs>
             </Paper>
         );
