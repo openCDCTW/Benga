@@ -6,7 +6,9 @@ import Navigation from './Navigation.jsx'
 import Footer from '../components/Footer.jsx';
 import About from '../components/About.jsx';
 import upload_contigs from './UploadContigs.jsx';
-import Profile_view from './ProfileView.jsx'
+import Profile_view from './ProfileView.jsx';
+import Tracking from './Tracking.jsx';
+import Tracking_result from './TrackingResult.jsx';
 
 class Main extends React.Component {
 
@@ -30,6 +32,8 @@ class Main extends React.Component {
                     <Route path="/cgMLST/non-release/about" component={About} />
                     <Route path="/cgMLST/non-release/profiling" exact component={upload_contigs} />
                     <Route path="/cgMLST/non-release/profile_result" component={Profile_view} />
+                    <Route path="/cgMLST/non-release/tracking" component={Tracking} />
+                    <Route path="/cgMLST/non-release/tracking_result" component={Tracking_result} />
                     <Footer />
                 </div>
             </Router>
