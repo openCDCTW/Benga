@@ -9,8 +9,8 @@ import upload_contigs from './UploadContigs.jsx';
 import Profile_view from './ProfileView.jsx';
 import Tracking from './Tracking.jsx';
 import Tracking_result from './TrackingResult.jsx';
-import Upload_profile from '../components/UploadProfile.jsx';
-import Dendrogram_view from '../components/DendrogramView.jsx';
+import Upload_profile from './UploadProfile.jsx';
+import Dendrogram_view from './DendrogramView.jsx';
 
 
 class Main extends React.Component {
