@@ -10,7 +10,7 @@ MODELS_PATH = os.path.abspath(os.path.join(DIR_PATH, "..", "..", 'models'))
 
 def form_prokka_cmd(filename, inpath, outpath):
     prefix, ext = os.path.splitext(filename)
-    args = ["prokka", "--prefix", prefix, "--cpus", "2", "--outdir", os.path.join(outpath, prefix),
+    args = ["prokka", "--prefix", prefix, "--cpus", "2", "--outdir", os.path.join(outpath, prefix), "--quiet",
             os.path.join(inpath, filename)]
     return " ".join(map(str, args))
 
@@ -23,10 +23,16 @@ def form_roary_cmd(inpath, outpath, ident_min, threads):
 
 def form_prodigal_cmd(infile, outpath, model):
     filename = files.fasta_filename(infile)
-    args = [os.path.join(BINARIES_PATH, "prodigal"), "-c", "-m", "-q", "-g", "11",
-            "-t", os.path.join(MODELS_PATH, model + '.trn'),
-            "-i", infile,
-            "-d", os.path.join(outpath, filename + ".locus.fna")]
+    training_file = os.path.join(MODELS_PATH, model + '.trn')
+    if os.path.exists(training_file):
+        args = [os.path.join(BINARIES_PATH, "prodigal"), "-c", "-m", "-q", "-g", "11",
+                "-t", training_file,
+                "-i", infile,
+                "-d", os.path.join(outpath, filename + ".locus.fna")]
+    else:
+        args = [os.path.join(BINARIES_PATH, "prodigal"), "-c", "-m", "-q", "-g", "11",
+                "-i", infile,
+                "-d", os.path.join(outpath, filename + ".locus.fna")]
     return " ".join(map(str, args))
 
 
