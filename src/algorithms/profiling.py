@@ -1,6 +1,5 @@
 import functools
 import os
-import re
 import shutil
 import uuid
 import subprocess
@@ -67,7 +66,7 @@ def make_ref_blastpdb(ref_db_file, database):
     return ref_len
 
 
-def blast_for_new_alleles(candidates, alleles, ref_db, temp_dir, ref_len, pid):
+def blast_for_new_alleles(candidates, alleles, ref_db, temp_dir, ref_len, pid, threads):
     """Blast unmapped alleles with existing locus and identify potentially new alleles."""
     filename = "new_allele_candidates_" + pid
     candidate_file = os.path.join(temp_dir, filename + ".fasta")
@@ -76,7 +75,7 @@ def blast_for_new_alleles(candidates, alleles, ref_db, temp_dir, ref_len, pid):
     allele_len = calculate_allele_len(recs)
 
     blastp_out_file = os.path.join(temp_dir, "{}.blastp.out".format(filename))
-    seq.query_blastpdb(candidate_file, ref_db, blastp_out_file, seq.BLAST_COLUMNS)
+    seq.query_blastpdb(candidate_file, ref_db, blastp_out_file, seq.BLAST_COLUMNS, threads)
 
     blastp_out = filter_duplicates(blastp_out_file, allele_len, ref_len, identity=95)
     blastp_out = blastp_out.drop_duplicates("qseqid")
@@ -99,12 +98,12 @@ def update_database(new_allele_pairs, alleles):
     return pairs
 
 
-def add_new_alleles(id_allele_list, ref_db, temp_dir, ref_len, pid):
+def add_new_alleles(id_allele_list, ref_db, temp_dir, ref_len, pid, threads):
     """Identify new alleles and add them to database."""
     all_alleles = functools.reduce(lambda x, y: {**x, **y[1]}, id_allele_list, {})
     existed_alleles = db.from_sql("select allele_id from alleles;")["allele_id"].tolist()
     candidates = list(filter(lambda x: x not in existed_alleles, all_alleles.keys()))
-    new_allele_pairs = blast_for_new_alleles(candidates, all_alleles, ref_db, temp_dir, ref_len, pid)
+    new_allele_pairs = blast_for_new_alleles(candidates, all_alleles, ref_db, temp_dir, ref_len, pid, threads)
     if new_allele_pairs:
         update_database(new_allele_pairs, all_alleles)
 
@@ -126,9 +125,6 @@ def profiling(output_dir, input_dir, database, threads, occr_level=None, selecte
     contighandler = files.ContigHandler()
     contighandler.new_format(input_dir, query_dir)
 
-    model = re.search('[a-zA-Z]+\w[a-zA-Z]+', database).group(0)
-    logger.info("Used model: {}".format(model))
-
     logger.info("Selecting loci by specified scheme {}%...".format(occr_level))
     if selected_loci:
         selected_loci = set(selected_loci)
@@ -143,14 +139,14 @@ def profiling(output_dir, input_dir, database, threads, occr_level=None, selecte
     ref_len = make_ref_blastpdb(ref_db, database)
 
     logger.info("Identifying loci and allocating alleles...")
-    args = [(os.path.join(query_dir, filename), temp_dir, model)
+    args = [(os.path.join(query_dir, filename), temp_dir, database)
             for filename in os.listdir(query_dir) if filename.endswith(".fa")]
     with ThreadPoolExecutor(threads) as executor:
         id_allele_list = list(executor.map(identify_alleles, args))
 
     if enable_adding_new_alleles:
         logger.info("Adding new alleles to database...")
-        add_new_alleles(id_allele_list, ref_db, temp_dir, ref_len, pid)
+        add_new_alleles(id_allele_list, ref_db, temp_dir, ref_len, pid, threads)
 
     logger.info("Collecting allele profiles of each genomes...")
     if generate_profiles:

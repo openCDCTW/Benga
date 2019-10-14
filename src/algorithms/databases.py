@@ -98,7 +98,7 @@ def collect_allele_info(profiles, ffn_dir):
                 v = "\t".join(operations.make_seqid(x) for x in alleles)
                 new_profile.at[locus] = v
         new_profiles.append(new_profile)
-    new_profiles = pd.concat(new_profiles, axis=1).sort_index().sort_index(axis=1)
+    new_profiles = pd.concat(new_profiles, axis=1, sort=False).sort_index().sort_index(axis=1)
     return new_profiles, freq
 
 

@@ -3,7 +3,6 @@ from __future__ import absolute_import, unicode_literals
 import os
 import pandas as pd
 import shutil
-import subprocess
 from celery import shared_task
 from django.conf import settings
 from django.core.files import File
@@ -37,8 +36,6 @@ def plot(input_dir, output_dir, linkage):
     dendro.scipy_tree(svg_filename)
     png_filename = os.path.join(output_dir, "dendrogram.png")
     dendro.scipy_tree(png_filename)
-    #emf_filename = os.path.join(output_dir, "dendrogram.emf")
-    #subprocess.run(['libreoffice6.2', '--headless', '--convert-to', 'emf', '--outdir', output_dir, svg_filename])
     return newick_filename, pdf_filename, png_filename, svg_filename
 
 
