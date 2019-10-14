@@ -118,7 +118,7 @@ class Tracking extends React.Component {
         this.componentConfig = {
             iconFiletypes: ['.tsv'],
             showFiletypeIcon: true,
-            postUrl: 'api/tracking/profile/'
+            postUrl: '/cgMLST/api/tracking/profile/'
         };
 
         this.dropzone = null;
@@ -133,10 +133,10 @@ class Tracking extends React.Component {
 	        return ;
 	    }
 	    this.dropzone.processQueue();
-        this.props.history.push("/cgMLST/tracking_result")
+        this.props.history.push("/cgMLST/non-release/tracking_result")
 	}
 
-	select_handleChange(event){
+    select_handleChange(event){
         if( event.target.value == 'Vibrio_cholerae'){
             this.setState(state => ({ 
                 [event.target.name]: event.target.value
@@ -190,12 +190,6 @@ class Tracking extends React.Component {
                 <br />
                 <br />
                 <div style={{ display:'flex', justifyContent:'center', alignItems:'center'}}>
-                    <a download href='https://drive.google.com/uc?export=download&id=1OgrY6Lt-93-gaYFEl7WbbUt6VLZ6eaC4' style={{ textDecoration:'none' }}>
-                        <Button style={{ textTransform:'none' }} variant="contained" color="default">
-                            Download &nbsp; example &nbsp; file
-                        </Button>
-                    </a>
-                    &nbsp;&nbsp;&nbsp;&nbsp;
                     <Button variant="contained" className ={classes.buttoncss} 
                      onClick={this.handlePost.bind(this)}>
                         Submit
@@ -204,21 +198,7 @@ class Tracking extends React.Component {
                     </Button>
                 </div>
                 <br />
-                <div style={{ display:'flex', justifyContent:'center', alignItems:'center'}}>
-                   <a download href='https://drive.google.com/uc?export=download&id=1_eQgWuGZxJAtOWxEgvdINyAJmyuENrza' style={{ textDecoration:'none' }}>
-			<Button style={{ textTransform:'none' }} variant="contained" color="default">
-                            Download &nbsp; cgMLST_tree_5048.pdf
-			</Button>
-                   </a>
-                </div>
                 <br />
-                <div style={{ display:'flex', justifyContent:'center', alignItems:'center'}}>
-                   <a download href='https://drive.google.com/uc?export=download&id=1WwCoeIMBekda2z9BX1MMDqzW9y_pPfw7' style={{ textDecoration:'none' }}>
-                        <Button style={{ textTransform:'none' }} variant="contained" color="default">
-                            Download &nbsp; V.cholerae_genomes_list.zip
-                        </Button>
-                   </a>
-                </div>
                 <br />
                 <br />
                 <br />

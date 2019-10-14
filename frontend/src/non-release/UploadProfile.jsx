@@ -67,7 +67,7 @@ class Upload_profile extends React.Component {
         this.componentConfig = {
             iconFiletypes: ['.tsv'],
             showFiletypeIcon: true,
-            postUrl: 'api/dendrogram/profile/'
+            postUrl: '/cgMLST/api/dendrogram/profile/'
         };
 
         this.dropzone = null;
@@ -85,7 +85,7 @@ class Upload_profile extends React.Component {
             return ;
         }
 
-        fetch('api/dendrogram/upload/', {method:'POST'})
+        fetch('/cgMLST/api/dendrogram/upload/', {method:'POST'})
             .then(function(res){
                return res.json();
             }).then(batch => window.clusteringID = batch.id);
@@ -98,13 +98,13 @@ class Upload_profile extends React.Component {
                 let scheme = {};
                 scheme.prof_num = this.dropzone.files.length;
                 scheme.linkage = this.state.algorithm;
-                fetch('api/dendrogram/upload/' + window.clusteringID + '/', { 
+                fetch('/cgMLST/api/dendrogram/upload/' + window.clusteringID + '/', { 
                     method:'PATCH',
                     headers: new Headers({'content-type': 'application/json'}),
                     body: JSON.stringify(scheme)
                 });
 
-                this.props.history.push("/cgMLST/clustering_result");
+                this.props.history.push("/cgMLST/non-release/clustering_result");
                 clearInterval(interval);
             }
         };
@@ -122,7 +122,7 @@ class Upload_profile extends React.Component {
 
     query(){
 
-        fetch('api/dendrogram/dendrogram/' + this.state.querybyID + '/', { method:'GET'})
+        fetch('/cgMLST/api/dendrogram/dendrogram/' + this.state.querybyID + '/', { method:'GET'})
         .then(function(response){
             if(response.status == 200){
                 return response.json();
@@ -135,10 +135,10 @@ class Upload_profile extends React.Component {
 
             if(this.state.tmp.png_file != undefined){
                 this.setState(state => ({
-                png_file: this.state.tmp.png_file, 
-                pdf_file: this.state.tmp.pdf_file,
-                svg_file: this.state.tmp.svg_file, 
-                newick_file: this.state.tmp.newick_file }))
+                png_file: '/cgMLST/' + this.state.tmp.png_file, 
+                pdf_file: '/cgMLST/' + this.state.tmp.pdf_file,
+                svg_file: '/cgMLST/' + this.state.tmp.svg_file, 
+                newick_file: '/cgMLST/' + this.state.tmp.newick_file }))
             }else{
                 alert("Data not found. Please input correct ID or try again later.");
             }
@@ -202,12 +202,6 @@ class Upload_profile extends React.Component {
                     <br />
                     <br />
                     <div style = {{ display:'flex', justifyContent:'center', alignItems:'center' }}>
-                        <a download href='https://drive.google.com/uc?export=download&id=1RyJl1yMrWRHPgYAbStjUtD2zmfQ8YMRb' style={{ textDecoration:'none' }}>
-                            <Button style={{ textTransform:'none' }} variant="contained" color="default">
-                                Download &nbsp; example &nbsp; files
-                            </Button>
-                        </a>
-                        &nbsp;&nbsp;&nbsp;&nbsp;
                         <Button variant="contained" className ={classes.cssRoot}
                         onClick={this.handlePost.bind(this)}>
                             Submit

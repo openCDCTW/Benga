@@ -73,7 +73,7 @@ class Upload_contigs extends React.Component {
         this.componentConfig = {
             iconFiletypes: ['.fasta','.fna','.fa'],
             showFiletypeIcon: true,
-            postUrl: 'api/profiling/sequence/'
+            postUrl: '/cgMLST/api/profiling/sequence/'
         };
 
         this.dropzone = null;
@@ -99,7 +99,7 @@ class Upload_contigs extends React.Component {
 
         this.setState(state => ({ switch: true }));
 
-        fetch('api/profiling/upload/', {method:'POST'})
+        fetch('/cgMLST/api/profiling/upload/', {method:'POST'})
             .then(function(res){
                return res.json();
             }).then(batch => window.batchid = batch.id);
@@ -111,13 +111,13 @@ class Upload_contigs extends React.Component {
 
                 var scheme = {};
                 scheme.seq_num = fileCheck;
-                fetch('api/profiling/upload/' + window.batchid + '/', { 
+                fetch('/cgMLST/api/profiling/upload/' + window.batchid + '/', { 
                     method:'PATCH',
                     headers: new Headers({'content-type': 'application/json'}),
                     body: JSON.stringify(scheme)
                 });
 
-                this.props.history.push("/cgMLST/profile_result");
+                this.props.history.push("/cgMLST/non-release/profile_result");
                 clearInterval(interval);
             }
         };
@@ -133,7 +133,7 @@ class Upload_contigs extends React.Component {
 
     query(){
 
-        fetch('api/profiling/profile/' + this.state.querybyID + '/', { method:'GET'})
+        fetch('/cgMLST/api/profiling/profile/' + this.state.querybyID + '/', { method:'GET'})
         .then(function(response){
             if(response.status != 404){
                 return response.json();
@@ -144,7 +144,7 @@ class Upload_contigs extends React.Component {
 
         function result(){
             if(this.state.tmp.zip != undefined){
-                this.setState(state => ({ profile_result_zip : this.state.tmp.zip }))
+                this.setState(state => ({ profile_result_zip : '/cgMLST/'+this.state.tmp.zip }))
             }else{
                 alert("Data not found. Please input correct ID or try again later.");
             }
@@ -194,12 +194,6 @@ class Upload_contigs extends React.Component {
                 <br />
                 <br />
                 <div style = {{ display:'flex', justifyContent:'center', alignItems:'center' }}>
-                    <a download href='https://drive.google.com/uc?export=download&id=1XG-05Kim8gOOg1UU16oJ9saOwfCh-PZM' style={{ textDecoration:'none' }}>
-                        <Button style={{ textTransform:'none' }} variant="contained" color="default">
-                            Download &nbsp; example &nbsp; files
-                        </Button>
-                    </a>
-                    &nbsp;&nbsp;&nbsp;&nbsp;
                     <Button variant="contained" className ={classes.cssRoot} 
                      onClick={this.handlePost.bind(this)}>
                         Submit

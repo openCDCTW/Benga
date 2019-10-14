@@ -76,12 +76,12 @@ class Tracking_result extends React.Component {
 
 	query_track_result(){
 		if(this.state.tracking_result == undefined){
-			fetch('api/tracking/results/' + window.trackingID + '/', { method:'GET'})
+			fetch('/cgMLST/api/tracking/results/' + window.trackingID + '/', { method:'GET'})
 			.then(response => response.json())
 			.then(result => this.setState(state => ({
                 tracking_result: result.json,
                 tracking_result_shown: result.json,
-                trackingZip: result.zip })));
+                trackingZip: '/cgMLST/' + result.zip })));
 		}else{
 			clearInterval(this.interval);
 		}
@@ -211,7 +211,7 @@ class Tracking_result extends React.Component {
 					</div>
 					<br />
 					<div style={{ display:'flex', justifyContent:'center', alignItems:'center'}}>
-						<Link to="/cgMLST/tracking" style={{ textDecoration:'none' }}>
+						<Link to="/cgMLST/non-release/tracking" style={{ textDecoration:'none' }}>
 							<Button variant="contained" color="default">
 								<ReplyIcon />
 								&nbsp;&nbsp;
