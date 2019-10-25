@@ -60,7 +60,7 @@ class Upload_contigs extends React.Component {
                 this.on("sending", function(file, xhr, formData){
                     formData.append("batch_id", window.batchid);
                     formData.append("database", window.databaseName);
-                    formData.append("occurrence", 95);
+                    formData.append("occurrence", window.occurrence);
                     window.fileName.push(file.name);
                 });
                 this.on("success", function(file){
