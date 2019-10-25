@@ -9,7 +9,7 @@ import Profile_view from './ProfileView.jsx';
 import Upload_profile from './UploadProfile.jsx';
 import Dendrogram_view from './DendrogramView.jsx';
 import Tracking from './Tracking.jsx';
-import Tutorial from './Tutorial.jsx';
+//import Tutorial from './Tutorial.jsx';
 import Tracking_result from './TrackingResult.jsx';
 import About from './About.jsx';
 
@@ -39,7 +39,6 @@ class Main extends React.Component {
                     <Route path="/cgMLST/tracking" component={Tracking} />
                     <Route path="/cgMLST/tracking_result" component={Tracking_result} />
                     <Route path="/cgMLST/about" component={About} />
-                    <Route path="/cgMLST/tutorial" component={Tutorial} />
                     <Footer />
                 </div>
             </Router>
