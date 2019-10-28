@@ -76,6 +76,7 @@ class Tracking extends React.Component {
 
         let nowYear = new Date();
         window.profile_db = "Vibrio_cholerae";
+	window.occurrence = 95
 
 		this.state = {
             allele_db:"Vibrio_cholerae",

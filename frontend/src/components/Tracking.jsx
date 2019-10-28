@@ -213,7 +213,7 @@ class Tracking extends React.Component {
                 </div>
                 <br />
                 <div style={{ display:'flex', justifyContent:'center', alignItems:'center'}}>
-                   <a download href='https://drive.google.com/uc?export=download&id=1WwCoeIMBekda2z9BX1MMDqzW9y_pPfw7' style={{ textDecoration:'none' }}>
+                   <a download href='https://drive.google.com/uc?export=download&id=1XXJCgbIeQiRnXD3RPAjyhnuE4mymmpiP' style={{ textDecoration:'none' }}>
                         <Button style={{ textTransform:'none' }} variant="contained" color="default">
                             Download &nbsp; V.cholerae_genomes_list.zip
                         </Button>

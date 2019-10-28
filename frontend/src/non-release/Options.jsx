@@ -28,7 +28,7 @@ class Options extends React.Component {
         super(props);
 
         this.state = {
-            database: 'Vibrio_cholerae',
+            database: 'Vibrio_cholerae 95',
             labelWidth: 0,
         };
 
@@ -36,8 +36,11 @@ class Options extends React.Component {
     }
     
     handleChange(event){
+	let db_info = event.target.value.split(" ")
         this.setState(state => ({ [event.target.name]: event.target.value}));
-        window.databaseName = event.target.value;
+	
+	window.databaseName = db_info[0];
+	window.occurrence = db_info[1];
     };
 
     render(){
@@ -57,14 +60,13 @@ class Options extends React.Component {
                   }}
                   className={classes.selectEmpty}
                   >
-                  <MenuItem value={'Campylobacter_coli'}>Campylobacter coli</MenuItem>
-                  <MenuItem value={'Campylobacter_jejunii'}>Campylobacter jejunii</MenuItem>
-                  <MenuItem value={'Cronobacter_sakazakii'}>Cronobacter sakazakii</MenuItem>
-                  <MenuItem value={'Escherichia_coli/Shigella'}>Escherichia coli/Shigella</MenuItem>
-                  <MenuItem value={'Listeria_monocytogenes'}>Listeria monocytogenes</MenuItem>
-                  <MenuItem value={'Salmonella_enterica'}>Salmonella enterica</MenuItem>
-                  <MenuItem value={'Vibrio_cholerae'}>Vibrio cholerae</MenuItem>
-                  <MenuItem value={'Vibrio_parahaemolyticus'}>Vibrio parahaemolyticus</MenuItem>
+                  <MenuItem value={'Campylobacter_jejunii/coli'} disabled>Campylobacter coli/jejunii</MenuItem>
+                  <MenuItem value={'Cronobacter_sakazakii 95'}>Cronobacter sakazakii</MenuItem>
+                  <MenuItem value={'Escherichia_coli/Shigella'} disabled>Escherichia coli/Shigella</MenuItem>
+                  <MenuItem value={'Listeria_monocytogenes 95'}>Listeria monocytogenes</MenuItem>
+                  <MenuItem value={'Salmonella_enterica 94'}>Salmonella enterica</MenuItem>
+                  <MenuItem value={'Vibrio_cholerae 95'}>Vibrio cholerae</MenuItem>
+                  <MenuItem value={'Vibrio_parahaemolyticus'} disabled>Vibrio parahaemolyticus</MenuItem>
                 </Select>
               <FormHelperText>Required</FormHelperText>
             </FormControl>
