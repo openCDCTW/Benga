@@ -70,6 +70,7 @@ def get_file_number(dir, ext=".tsv"):
 def plot_dendrogram(batch_id):
     input_dir = os.path.join(settings.MEDIA_ROOT, "uploads", batch_id)
     output_dir = os.path.join(settings.MEDIA_ROOT, "temp", batch_id)
+    os.umask(0)
     os.makedirs(output_dir, exist_ok=True)
     prof_num = get_prof_number(batch_id)
     if prof_num == get_file_number(input_dir):

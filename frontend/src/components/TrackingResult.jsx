@@ -174,14 +174,14 @@ class Tracking_result extends React.Component {
 									<TableHead>
 										<TableRow>
 											<TrackingResultTable align="right">Difference(loci)</TrackingResultTable>
-											<TrackingResultTable align="right">BioSample</TrackingResultTable>
-											<TrackingResultTable align="right">Strain ID/Alias</TrackingResultTable>
-											<TrackingResultTable align="right">SourceSeq</TrackingResultTable>
+											<TrackingResultTable align="right">BioSample no.</TrackingResultTable>
+											<TrackingResultTable align="right">Identifier</TrackingResultTable>
+											<TrackingResultTable align="right">SourceSeq.</TrackingResultTable>
 											<TrackingResultTable align="right">Source country</TrackingResultTable>
 											<TrackingResultTable align="right">Isolated year</TrackingResultTable>
 											<TrackingResultTable align="right">ST</TrackingResultTable>
-											<TrackingResultTable align="right">Serogroup_type</TrackingResultTable>
-											<TrackingResultTable align="right">Number of void loci</TrackingResultTable>
+											<TrackingResultTable align="right">Serogroup type</TrackingResultTable>
+											<TrackingResultTable align="right">No. void loci</TrackingResultTable>
 										</TableRow>
 									</TableHead>
 									<TableBody>

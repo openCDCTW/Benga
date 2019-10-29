@@ -3,7 +3,9 @@ from django.db import models
 
 ALLELE_DB_CHOICES = (
     ("Vibrio_cholerae", "Vibrio cholerae"),
-    ("Salmonella_enterica", "Salmonella_enterica"),
+    ("Salmonella_enterica", "Salmonella enterica"),
+    ("Cronobacter_sakazakii", "Cronobacter sakazakii"),
+    ("Listeria_monocytogenes", "Listeria monocytogenes")
 )
 
 
