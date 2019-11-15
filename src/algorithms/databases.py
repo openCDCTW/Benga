@@ -102,7 +102,7 @@ def collect_allele_info(profiles, ffn_dir):
     return new_profiles, freq
 
 
-def reference_self_blastp(output_dir, freq):
+def reference_self_blastp(output_dir, freq, threads):
     """Blast reference alleles of locus with themselves."""
     ref_recs = [seq.new_record(locus, counter.most_common(1)[0][0].translate(table=11)) for locus, counter in freq.items()]
     ref_length = {rec.id: len(rec.seq) for rec in ref_recs}
@@ -113,7 +113,7 @@ def reference_self_blastp(output_dir, freq):
     seq.compile_blastpdb(ref_faa, ref_db)
 
     blastp_out_file = os.path.join(output_dir, "ref_db.blastp.out")
-    seq.query_blastpdb(ref_faa, ref_db, blastp_out_file, seq.BLAST_COLUMNS)
+    seq.query_blastpdb(ref_faa, ref_db, blastp_out_file, seq.BLAST_COLUMNS, threads)
     return blastp_out_file, ref_length
 
 
@@ -198,7 +198,7 @@ def make_schemes(refseqs, total_isolates):
     db.table_to_sql("loci", schemes)
 
 
-def annotate_configs(input_dir, output_dir, logger=None, threads=8):
+def annotate_configs(input_dir, output_dir, logger=None, threads=8, training_file=None):
     if not logger:
         lf = logs.LoggerFactory()
         lf.addConsoleHandler()
@@ -214,7 +214,7 @@ def annotate_configs(input_dir, output_dir, logger=None, threads=8):
     logger.info("Annotating...")
     annotate_dir = os.path.join(output_dir, "Annotated")
     os.makedirs(annotate_dir, exist_ok=True)
-    c = [cmds.form_prokka_cmd(x, genome_dir, annotate_dir) for x in filenames]
+    c = [cmds.form_prokka_cmd(x, genome_dir, annotate_dir, training_file) for x in filenames]
     with ProcessPoolExecutor(int(threads / 2)) as executor:
         executor.map(cmds.execute_cmd, c)
 
@@ -258,7 +258,7 @@ def make_database(output_dir, drop_by_occur, logger=None, threads=2):
     profiles, freq = collect_allele_info(profiles, ffn_dir)
 
     logger.info("Checking duplicated loci by self-blastp...")
-    blastp_out_file, ref_length = reference_self_blastp(output_dir, freq)
+    blastp_out_file, ref_length = reference_self_blastp(output_dir, freq, threads)
 
     logger.info("Filter out high identity loci and drop loci which occurrence less than {}...".format(drop_by_occur))
     filtered_loci = filter_locus(blastp_out_file, ref_length, total_isolates, drop_by_occur)
