@@ -20,11 +20,12 @@ def main():
               help="Level of occurrence to drop.")
 @click.option('-t', '--threads', default=8, metavar="<int>", type=int,
               help="Number of threads for computation. [Default: 8]")
+@click.option('--training-file', default=None, type=click.Path(exists=True), help="Prodigal training file")
 @click.argument('input_dir', type=click.Path(exists=True))
 @click.argument('output_dir', type=click.Path(exists=True))
-def makedb(input_dir, output_dir, drop_by_occur, threads):
+def makedb(input_dir, output_dir, drop_by_occur, threads, training_file):
     """Make database with fasta files in INPUT_DIR and output accessory results in OUTPUT_DIR."""
-    databases.annotate_configs(input_dir, output_dir, threads=threads)
+    databases.annotate_configs(input_dir, output_dir, threads=threads, training_file=training_file)
     database = databases.make_database(output_dir, drop_by_occur, threads=threads)
     statistics.calculate_loci_coverage(output_dir, output_dir, database=database)
     statistics.calculate_allele_length(output_dir, database=database)
