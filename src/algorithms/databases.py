@@ -7,6 +7,7 @@ from concurrent.futures import ProcessPoolExecutor
 import pandas as pd
 from Bio import SeqIO
 
+from .profiling import profiling
 from src.utils import seq, files, cmds, operations, db, logs
 from src.utils.alleles import filter_duplicates
 
@@ -198,6 +199,36 @@ def make_schemes(refseqs, total_isolates):
     db.table_to_sql("loci", schemes)
 
 
+def update_schemes(directory, database, threads):
+    indir, outdir = os.path.join(directory, 'Genomes'), os.path.join(directory, 'Profile')
+    os.makedirs(outdir, exist_ok=True)
+    profiling(outdir, indir, database, threads, 0)
+    profile = pd.read_csv(os.path.join(outdir, 'profile.tsv'), sep='\t', index_col=0, low_memory=False)
+    isolates = profile.shape[1]
+    new_schemes = dict(map(lambda rows: (rows[0], (rows[1].notna().sum())), profile.iterrows()))
+
+    locus_meta = db.from_sql("select * from locus_meta;", database=database)
+    locus_meta = locus_meta[locus_meta['locus_id'].isin(list(new_schemes))]
+    locus_meta['num_isolates'] = locus_meta['locus_id'].map(new_schemes)
+
+    loci = db.from_sql("select * from loci;", database=database)
+    loci["occurrence"] = (loci['locus_id'].map(new_schemes)/isolates*100).round(2)
+    loci = loci[loci["occurrence"].notna()]
+
+    alleles = db.from_sql("select * from alleles;", database=database)
+    alleles = alleles[alleles['allele_id'].isin(loci['ref_allele'])]
+
+    pairs = db.from_sql("select * from pairs;", database=database)
+    pairs = pairs[pairs['allele_id'].isin(loci['ref_allele'])]
+    db.dropdb(database)
+    db.createdb(database)
+    db.create_pgadb_relations(database)
+    db.table_to_sql("locus_meta", locus_meta, database)
+    db.table_to_sql("alleles", alleles, database)
+    db.table_to_sql("pairs", pairs, database)
+    db.table_to_sql("loci", loci, database)
+
+
 def annotate_configs(input_dir, output_dir, logger=None, threads=8, training_file=None):
     if not logger:
         lf = logs.LoggerFactory()
@@ -276,5 +307,8 @@ def make_database(output_dir, drop_by_occur, logger=None, threads=2):
     logger.info("Making dynamic schemes...")
     refseqs = dict(map(lambda x: (x[0], operations.make_seqid(x[1])), refseqs.items()))
     make_schemes(refseqs, total_isolates)
+
+    logger.info("Update schemes...")
+    update_schemes(output_dir, dbname, threads)
     logger.info("Done!!")
     return dbname
