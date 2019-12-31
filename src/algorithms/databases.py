@@ -1,5 +1,4 @@
 import os
-import re
 import subprocess
 from collections import Counter, defaultdict
 from concurrent.futures import ProcessPoolExecutor
@@ -23,29 +22,12 @@ def move_file(annotate_dir, dest_dir, ext):
 
 def filter_tRNA(matrix):
     """Filter out the locus of which description contains 'tRNA-***'."""
-    c = re.compile(r"tRNA-\w+\(\w{3}\)")
-    is_trna = []
-    for x in matrix["description"]:
-        m = c.match(x)
-        is_trna.append(m is not None)
-    matrix["is_trna"] = is_trna
-    return matrix[~matrix["is_trna"]].drop("is_trna", axis=1)
+    return matrix[~matrix['description'].str.contains(r"tRNA-\w+\(\w{3}\)", regex=True)]
 
 
 def filter_rRNA(matrix):
     """Filter out the locus of which description contains 'ribosomal RNA'."""
-    c1 = re.compile("ribosomal RNA")
-    c2 = re.compile("subunit")
-    is_rrna = []
-    for x in matrix["description"]:
-        m1 = c1.match(x)
-        if m1 is not None:
-            m2 = c2.match(x)
-            is_rrna.append(m2 is None)
-        else:
-            is_rrna.append(False)
-    matrix["is_rrna"] = is_rrna
-    return matrix[~matrix["is_rrna"]].drop("is_rrna", axis=1)
+    return matrix[~matrix['description'].str.contains("ribosomal RNA&subunit")]
 
 
 def extract_profiles(roary_matrix_file, dbname, metadata_cols=13):
@@ -106,7 +88,6 @@ def collect_allele_info(profiles, ffn_dir):
 def reference_self_blastp(output_dir, freq, threads):
     """Blast reference alleles of locus with themselves."""
     ref_recs = [seq.new_record(locus, counter.most_common(1)[0][0].translate(table=11)) for locus, counter in freq.items()]
-    ref_length = {rec.id: len(rec.seq) for rec in ref_recs}
     ref_faa = os.path.join(output_dir, "ref_seq.faa")
     seq.save_records(ref_recs, ref_faa)
 
@@ -115,7 +96,7 @@ def reference_self_blastp(output_dir, freq, threads):
 
     blastp_out_file = os.path.join(output_dir, "ref_db.blastp.out")
     seq.query_blastpdb(ref_faa, ref_db, blastp_out_file, seq.BLAST_COLUMNS, threads)
-    return blastp_out_file, ref_length
+    return blastp_out_file
 
 
 def identify_pairs(df):
@@ -152,8 +133,8 @@ def collect_high_occurrence_loci(pairs, total_isolates, drop_by_occur):
     return filtered_loci
 
 
-def filter_locus(blastp_out_file, ref_length, total_isolates, drop_by_occur):
-    blastp_out = filter_duplicates(blastp_out_file, ref_length, ref_length, identity=95)
+def filter_locus(blastp_out_file, total_isolates, drop_by_occur):
+    blastp_out = filter_duplicates(blastp_out_file, identity=95)
     pairs = identify_pairs(blastp_out)
     filtered_loci = collect_high_occurrence_loci(pairs, total_isolates, drop_by_occur)
     return filtered_loci
@@ -292,7 +273,7 @@ def make_database(output_dir, drop_by_occur, logger=None, threads=2):
     blastp_out_file, ref_length = reference_self_blastp(output_dir, freq, threads)
 
     logger.info("Filter out high identity loci and drop loci which occurrence less than {}...".format(drop_by_occur))
-    filtered_loci = filter_locus(blastp_out_file, ref_length, total_isolates, drop_by_occur)
+    filtered_loci = filter_locus(blastp_out_file, total_isolates, drop_by_occur)
     os.remove(blastp_out_file)
 
     logger.info("Updating and saving profiles...")

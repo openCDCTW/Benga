@@ -7,7 +7,7 @@ from Bio.SeqRecord import SeqRecord
 from Bio.SeqIO import write
 
 BLAST_COLUMNS = ["qseqid", "sseqid", "pident", "length", "mismatch", "gapopen", "qstart", "qend",
-                 "sstart", "send", "evalue", "bitscore", "qcovs"]
+                 "sstart", "send", "evalue", "bitscore", "qlen", "slen"]
 
 
 def new_record(seqid, seq, desc="", seqtype=None):
