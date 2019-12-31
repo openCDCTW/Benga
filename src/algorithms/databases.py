@@ -22,12 +22,12 @@ def move_file(annotate_dir, dest_dir, ext):
 
 def filter_tRNA(matrix):
     """Filter out the locus of which description contains 'tRNA-***'."""
-    return matrix[~matrix['Annotation'].str.contains(r"tRNA-\w+\(\w{3}\)", regex=True)]
+    return matrix[~matrix['description'].str.contains(r"tRNA-\w+\(\w{3}\)", regex=True)]
 
 
 def filter_rRNA(matrix):
     """Filter out the locus of which description contains 'ribosomal RNA'."""
-    return matrix[~matrix['Annotation'].str.contains("ribosomal RNA&subunit")]
+    return matrix[~matrix['description'].str.contains("ribosomal RNA&subunit")]
 
 
 def extract_profiles(roary_matrix_file, dbname, metadata_cols=13):
