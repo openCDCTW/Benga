@@ -70,19 +70,19 @@ def profile(input_dir, output_dir, database, threads, occrrence, not_extend, no_
 @click.argument('output_dir', type=click.Path(exists=True))
 @click.option('--linkage', default="single", type=click.Choice(["single", "average"]),
               help="Linkage for hierarchical clustering [Default: single]")
-@click.option('--distance-annotate', default=False, is_flag=True,
+@click.option('--show-node-info', default=False, is_flag=True,
               help="Annotating the distances on dendrogram node [Default: Disable]")
-def tree(input_dir, output_dir, linkage, distance_annotate):
+def tree(input_dir, output_dir, linkage, show_node_info):
     """Plot dendrogram with profile.tsv file in INPUT_DIR, and output to OUTPUT_DIR."""
     profiles = pd.read_csv(os.path.join(input_dir, "profile.tsv"), sep="\t", index_col=0)
-    dm = clustering.DistanceMatrix(profiles)
-    dendro = clustering.Dendrogram(dm, linkage)
+    dendrogram = clustering.Dendrogram(profiles, linkage)
+    dendrogram.cluster(show_node_info=show_node_info)
     date = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M")
     filename = date + "_tree"
-    dendro.to_newick(os.path.join(output_dir, "{}.newick".format(filename)))
-    dendro.scipy_tree(os.path.join(output_dir, "{}.pdf".format(filename)), distance_annotate)
-    dendro.scipy_tree(os.path.join(output_dir, "{}.svg".format(filename)), distance_annotate)
-    dendro.scipy_tree(os.path.join(output_dir, "{}.png".format(filename)), distance_annotate)
+    dendrogram.to_newick(os.path.join(output_dir, "{}.newick".format(filename)))
+    dendrogram.savefig(os.path.join(output_dir, "{}.pdf".format(filename)))
+    dendrogram.savefig(os.path.join(output_dir, "{}.svg".format(filename)))
+    dendrogram.savefig(os.path.join(output_dir, "{}.png".format(filename)))
     subprocess.call(['libreoffice', '--headless', '--convert-to', 'emf', '--outdir', output_dir,
                      os.path.join(output_dir, "{}.svg".format(filename))])
 
