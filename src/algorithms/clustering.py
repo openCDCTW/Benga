@@ -10,20 +10,18 @@ from matplotlib.ticker import MaxNLocator, FuncFormatter
 from ..utils.data import integer_encoding
 
 
-class DistanceMatrix:
+class Distance:
     def __init__(self, profile):
         assert isinstance(profile, pd.DataFrame)
-        self.profile = profile
+        self.profile = profile.apply(integer_encoding, axis=1)
         shape = (len(profile.columns), len(profile.columns))
         self.matrix = np.empty(shape)
 
     def calculate(self):
-        profile = self.profile.apply(integer_encoding, axis=1)
-        values = profile.T.values
+        values = self.profile.T.values
         for i_1, value_1 in enumerate(values):
             for i_2, value_2 in enumerate(values[i_1:], i_1):
                 self.matrix[i_1, i_2] = self.matrix[i_2, i_1] = (value_1 != value_2).sum()
-        return self.matrix
 
 
 class Linkage:
@@ -38,32 +36,23 @@ class Linkage:
             raise
 
 
-class Canvas:
+class Figure:
     plt.style.use("fast")
     rcParams["lines.linewidth"] = 0.5
 
     def __init__(self, width, height):
-        self.width = width
-        self.height = height
-        self.fig = None
-        self.ax = None
-
-    def _remove_edge(self):
+        self.fig, self.ax = plt.subplots(1, 1, figsize=(width, height))
         self.ax.spines['top'].set_visible(False)
         self.ax.spines['bottom'].set_visible(False)
         self.ax.spines['left'].set_visible(False)
         self.ax.spines['right'].set_visible(False)
+        self.ax.grid(False)
+        self.ax.patch.set_facecolor('none')
+        plt.close()
 
     def annotate(self, text, position, fontsize=8):
         self.ax.annotate(text, position, xytext=(-2, 8), textcoords='offset points', va='top', ha='right',
                          fontsize=fontsize)
-
-    def draw(self):
-        self.fig, self.ax = plt.subplots(1, 1, figsize=(self.width, self.height))
-        self._remove_edge()
-        self.ax.grid(False)
-        self.ax.patch.set_facecolor('none')
-        plt.close()
 
     def savefig(self, file, dpi=300):
         self.fig.savefig(file, dpi=dpi, bbox_inches='tight', pad_inches=1)
@@ -75,31 +64,24 @@ class Dendrogram:
 
     def __init__(self, profile, linkage_method='single'):
         assert isinstance(profile, pd.DataFrame)
-        self.profile = profile
-        self.linkage_method = linkage_method
-        self._linkage = None
-        self.figure = None
+        self.distance = Distance(profile)
+        self.distance.calculate()
+        self.linkage = Linkage(distmatrix=self.distance.matrix, method=linkage_method)
+        self.figure = Figure(12, len(self.distance.profile.columns) * 0.3)
 
     def to_newick(self, file):
         """Generate newick format with dendrogram."""
-        if self._linkage is None:
-            distmatrix = DistanceMatrix(self.profile).calculate()
-            self._linkage = Linkage(distmatrix, self.linkage_method)
-        tree = hierarchy.to_tree(self._linkage.matrix, False)
-        newick = make_newick(tree, "", tree.dist, self.profile.columns)
+        tree = hierarchy.to_tree(self.linkage.matrix, False)
+        newick = make_newick(tree, "", tree.dist, self.distance.profile.columns)
         with open(file, 'w') as f:
             f.write(newick)
 
     def cluster(self, no_labels=False, show_node_info=False):
         """Generate dendrogram."""
-        distmatrix = DistanceMatrix(self.profile).calculate()
-        linkage = Linkage(distmatrix, self.linkage_method)
-        canvas = Canvas(8, len(self.profile.columns, ) * 0.3)
-        canvas.draw()
         dendrogram = hierarchy.dendrogram(
-            linkage.matrix,
-            ax=canvas.ax,
-            labels=self.profile.columns,
+            self.linkage.matrix,
+            ax=self.figure.ax,
+            labels=self.distance.profile.columns,
             orientation="left",
             leaf_font_size=12,
             above_threshold_color="#000000",
@@ -111,14 +93,10 @@ class Dendrogram:
             for i, d in zip(icoord, dcoord):
                 x = 0.5 * sum(i[1:3])
                 y = d[1]
-                info = self.show_format[self.linkage_method](y)
-                canvas.annotate(info, (y, x))
-        canvas.ax.xaxis.set_major_locator(MaxNLocator(integer=True))
-        canvas.ax.get_xaxis().set_major_formatter(FuncFormatter(lambda x, p: format(int(x), ',')))
-        self.figure = canvas
-
-    def savefig(self, file):
-        self.figure.savefig(file)
+                info = self.show_format[self.linkage.method](y)
+                self.figure.annotate(info, (y, x))
+        self.figure.ax.xaxis.set_major_locator(MaxNLocator(integer=True))
+        self.figure.ax.get_xaxis().set_major_formatter(FuncFormatter(lambda x, p: format(int(x), ',')))
 
 
 def make_newick(node, newick, parentdist, leaf_names):

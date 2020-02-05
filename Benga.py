@@ -80,9 +80,9 @@ def tree(input_dir, output_dir, linkage, show_node_info):
     date = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M")
     filename = date + "_tree"
     dendrogram.to_newick(os.path.join(output_dir, "{}.newick".format(filename)))
-    dendrogram.savefig(os.path.join(output_dir, "{}.pdf".format(filename)))
-    dendrogram.savefig(os.path.join(output_dir, "{}.svg".format(filename)))
-    dendrogram.savefig(os.path.join(output_dir, "{}.png".format(filename)))
+    dendrogram.figure.savefig(os.path.join(output_dir, "{}.pdf".format(filename)))
+    dendrogram.figure.savefig(os.path.join(output_dir, "{}.svg".format(filename)))
+    dendrogram.figure.savefig(os.path.join(output_dir, "{}.png".format(filename)))
     subprocess.call(['libreoffice', '--headless', '--convert-to', 'emf', '--outdir', output_dir,
                      os.path.join(output_dir, "{}.svg".format(filename))])
 
