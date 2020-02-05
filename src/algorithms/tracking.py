@@ -1,12 +1,7 @@
-import numpy as np
 import os
 import pandas as pd
 import zipfile
 from src.utils import nosql
-
-
-def get_profile(track, biosample):
-    return track.find_one({'BioSample': biosample})["profile"]
 
 
 def distance_against_all(query_profile, track, top_n=100):
@@ -26,16 +21,15 @@ def save_profiles(samples, track, pf_dir):
     profiles = track.find({'BioSample': {'$in': samples}}, {'_id': 0, 'BioSample': 1, 'profile': 1})
     for profile in profiles:
         s = pd.Series(profile['profile'], name=profile['BioSample'])
-        pf = pd.DataFrame(s)
-        pf.to_csv(os.path.join(pf_dir, profile['BioSample'] + ".tsv"), sep="\t")
+        s.to_csv(os.path.join(pf_dir, profile['BioSample'] + ".tsv"), sep="\t", header=True)
 
 
 def add_metadata(distances, track):
     samples = list(map(lambda x: x[0], distances))
     metadata = track.find({'BioSample': {'$in': samples}}, {'_id': 0, 'profile': 0})
     metadata = pd.DataFrame(list(metadata))
-    distances = pd.DataFrame(distances, columns=['BioSample', 'distances'])
-    results = pd.merge(distances, metadata, on='BioSample').sort_values('distances')
+    metadata['Distance (loci)'] = metadata.map(dict(distances))
+    results = pd.merge(distances, metadata, on='BioSample').sort_values('Distance (loci)')
     return results
 
 
@@ -66,8 +60,10 @@ def to_zip(filename, results_file, prof_dir):
 
 
 def tracking(id, database, output_dir, profile_filename):
-    track = nosql.get_dbtrack(database)
-    distances, results = calculate_distances(profile_filename, track)
+    track_data, metadata_cols = nosql.get_dbtrack(database)
+    metadata_cols = metadata_cols.find_one()['template']
+    distances, results = calculate_distances(profile_filename, track_data)
+    results = results.reindex(metadata_cols, axis=1)
     results_json = to_json(id, output_dir, results)
 
     results_file = os.path.join(output_dir, id[0:8] + ".tsv")
@@ -75,7 +71,7 @@ def tracking(id, database, output_dir, profile_filename):
 
     prof_dir = os.path.join(output_dir, "profiles")
     os.makedirs(prof_dir, exist_ok=True)
-    save_profiles(distances, track, prof_dir)
+    save_profiles(distances, track_data, prof_dir)
 
     results_zip = os.path.join(output_dir, id[0:8] + '.zip')
     to_zip(results_zip, results_file, prof_dir)

@@ -50,7 +50,7 @@ def save(batch_id, database, occr_level, zip_filename):
 
 
 def get_filename(seq_id):
-    return os.path.basename(Sequence.objects.get(pk=seq_id).file.name)
+    return os.path.splitext(Sequence.objects.get(pk=seq_id).file.name)[0]
 
 
 def get_seq_number(batch_id):
