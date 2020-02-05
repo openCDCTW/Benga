@@ -73,8 +73,6 @@ class Tracking extends React.Component {
 	constructor(props) {
 
 		super(props);
-
-        let nowYear = new Date();
         window.profile_db = "Vibrio_cholerae";
 
 		this.state = {
@@ -82,7 +80,6 @@ class Tracking extends React.Component {
             yearError: false,
             country: '',
             labelWidth: 0,
-            nowYear: nowYear.getFullYear(),
 		};
 
 		this.djsConfig = {
@@ -96,7 +93,7 @@ class Tracking extends React.Component {
             timeout: 0,
             init:function(){
                 this.on("addedfile", function(file){
-                    if(file.size <100000){
+                    if(file.size <1000){
                         this.removeFile(file);
                     }
                 });

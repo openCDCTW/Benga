@@ -36,6 +36,7 @@ class Upload_contigs extends React.Component {
         super(props);
 
         window.databaseName = "Vibrio_cholerae";
+	window.occurrence = 95;
         window.fileName = [];
 
         this.state = {

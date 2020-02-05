@@ -60,13 +60,15 @@ class Options extends React.Component {
                   }}
                   className={classes.selectEmpty}
                   >
-                  <MenuItem value={'Campylobacter_jejunii/coli'} disabled>Campylobacter coli/jejunii</MenuItem>
+                  <MenuItem value={'Campylobacter_coli/jejuni 44'}>Campylobacter coli/jejunii</MenuItem>
                   <MenuItem value={'Cronobacter_sakazakii 95'}>Cronobacter sakazakii</MenuItem>
-                  <MenuItem value={'Escherichia_coli/Shigella'} disabled>Escherichia coli/Shigella</MenuItem>
-                  <MenuItem value={'Listeria_monocytogenes 95'}>Listeria monocytogenes</MenuItem>
-                  <MenuItem value={'Salmonella_enterica 94'}>Salmonella enterica</MenuItem>
+                  <MenuItem value={'Ecoli/Shigella 16'}>Escherichia coli/Shigella</MenuItem>
+                  <MenuItem value={'Listeria_monocytogenes 94'}>Listeria monocytogenes</MenuItem>
+                  <MenuItem value={'Mycobacterium_tuberculosis 95'}>Mycobacterium tuberculosis</MenuItem>
+                  <MenuItem value={'Neisseria_meningitidis 95'}>Neisseria meningitidis</MenuItem>
+                  <MenuItem value={'Salmonella_enterica 92'}>Salmonella enterica</MenuItem>
                   <MenuItem value={'Vibrio_cholerae 95'}>Vibrio cholerae</MenuItem>
-                  <MenuItem value={'Vibrio_parahaemolyticus'} disabled>Vibrio parahaemolyticus</MenuItem>
+                  <MenuItem value={'Vibrio_parahaemolyticus 95'}>Vibrio parahaemolyticus</MenuItem>
                 </Select>
               <FormHelperText>Required</FormHelperText>
             </FormControl>

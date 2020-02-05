@@ -49,7 +49,7 @@ class Upload_profile extends React.Component {
             timeout: 0,
             init:function(){
                 this.on("addedfile", function(file){
-                    if(file.size < 100000){
+                    if(file.size < 1000){
                         this.removeFile(file);
                     }
                 });

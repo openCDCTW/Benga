@@ -5,7 +5,12 @@ ALLELE_DB_CHOICES = (
     ("Vibrio_cholerae", "Vibrio cholerae"),
     ("Salmonella_enterica", "Salmonella enterica"),
     ("Cronobacter_sakazakii", "Cronobacter sakazakii"),
-    ("Listeria_monocytogenes", "Listeria monocytogenes")
+    ("Listeria_monocytogenes", "Listeria monocytogenes"),
+    ("Campylobacter_coli/jejuni", "Campylobacter coli/jejuni"),
+    ("Ecoli/Shigella", "Ecoli/Shigella"),
+    ("Mycobacterium_tuberculosis", "Mycobacterium tuberculosis"),
+    ("Neisseria_meningitidis", "Neisseria meningitidis"),
+    ("Vibrio_parahaemolyticus", "Vibrio parahaemolyticus")
 )
 
 

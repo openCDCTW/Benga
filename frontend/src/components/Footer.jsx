@@ -3,6 +3,9 @@ import ReactDOM from 'react-dom';
 
 export default class Footer extends React.Component {
 
+	constructor(props) {
+            super(props);
+	};
 
     render() {
         return (
@@ -17,7 +20,7 @@ export default class Footer extends React.Component {
                     </font>
                     <br />
                     <br />
-                    <font>Copyright (c) 2019 Centers for Disease Control, MOHW, Taiwan (Taiwan CDC).</font>
+                    <font>Copyright (c) 2020 Centers for Disease Control, MOHW, Taiwan (Taiwan CDC).</font>
                 </div>
                 <br />
                 <br />

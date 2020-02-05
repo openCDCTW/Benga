@@ -76,7 +76,6 @@ class Tracking extends React.Component {
 
         let nowYear = new Date();
         window.profile_db = "Vibrio_cholerae";
-	window.occurrence = 95
 
 		this.state = {
             allele_db:"Vibrio_cholerae",
@@ -97,7 +96,7 @@ class Tracking extends React.Component {
             timeout: 0,
             init:function(){
                 this.on("addedfile", function(file){
-                    if(file.size <100000){
+                    if(file.size < 1000){
                         this.removeFile(file);
                     }
                 });
@@ -134,7 +133,7 @@ class Tracking extends React.Component {
 	        return ;
 	    }
 	    this.dropzone.processQueue();
-        this.props.history.push("/cgMLST/non-release/tracking_result")
+            this.props.history.push("/cgMLST/non-release/tracking_result_nm")
 	}
 
     select_handleChange(event){
@@ -143,6 +142,12 @@ class Tracking extends React.Component {
                 [event.target.name]: event.target.value
             }));
             window.profile_db = "Vibrio_cholerae";
+        }
+        if( event.target.value == 'Neisseria_meningitidis'){
+            this.setState(state => ({
+                [event.target.name]: event.target.value
+            }));
+            window.profile_db = "Neisseria_meningitidis";
         }
     }
 
@@ -173,6 +178,7 @@ class Tracking extends React.Component {
                                   className={classes.selectEmpty}
                                   >
                                   <MenuItem value={'Vibrio_cholerae'}>Vibrio cholerae</MenuItem>
+                                  <MenuItem value={'Neisseria_meningitidis'}>Neisseria meningitidis</MenuItem>
                                 </Select>
                               <FormHelperText>Required</FormHelperText>
                             </FormControl>
