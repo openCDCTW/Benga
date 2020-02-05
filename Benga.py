@@ -20,11 +20,12 @@ def main():
               help="Level of occurrence to drop.")
 @click.option('-t', '--threads', default=8, metavar="<int>", type=int,
               help="Number of threads for computation. [Default: 8]")
+@click.option('--training-file', default=None, type=click.Path(exists=True), help="Prodigal training file")
 @click.argument('input_dir', type=click.Path(exists=True))
 @click.argument('output_dir', type=click.Path(exists=True))
-def makedb(input_dir, output_dir, drop_by_occur, threads):
+def makedb(input_dir, output_dir, drop_by_occur, threads, training_file):
     """Make database with fasta files in INPUT_DIR and output accessory results in OUTPUT_DIR."""
-    databases.annotate_configs(input_dir, output_dir, threads=threads)
+    databases.annotate_configs(input_dir, output_dir, threads=threads, training_file=training_file)
     database = databases.make_database(output_dir, drop_by_occur, threads=threads)
     statistics.calculate_loci_coverage(output_dir, output_dir, database=database)
     statistics.calculate_allele_length(output_dir, database=database)
@@ -69,19 +70,19 @@ def profile(input_dir, output_dir, database, threads, occrrence, not_extend, no_
 @click.argument('output_dir', type=click.Path(exists=True))
 @click.option('--linkage', default="single", type=click.Choice(["single", "average"]),
               help="Linkage for hierarchical clustering [Default: single]")
-@click.option('--distance-annotate', default=False, is_flag=True,
+@click.option('--show-node-info', default=False, is_flag=True,
               help="Annotating the distances on dendrogram node [Default: Disable]")
-def tree(input_dir, output_dir, linkage, distance_annotate):
+def tree(input_dir, output_dir, linkage, show_node_info):
     """Plot dendrogram with profile.tsv file in INPUT_DIR, and output to OUTPUT_DIR."""
     profiles = pd.read_csv(os.path.join(input_dir, "profile.tsv"), sep="\t", index_col=0)
-    dm = clustering.DistanceMatrix(profiles)
-    dendro = clustering.Dendrogram(dm, linkage)
+    dendrogram = clustering.Dendrogram(profiles, linkage)
+    dendrogram.cluster(show_node_info=show_node_info)
     date = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M")
     filename = date + "_tree"
-    dendro.to_newick(os.path.join(output_dir, "{}.newick".format(filename)))
-    dendro.scipy_tree(os.path.join(output_dir, "{}.pdf".format(filename)), distance_annotate)
-    dendro.scipy_tree(os.path.join(output_dir, "{}.svg".format(filename)), distance_annotate)
-    dendro.scipy_tree(os.path.join(output_dir, "{}.png".format(filename)), distance_annotate)
+    dendrogram.to_newick(os.path.join(output_dir, "{}.newick".format(filename)))
+    dendrogram.figure.savefig(os.path.join(output_dir, "{}.pdf".format(filename)))
+    dendrogram.figure.savefig(os.path.join(output_dir, "{}.svg".format(filename)))
+    dendrogram.figure.savefig(os.path.join(output_dir, "{}.png".format(filename)))
     subprocess.call(['libreoffice', '--headless', '--convert-to', 'emf', '--outdir', output_dir,
                      os.path.join(output_dir, "{}.svg".format(filename))])
 

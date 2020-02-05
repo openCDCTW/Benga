@@ -26,16 +26,16 @@ def read_profiles(input_dir):
 
 def plot(input_dir, output_dir, linkage):
     profiles = read_profiles(input_dir)
-    dm = clustering.DistanceMatrix(profiles)
-    dendro = clustering.Dendrogram(dm, linkage)
+    dendrogram = clustering.Dendrogram(profiles, linkage)
+    dendrogram.cluster(show_node_info=True)
     newick_filename = os.path.join(output_dir, "dendrogram.newick")
-    dendro.to_newick(newick_filename)
+    dendrogram.to_newick(newick_filename)
     pdf_filename = os.path.join(output_dir, "dendrogram.pdf")
-    dendro.scipy_tree(pdf_filename)
+    dendrogram.figure.savefig(pdf_filename)
     svg_filename = os.path.join(output_dir, "dendrogram.svg")
-    dendro.scipy_tree(svg_filename)
+    dendrogram.figure.savefig(svg_filename)
     png_filename = os.path.join(output_dir, "dendrogram.png")
-    dendro.scipy_tree(png_filename)
+    dendrogram.figure.savefig(png_filename)
     return newick_filename, pdf_filename, png_filename, svg_filename
 
 

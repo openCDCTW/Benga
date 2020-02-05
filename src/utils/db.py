@@ -4,6 +4,7 @@ import pandas as pd
 from sqlalchemy import create_engine, MetaData, Table, Column, ForeignKey
 from sqlalchemy.engine.url import URL
 from sqlalchemy.dialects import postgresql
+from sqlalchemy_utils.functions import drop_database
 from django.conf import settings
 
 DBCONFIG = {}
@@ -86,3 +87,10 @@ def create_pgadb_relations(dbname):
     engine = create_engine(URL(**DBCONFIG))
     METADATA.create_all(engine)
     engine.dispose()
+
+
+def dropdb(dbname):
+    global DBCONFIG
+    DBCONFIG["database"] = dbname
+    engine = create_engine(URL(**DBCONFIG))
+    drop_database(engine.url)

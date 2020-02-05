@@ -10,41 +10,41 @@ def get_profile(track, biosample):
 
 
 def distance_against_all(query_profile, track, top_n=100):
-    query_alleles = query_profile.dropna().to_dict()
     distances = {}
-    for profile in track.find():
-        ref_alleles = profile["profile"]
-        same_loci = query_alleles.keys() & ref_alleles.keys()
-        diff_alleles_count = sum(True if query_alleles[loci] != ref_alleles[loci] else False for loci in same_loci)
-        diff_loci_count = len((query_alleles.keys()|ref_alleles.keys()) - same_loci)
-        distances[profile['BioSample']] = diff_alleles_count + diff_loci_count
-    top_n_dist = pd.Series(distances, name='distance').sort_values()[0:top_n]
+    for subject in track.find({}, {'_id': 0, 'BioSample': 1, 'profile': 1}):
+        subject_profile = subject["profile"]
+        same_loci = query_profile.keys() & subject_profile.keys()
+        diff_alleles_count = sum(map(lambda loci: query_profile[loci] != subject_profile[loci], same_loci))
+        diff_loci_count = len((query_profile.keys() | subject_profile.keys()) - same_loci)
+        distances[subject['BioSample']] = diff_alleles_count + diff_loci_count
+    top_n_dist = sorted(distances.items(), key=lambda x: x[1])[0:top_n]
     return top_n_dist
 
 
-def save_profiles(biosamples, track, prof_dir):
-    for biosample in biosamples:
-        prof = pd.DataFrame()
-        prof[biosample] = pd.Series(data=get_profile(track, biosample))
-        prof.to_csv(os.path.join(prof_dir, biosample + ".tsv"), sep="\t")
+def save_profiles(samples, track, pf_dir):
+    samples = list(map(lambda x: x[0], samples))
+    profiles = track.find({'BioSample': {'$in': samples}}, {'_id': 0, 'BioSample': 1, 'profile': 1})
+    for profile in profiles:
+        s = pd.Series(profile['profile'], name=profile['BioSample'])
+        pf = pd.DataFrame(s)
+        pf.to_csv(os.path.join(pf_dir, profile['BioSample'] + ".tsv"), sep="\t")
 
 
 def add_metadata(distances, track):
-    metadata_set = []
-    for sample in distances.index:
-        metadata = track.find_one({'BioSample': sample}, {'_id': 0, 'profile': 0})
-        metadata_set.append(metadata)
-    metadata_table = pd.DataFrame(metadata_set)
-    results = pd.merge(distances, metadata_table, left_index=True, right_on='BioSample')
+    samples = list(map(lambda x: x[0], distances))
+    metadata = track.find({'BioSample': {'$in': samples}}, {'_id': 0, 'profile': 0})
+    metadata = pd.DataFrame(list(metadata))
+    distances = pd.DataFrame(distances, columns=['BioSample', 'distances'])
+    results = pd.merge(distances, metadata, on='BioSample').sort_values('distances')
     return results
 
 
 def calculate_distances(profile_filename, track):
-    query_profile = pd.read_csv(profile_filename, sep="\t", index_col=0)
-    query_profile = query_profile[query_profile.columns[0]]
+    query_profile = pd.read_csv(profile_filename, sep="\t", index_col=0, usecols=[0, 1])
+    query_profile = next(query_profile.iteritems())[1].dropna().to_dict()
     distances = distance_against_all(query_profile, track)
     results = add_metadata(distances, track)
-    results.replace(np.nan, "", regex=True, inplace=True)
+    results = results.fillna('')
     return distances, results
 
 
@@ -75,7 +75,7 @@ def tracking(id, database, output_dir, profile_filename):
 
     prof_dir = os.path.join(output_dir, "profiles")
     os.makedirs(prof_dir, exist_ok=True)
-    save_profiles(distances.index, track, prof_dir)
+    save_profiles(distances, track, prof_dir)
 
     results_zip = os.path.join(output_dir, id[0:8] + '.zip')
     to_zip(results_zip, results_file, prof_dir)

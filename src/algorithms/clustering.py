@@ -3,95 +3,100 @@ import pandas as pd
 import numpy as np
 from scipy.cluster import hierarchy
 from scipy.spatial.distance import squareform
-import matplotlib
-import matplotlib.pyplot as plt
+from matplotlib import rcParams
+from matplotlib import pyplot as plt
 from matplotlib.ticker import MaxNLocator, FuncFormatter
 
 from ..utils.data import integer_encoding
 
 
-class DistanceMatrix:
-
+class Distance:
     def __init__(self, profile):
-        profile = integer_encoding(profile).T
-        self._profile_values = profile.values
-        self._profile_index = profile.index
-        self._distances = None
+        assert isinstance(profile, pd.DataFrame)
+        self.profile = profile.apply(integer_encoding, axis=1)
+        shape = (len(profile.columns), len(profile.columns))
+        self.matrix = np.empty(shape)
 
-    @property
-    def index(self):
-        return self._profile_index
+    def calculate(self):
+        values = self.profile.T.values
+        for i_1, value_1 in enumerate(values):
+            for i_2, value_2 in enumerate(values[i_1:], i_1):
+                self.matrix[i_1, i_2] = self.matrix[i_2, i_1] = (value_1 != value_2).sum()
 
-    @property
-    def distance(self):
-        """Calculate distance matrix."""
-        if not self._distances:
-            data = np.zeros((len(self._profile_index), len(self._profile_index)))
-            for index_1, value_1 in enumerate(self._profile_values):
-                for index_2, value_2 in enumerate(self._profile_values[index_1::], index_1):
-                    data[index_1, index_2] = data[index_2, index_1] = hamming(value_1, value_2)
-            self._distances = pd.DataFrame(data, self._profile_index, self._profile_index)
-        return self._distances
+
+class Linkage:
+    def __init__(self, distmatrix, method='single'):
+        self.cdm = squareform(distmatrix)
+        self.method = method
+        if method == 'single':
+            self.matrix = fastcluster.single(self.cdm)
+        elif method == 'average':
+            self.matrix = fastcluster.average(self.cdm)
+        else:
+            raise
+
+
+class Figure:
+    plt.style.use("fast")
+    rcParams["lines.linewidth"] = 0.5
+
+    def __init__(self, width, height):
+        self.fig, self.ax = plt.subplots(1, 1, figsize=(width, height))
+        self.ax.spines['top'].set_visible(False)
+        self.ax.spines['bottom'].set_visible(False)
+        self.ax.spines['left'].set_visible(False)
+        self.ax.spines['right'].set_visible(False)
+        self.ax.grid(False)
+        self.ax.patch.set_facecolor('none')
+        plt.close()
+
+    def annotate(self, text, position, fontsize=8):
+        self.ax.annotate(text, position, xytext=(-2, 8), textcoords='offset points', va='top', ha='right',
+                         fontsize=fontsize)
+
+    def savefig(self, file, dpi=300):
+        self.fig.savefig(file, dpi=dpi, bbox_inches='tight', pad_inches=1)
 
 
 class Dendrogram:
+    show_format = {'single': lambda x: '{:.0f}'.format(x),
+                   'average': lambda x: '{:.1f}'.format(x)}
 
-    def __init__(self, dm, link):
-        self._nodes = list(dm.index)
-        self._newick = None
-        if link == "single":
-            self._linkage = fastcluster.single(squareform(dm.distance))
-        elif link == "average":
-            self._linkage = fastcluster.average(squareform(dm.distance))
-        else:
-            raise AttributeError("Invalid value {} for link in Dendrogram.".format(link))
-        self._tree = hierarchy.to_tree(self._linkage, False)
-
-    @property
-    def newick(self):
-        """Generate newick format with dendrogram."""
-        if not self._newick:
-            self._newick = make_newick(self._tree, "", self._tree.dist, self._nodes)
-        return self._newick
-
-    def scipy_tree(self, file, distance_annotate=True, w=8, dpi=300):
-        """Generate dendrogram."""
-        plt.style.use("fast")
-        matplotlib.rcParams['lines.linewidth'] = 0.5
-        fig, ax = plt.subplots(1, 1, figsize=(w, int(len(self._nodes)*0.3)))
-        ax.grid(False)
-        ax.patch.set_facecolor('none')
-        ax.xaxis.set_major_locator(MaxNLocator(integer=True))
-        ax.get_xaxis().set_major_formatter(FuncFormatter(lambda x, p: format(int(x), ',')))
-
-        ax.spines['right'].set_visible(False)
-        ax.spines['top'].set_visible(False)
-        ax.spines['left'].set_visible(False)
-        ax.spines['bottom'].set_visible(False)
-        
-        plt.rcParams['svg.fonttype'] = 'none'
-        tree = hierarchy.dendrogram(self._linkage, labels=self._nodes, orientation="left",
-                                    leaf_font_size=10, above_threshold_color="#000000", color_threshold=0)
-        if distance_annotate:
-            for i, d, in zip(tree['icoord'], tree['dcoord']):
-                x = 0.5 * sum(i[1:3])
-                y = d[1]
-                if y.is_integer():
-                    node_info = int(y)
-                else:
-                    node_info = round(y, 1)
-                plt.annotate(
-                    node_info, (y, x), xytext=(-2, 8), textcoords='offset points', va='top', ha='right', fontsize=8
-                    )
-        fig.savefig(file, dpi=dpi, bbox_inches='tight', pad_inches=1)
+    def __init__(self, profile, linkage_method='single'):
+        assert isinstance(profile, pd.DataFrame)
+        self.distance = Distance(profile)
+        self.distance.calculate()
+        self.linkage = Linkage(distmatrix=self.distance.matrix, method=linkage_method)
+        self.figure = Figure(12, len(self.distance.profile.columns) * 0.3)
 
     def to_newick(self, file):
-        with open(file, "w") as file:
-            file.write(self.newick)
+        """Generate newick format with dendrogram."""
+        tree = hierarchy.to_tree(self.linkage.matrix, False)
+        newick = make_newick(tree, "", tree.dist, self.distance.profile.columns)
+        with open(file, 'w') as f:
+            f.write(newick)
 
-
-def hamming(value_1, value_2):
-    return (value_1 != value_2).sum()
+    def cluster(self, no_labels=False, show_node_info=False):
+        """Generate dendrogram."""
+        dendrogram = hierarchy.dendrogram(
+            self.linkage.matrix,
+            ax=self.figure.ax,
+            labels=self.distance.profile.columns,
+            orientation="left",
+            leaf_font_size=12,
+            above_threshold_color="#000000",
+            color_threshold=0,
+            no_labels=no_labels,
+        )
+        if show_node_info:
+            icoord, dcoord = dendrogram['icoord'], dendrogram['dcoord']
+            for i, d in zip(icoord, dcoord):
+                x = 0.5 * sum(i[1:3])
+                y = d[1]
+                info = self.show_format[self.linkage.method](y)
+                self.figure.annotate(info, (y, x))
+        self.figure.ax.xaxis.set_major_locator(MaxNLocator(integer=True))
+        self.figure.ax.get_xaxis().set_major_formatter(FuncFormatter(lambda x, p: format(int(x), ',')))
 
 
 def make_newick(node, newick, parentdist, leaf_names):
