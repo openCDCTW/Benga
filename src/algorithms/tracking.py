@@ -28,8 +28,8 @@ def add_metadata(distances, track):
     samples = list(map(lambda x: x[0], distances))
     metadata = track.find({'BioSample': {'$in': samples}}, {'_id': 0, 'profile': 0})
     metadata = pd.DataFrame(list(metadata))
-    metadata['Distance (loci)'] = metadata.map(dict(distances))
-    results = pd.merge(distances, metadata, on='BioSample').sort_values('Distance (loci)')
+    metadata['Distance (loci)'] = metadata['BioSample'].map(dict(distances))
+    results = metadata.sort_values('Distance (loci)')
     return results
 
 
@@ -67,7 +67,7 @@ def tracking(id, database, output_dir, profile_filename):
     results_json = to_json(id, output_dir, results)
 
     results_file = os.path.join(output_dir, id[0:8] + ".tsv")
-    results.to_csv(results_file, sep="\t")
+    results.to_csv(results_file, sep="\t", index=False)
 
     prof_dir = os.path.join(output_dir, "profiles")
     os.makedirs(prof_dir, exist_ok=True)
