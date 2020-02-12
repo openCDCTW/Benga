@@ -4,7 +4,7 @@ import shutil
 import uuid
 import subprocess
 from collections import Counter, OrderedDict
-from concurrent.futures import ThreadPoolExecutor
+from concurrent.futures import ProcessPoolExecutor, ThreadPoolExecutor, as_completed
 
 import pandas as pd
 import sqlalchemy as sa
@@ -98,7 +98,8 @@ def update_database(new_allele_pairs, alleles):
 def add_new_alleles(id_allele_list, ref_db, temp_dir, pid, threads):
     """Identify new alleles and add them to database."""
     all_alleles = functools.reduce(lambda x, y: {**x, **y[1]}, id_allele_list, {})
-    existed_alleles = db.from_sql("select allele_id from alleles;")["allele_id"].tolist()
+    query = sa.select([db.ALLELES.c["allele_id"]]).where(db.ALLELES.c["allele_id"].in_(all_alleles.keys()))
+    existed_alleles = db.from_sql(query)["allele_id"].to_list()
     candidates = list(filter(lambda x: x not in existed_alleles, all_alleles.keys()))
     new_allele_pairs = blast_for_new_alleles(candidates, all_alleles, ref_db, temp_dir, pid, threads)
     if new_allele_pairs:
@@ -138,7 +139,7 @@ def profiling(output_dir, input_dir, database, threads, occr_level=None, selecte
     logger.info("Identifying loci and allocating alleles...")
     args = [(os.path.join(query_dir, filename), temp_dir, database)
             for filename in os.listdir(query_dir) if filename.endswith(".fa")]
-    with ThreadPoolExecutor(threads) as executor:
+    with ProcessPoolExecutor(threads) as executor:
         id_allele_list = list(executor.map(identify_alleles, args))
 
     if enable_adding_new_alleles:
@@ -147,10 +148,13 @@ def profiling(output_dir, input_dir, database, threads, occr_level=None, selecte
 
     logger.info("Collecting allele profiles of each genomes...")
     if generate_profiles:
-        collect = []
-        for genome_id, alleles in id_allele_list:
-            profile = profile_by_query(alleles, genome_id, selected_loci, database)
-            collect.append(profile)
+        to_do = []
+        with ThreadPoolExecutor(threads) as executor:
+            for genome_id, alleles in id_allele_list:
+                future = executor.submit(profile_by_query, alleles, genome_id, selected_loci, database)
+                to_do.append(future)
+        done_iter = as_completed(to_do)
+        collect = list(map(lambda x: x.result(), done_iter))
         result = pd.concat(collect, axis=1, sort=False)
         result.to_csv(os.path.join(output_dir, profile_file + ".tsv"), sep="\t")
         if generate_bn:
