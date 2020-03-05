@@ -1,8 +1,8 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
+import { withRouter } from "react-router-dom";
 import DropzoneComponent from 'react-dropzone-component';
 import { Link } from 'react-router-dom';
-import Options from './Options.jsx';
 import Button from '@material-ui/core/Button';
 import { withStyles } from '@material-ui/core/styles';
 import CloudUploadIcon from '@material-ui/icons/CloudUpload';
@@ -10,12 +10,10 @@ import Icon from '@material-ui/core/Icon';
 import DeleteIcon from '@material-ui/icons/Delete';
 import ReplyIcon from '@material-ui/icons/Reply';
 import DownloadIcon from '@material-ui/icons/CloudDownload';
-import SearchBar from './SearchBar.jsx';
 import Paper from '@material-ui/core/Paper';
 import Tabs from '@material-ui/core/Tabs';
 import Tab from '@material-ui/core/Tab';
 import blue from '@material-ui/core/colors/blue';
-// import { Scrollbars } from 'react-custom-scrollbars';
 import download from 'downloadjs';
 
 
@@ -26,21 +24,19 @@ const styles = theme => ({
         '&:hover': {
             backgroundColor:blue[600],
         },
-    }
+    },
+    divCenter:{
+        display:'flex',
+        justifyContent:'center',
+        alignItems:'center',
+    },
 })
 
-class Upload_contigs extends React.Component {
+class Profiling extends React.Component {
 
     constructor(props) {
-
         super(props);
-
-        window.databaseName = "Vibrio_cholerae";
         window.fileName = [];
-
-        this.state = {
-            switch: false,
-        };
 
         this.djsConfig = {
             dictDefaultMessage:"Drag contig file(s) here (up to 100 files)",
@@ -53,14 +49,14 @@ class Upload_contigs extends React.Component {
             parallelUploads: 100,
             init:function(){
                 this.on("addedfile", function(file){
-                    if(file.size < 100000){
+                    if(file.size < 10000){
                         this.removeFile(file);
                     }
                 });
                 this.on("sending", function(file, xhr, formData){
                     formData.append("batch_id", window.batchid);
-                    formData.append("database", window.databaseName);
-                    formData.append("occurrence", 95);
+                    formData.append("database", window.database);
+                    formData.append("occurrence", window.occurrence);
                     window.fileName.push(file.name);
                 });
                 this.on("success", function(file){
@@ -77,11 +73,10 @@ class Upload_contigs extends React.Component {
         };
 
         this.dropzone = null;
-
     }
 
     handlePost() {
-        
+
         var fileCheck = this.dropzone.files.length;
 
         if(fileCheck < 1){
@@ -91,13 +86,6 @@ class Upload_contigs extends React.Component {
             alert('Cannot upload more than 100 files');
             return ;
         }
-
-        if(window.databaseName == ""){
-            alert('Please choose a database !');
-            return ;
-        }
-
-        this.setState(state => ({ switch: true }));
 
         fetch('api/profiling/upload/', {method:'POST'})
             .then(function(res){
@@ -111,13 +99,13 @@ class Upload_contigs extends React.Component {
 
                 var scheme = {};
                 scheme.seq_num = fileCheck;
-                fetch('api/profiling/upload/' + window.batchid + '/', { 
+                fetch('api/profiling/upload/' + window.batchid + '/', {
                     method:'PATCH',
                     headers: new Headers({'content-type': 'application/json'}),
                     body: JSON.stringify(scheme)
                 });
 
-                this.props.history.push("/cgMLST/profile_result");
+                this.props.history.push("/cgMLST/profilingResult");
                 clearInterval(interval);
             }
         };
@@ -127,7 +115,6 @@ class Upload_contigs extends React.Component {
 
     remove(){
         this.dropzone.removeAllFiles();
-        this.setState(state => ({ switch: false }));
         window.fileName.length = 0;
     }
 
@@ -153,10 +140,6 @@ class Upload_contigs extends React.Component {
         let interval = setInterval(result.bind(this),50);
     }
 
-    back(){
-        this.setState(state => ({ profile_result_zip: undefined }));
-    }
-    
     render() {
 
         const config = this.componentConfig;
@@ -165,107 +148,39 @@ class Upload_contigs extends React.Component {
             init: dz => this.dropzone = dz,}
         const { classes } = this.props;
 
-        if(this.state.profile_result_zip == undefined){
-            return (
-            <div>
-                <br />
-                <br />
-                <div>
-                    <div style={{ float:'left', marginLeft:'10px', marginTop:'7px' }}>
-                        <Options switch={this.state.switch} />
-                    </div>
-                    <div style={{ float:'right', marginTop:'35px', marginRight:'25px' }}>
-                        <Button variant="contained" color="secondary" onClick={this.remove.bind(this)}>
-                                Remove all files
-                                &nbsp;&nbsp;
-                                <DeleteIcon />
-                        </Button>
-                    </div>
+        return (
+            <div style={{ marginTop:'100px' }}>
+                <div style={{ float:'right', marginTop:'-50px', marginRight:'25px' }}>
+                    <Button variant="contained" color="secondary" onClick={this.remove.bind(this)}>
+                            Remove all files
+                            &nbsp;&nbsp;
+                            <DeleteIcon />
+                    </Button>
                 </div>
-                <br />
-                <br />
-                <br />
-                <br />
-                <br />
-                <div style = {{ display:'flex', justifyContent:'center', alignItems:'center' }}>
-                    <DropzoneComponent config={config} eventHandlers={eventHandlers} 
+                <div className={classes.divCenter}>
+                    <DropzoneComponent config={config} eventHandlers={eventHandlers}
                         djsConfig={djsConfig} />
                 </div>
                 <br />
                 <br />
-                <div style = {{ display:'flex', justifyContent:'center', alignItems:'center' }}>
-                    <a download href='https://drive.google.com/uc?export=download&id=1XG-05Kim8gOOg1UU16oJ9saOwfCh-PZM' style={{ textDecoration:'none' }}>
+                <div className={classes.divCenter}>
+                    { window.database == 'Vibrio_cholerae' ?
+                    <a download href='https://drive.google.com/uc?export=download&id=1XG-05Kim8gOOg1UU16oJ9saOwfCh-PZM'
+                    style={{ textDecoration:'none', marginRight:'25px' }}>
                         <Button style={{ textTransform:'none' }} variant="contained" color="default">
                             Download &nbsp; example &nbsp; files
                         </Button>
-                    </a>
-                    &nbsp;&nbsp;&nbsp;&nbsp;
-                    <Button variant="contained" className ={classes.cssRoot} 
+                    </a> : null }
+                    <Button variant="contained" className ={classes.cssRoot}
                      onClick={this.handlePost.bind(this)}>
                         Submit
                         &nbsp;&nbsp;
                         <CloudUploadIcon />
                     </Button>
                 </div>
-                <br />
-                <br />
-                <div style={{ display:'flex', justifyContent:'center', alignItems:'center'}}>
-                    <SearchBar
-                        onChange = {(value) => this.setState({ querybyID: value })}
-                        onRequestSearch={this.query.bind(this)}
-                        placeholder = {"Input ID to get result"}
-                        style = {{
-                            width: '90%',
-                            margin: '0 auto',
-                        }}
-                    />
-                </div>
-                <br />
-                <br />
-                <br />
-                <br />
-                <br />
             </div>
             );
-        }else{
-            return (
-                    <div>
-                        <br />
-                        <br />
-                        <br />
-                        <br />
-                        <br />
-                        <br />
-                        <div style={{ display:'flex', justifyContent:'center', alignItems:'center'}}>
-                            <a download href={this.state.profile_result_zip} 
-                             style={{ textDecoration:'none' }}>
-                                <Button variant="contained" color="default">
-                                Download profiles (.zip)
-                                &nbsp;&nbsp;
-                                <DownloadIcon />
-                                </Button>
-                            </a>
-                        </div>
-                        <br />
-                        <br />
-                        <br />
-                        <br />
-                        <br />
-                        <br />
-                        <div style={{ display:'flex', justifyContent:'center', alignItems:'center'}}>
-                            <Button variant="contained" color="default" onClick={this.back.bind(this)}>
-                                <ReplyIcon />
-                                &nbsp;&nbsp;
-                                Back
-                            </Button>
-                        </div>
-                        <br />
-                    </div>
-                );
         }
-        
-    }
 }
 
-
-export default withStyles(styles)(Upload_contigs);
+export default withRouter(withStyles(styles)(Profiling));

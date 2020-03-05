@@ -1,49 +1,57 @@
 import React from 'react';
-import ReactDOM from 'react-dom';
-import { BrowserRouter as Router, Route, HashRouter } from "react-router-dom";
-import Header from './Header.jsx';
-import Navigation from './Navigation.jsx'
-import Footer from './Footer.jsx';
-import upload_contigs from './UploadContigs.jsx';
-import Profile_view from './ProfileView.jsx';
-import Upload_profile from './UploadProfile.jsx';
-import Dendrogram_view from './DendrogramView.jsx';
-import Tracking from './Tracking.jsx';
-//import Tutorial from './Tutorial.jsx';
-import Tracking_result from './TrackingResult.jsx';
-import About from './About.jsx';
+import { withStyles } from '@material-ui/core/styles';
+import AppBar from '@material-ui/core/AppBar';
+import CssBaseline from '@material-ui/core/CssBaseline';
+import Toolbar from '@material-ui/core/Toolbar';
+import Typography from '@material-ui/core/Typography';
+import Button from '@material-ui/core/Button';
+import PageContent from './PageContent.jsx'
+
+const styles = theme => ({
+  root: {
+    display: 'flex',
+  },
+  title:{
+    color: 'white',
+    flexGrow: 1,
+  },
+  loginbtn:{
+    color: 'white',
+    display: 'none',
+  },
+  appBar: {
+    zIndex: 1201,
+  },
+});
 
 class Main extends React.Component {
 
     constructor(props) {
-
         super(props);
-        
         history.pushState(null, null, location.href);
         window.onpopstate = function(){
             history.go(1);
         };
     }
 
-    render() {
+     render() {
+        const { classes } = this.props;
+
         return(
-            <Router>
-                <div>
-                    <Header />
-                    <Navigation />
-                    <Route path="/cgMLST" exact component={upload_contigs} />
-                    <Route path="/cgMLST/profiling" exact component={upload_contigs} />
-                    <Route path="/cgMLST/profile_result" component={Profile_view} />
-                    <Route path="/cgMLST/clustering" component={Upload_profile} />
-                    <Route path="/cgMLST/clustering_result" component={Dendrogram_view} />
-                    <Route path="/cgMLST/tracking" component={Tracking} />
-                    <Route path="/cgMLST/tracking_result" component={Tracking_result} />
-                    <Route path="/cgMLST/about" component={About} />
-                    <Footer />
-                </div>
-            </Router>
+            <div className={classes.root}>
+                <CssBaseline />
+                <AppBar position="fixed" className={classes.appBar}>
+                    <Toolbar>
+                        <Typography className={classes.title} variant="h6">
+                            cgMLST@Taiwan
+                        </Typography>
+                        <Button className={classes.loginbtn}>Login</Button>
+                    </Toolbar>
+                </AppBar>
+                <PageContent />
+            </div>
         );
     }
 }
 
-ReactDOM.render(<Main />, document.getElementById('root'));
+export default withStyles(styles)(Main);

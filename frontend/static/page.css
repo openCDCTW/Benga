@@ -1,14 +1,10 @@
 
 header {
-    text-align: center;
-    height: 115px;
-    background-color: #2E9286;
     margin: auto;
 }
 
 body {
     font-family: sans-serif;
-    width: 70%;
     margin: auto;
 }
 
@@ -34,7 +30,6 @@ div.intro {
     margin-left: auto;
     margin-right: auto;
 }
-
 
 footer {
     height:32px;
@@ -64,7 +59,7 @@ div.filepicker {
     background-color: #FFFFFF;
     border-radius: 5px;
     min-height: 60px;
-    max-height: 350px;
+    max-height: 600px;
     overflow: auto;
     width: 95%;
     border: 2px dashed #0B90E2;

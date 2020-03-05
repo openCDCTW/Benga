@@ -13,3 +13,4 @@ celery
 django-celery-results
 djangorestframework
 uwsgi
+sqlalchemy_utils
