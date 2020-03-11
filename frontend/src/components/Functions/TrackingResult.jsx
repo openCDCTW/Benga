@@ -198,7 +198,7 @@ class TrackingResult extends React.Component {
 						</Paper>
 					</div>
 					<div className={classes.displayCenter}>
-						<Link to="/cgMLST/non-release/tracking" style={{ textDecoration:'none' }}>
+						<Link to="/cgMLST/tracking" style={{ textDecoration:'none', marginTop: '45px' }}>
 							<Button variant="contained" color="default">
 								<ReplyIcon />
 								&nbsp;&nbsp;
@@ -304,9 +304,8 @@ class TrackingResult extends React.Component {
 							<br />
 						</Paper>
 					</div>
-					<br />
 					<div className={classes.displayCenter}>
-						<Link to="/cgMLST/tracking" style={{ textDecoration:'none' }}>
+						<Link to="/cgMLST/tracking" style={{ textDecoration:'none', marginTop: '45px' }}>
 							<Button variant="contained" color="default">
 								<ReplyIcon />
 								&nbsp;&nbsp;

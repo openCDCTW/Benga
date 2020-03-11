@@ -49,7 +49,7 @@ class Lists extends React.Component {
                         <ListItemIcon><TreeIcon /></ListItemIcon>
                         <ListItemText>Clustering</ListItemText>
                         </ListItem>
-                        <ListItem button component={Link} to="/cgMLST/queryByID" disabled>
+                        <ListItem button component={Link} to="/cgMLST/queryByID">
                         <ListItemIcon><FolderIcon /></ListItemIcon>
                         <ListItemText>Query result by ID</ListItemText>
                         </ListItem>
@@ -68,7 +68,7 @@ class Lists extends React.Component {
                         <ListItemIcon><TreeIcon /></ListItemIcon>
                         <ListItemText>Clustering</ListItemText>
                         </ListItem>
-                        <ListItem button component={Link} to="/cgMLST/queryByID" disabled>
+                        <ListItem button component={Link} to="/cgMLST/queryByID">
                         <ListItemIcon><FolderIcon /></ListItemIcon>
                         <ListItemText>Query result by ID</ListItemText>
                         </ListItem>
@@ -99,7 +99,7 @@ class Lists extends React.Component {
                         <ListItemIcon><TreeIcon /></ListItemIcon>
                         <ListItemText>Clustering</ListItemText>
                         </ListItem>
-                        <ListItem button component={Link} to="/cgMLST/queryByID" disabled>
+                        <ListItem button component={Link} to="/cgMLST/queryByID">
                         <ListItemIcon><FolderIcon /></ListItemIcon>
                         <ListItemText>Query result by ID</ListItemText>
                         </ListItem>
