@@ -61,7 +61,7 @@ def calculate_loci_coverage(input_dir, output_dir, database):
 
 
 def count_subjects(input_dir):
-    input_file = os.path.join(input_dir, "allele_profiles.tsv")
+    input_file = os.path.join(input_dir, "Profile", "profile.tsv")
     with open(input_file, "r") as file:
         first_line = file.readline()
     genomes = first_line.strip().split("\t")
@@ -86,7 +86,7 @@ def plot_genome_coverage(data, output_dir, perc=5, cumulative=False):
 
     # plot
     fig = plt.figure(figsize=(12, 9))
-    plt.hist(data[data >= perc], bins=50, cumulative=cumulative, histtype="step", lw=2)
+    plt.hist(data[data >= perc], bins=100, cumulative=cumulative, histtype="step", lw=2)
     plt.title(title, fontsize=25)
     plt.xlabel("Percentage of genomes covered by loci (%)", fontsize=18)
     plt.ylabel("Number of locus", fontsize=18)
