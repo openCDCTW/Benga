@@ -3,43 +3,31 @@ import subprocess
 
 from src.utils import files
 
-DIR_PATH = os.path.dirname(os.path.realpath(__file__))
-BINARIES_PATH = os.path.abspath(os.path.join(DIR_PATH, "..", "..", "binaries", "linux"))
-MODELS_PATH = os.path.abspath(os.path.join(DIR_PATH, "..", "..", 'models'))
 
-
-def form_prokka_cmd(filename, inpath, outpath, training_file):
-    prefix, ext = os.path.splitext(filename)
-    if training_file:
-        args = ["prokka", "--prefix", prefix, "--cpus", "2", "--outdir", os.path.join(outpath, prefix),
-                "--quiet", "--prodigaltf", training_file, os.path.join(inpath, filename)]
+def form_prokka_cmd(genome_file, outdir, training_file):
+    prefix = files.get_fileroot(genome_file)
+    if os.path.exists(training_file):
+        cmd = 'prokka --prefix {} --cpus 2 --outdir {} --prodigaltf {} --quiet {}'.format(prefix, outdir, training_file,
+                                                                                          genome_file)
     else:
-        args = ["prokka", "--prefix", prefix, "--cpus", "2", "--outdir", os.path.join(outpath, prefix), "--quiet",
-                os.path.join(inpath, filename)]
-    return " ".join(map(str, args))
+        cmd = 'prokka --prefix {} --cpus 2 --outdir {} --quiet {}'.format(prefix, outdir, genome_file)
+    return cmd
 
 
 def form_roary_cmd(inpath, outpath, ident_min, threads):
-    args = ["roary", "-p", threads, "-i", ident_min, "-s", "-f", os.path.join(outpath, "roary"),
-            os.path.join(inpath, "*.gff")]
-    return " ".join(map(str, args))
+    cmd = "roary -p {} -i {} -s -f {} {}".format(
+        threads, ident_min, os.path.join(outpath, "roary"), os.path.join(inpath, "*.gff"))
+    return cmd
 
 
-def form_prodigal_cmd(infile, outpath, model):
-    filename = files.fasta_filename(infile)
-    training_file = os.path.join(MODELS_PATH, model + '.trn')
+def form_prodigal_cmd(infile, outfile, training_file):
     if os.path.exists(training_file):
-        args = [os.path.join(BINARIES_PATH, "prodigal"), "-c", "-m", "-q", "-g", "11",
-                "-t", training_file,
-                "-i", infile,
-                "-d", os.path.join(outpath, filename + ".locus.fna")]
+        cmd = "prodigal -c -m -q -g 11 -i {} -d {} -t {}".format(infile, outfile, training_file)
     else:
-        args = [os.path.join(BINARIES_PATH, "prodigal"), "-c", "-m", "-q", "-g", "11",
-                "-i", infile,
-                "-d", os.path.join(outpath, filename + ".locus.fna")]
-    return " ".join(map(str, args))
+        cmd = "prodigal -c -m -q -g 11 -i {} -d {}".format(infile, outfile)
+    return cmd
 
 
-def execute_cmd(args):
-    cmd = args
-    subprocess.run(cmd, shell=True)
+def execute_cmd(cmd):
+    process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
+    process.communicate()

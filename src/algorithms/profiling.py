@@ -2,9 +2,8 @@ import functools
 import os
 import shutil
 import uuid
-import subprocess
-from collections import Counter, OrderedDict
-from concurrent.futures import ThreadPoolExecutor
+from collections import OrderedDict
+from concurrent.futures import ProcessPoolExecutor, as_completed
 
 import pandas as pd
 import sqlalchemy as sa
@@ -16,14 +15,18 @@ from src.utils import db
 from src.utils.alleles import filter_duplicates
 
 
-def identify_alleles(args):
+MODELS_PATH = os.path.abspath(os.path.join("..", "..", 'models'))
+
+
+def identify_alleles(genome_file, outdir, model):
     """Identify CDS from the outcome of prodigal."""
-    filename, out_dir, model = args
-    subprocess.run(cmds.form_prodigal_cmd(filename, out_dir, model), shell=True, stdout=subprocess.DEVNULL)
-    genome_id = files.fasta_filename(filename)
-    target_file = os.path.join(out_dir, genome_id + ".locus.fna")
+    genome_id = files.get_fileroot(genome_file)
+    training_file = os.path.join(MODELS_PATH, model + '.trn')
+    outfile = os.path.join(outdir, genome_id + '.locus.fna')
+    prodigal_cmd = cmds.form_prodigal_cmd(genome_file, outfile, training_file)
+    cmds.execute_cmd(prodigal_cmd)
     alleles = OrderedDict()
-    for rec in SeqIO.parse(target_file, "fasta"):
+    for rec in SeqIO.parse(outfile, "fasta"):
         allele_id = operations.make_seqid(rec.seq)
         content = (rec.seq, rec.seq.translate(table=11))
         alleles[allele_id] = content
@@ -46,14 +49,10 @@ def profile_by_query(alleles, genome_id, selected_loci, database):
     return profile
 
 
-def calculate_allele_len(recs):
-    return {rec.id: len(rec.seq) for rec in recs}
-
-
 def make_ref_blastpdb(ref_db_file, database):
-    query = "select loci.locus_id, alleles.peptide_seq " \
-            "from loci inner join alleles " \
-            "on loci.ref_allele = alleles.allele_id;"
+    query = sa.select([db.LOCI.c["locus_id"], db.ALLELES.c["peptide_seq"]]).select_from(
+        db.LOCI.join(db.ALLELES, db.LOCI.c["ref_allele"] == db.ALLELES.c["allele_id"])
+    )
     refs = db.from_sql(query, database=database)
 
     ref_recs = [seq.new_record(row["locus_id"], row["peptide_seq"], seqtype="protein") for _, row in refs.iterrows()]
@@ -98,7 +97,8 @@ def update_database(new_allele_pairs, alleles):
 def add_new_alleles(id_allele_list, ref_db, temp_dir, pid, threads):
     """Identify new alleles and add them to database."""
     all_alleles = functools.reduce(lambda x, y: {**x, **y[1]}, id_allele_list, {})
-    existed_alleles = db.from_sql("select allele_id from alleles;")["allele_id"].tolist()
+    query = sa.select([db.ALLELES.c["allele_id"]]).where(db.ALLELES.c["allele_id"].in_(all_alleles.keys()))
+    existed_alleles = db.from_sql(query)["allele_id"].to_list()
     candidates = list(filter(lambda x: x not in existed_alleles, all_alleles.keys()))
     new_allele_pairs = blast_for_new_alleles(candidates, all_alleles, ref_db, temp_dir, pid, threads)
     if new_allele_pairs:
@@ -120,7 +120,7 @@ def profiling(output_dir, input_dir, database, threads, occr_level=None, selecte
     query_dir = os.path.join(output_dir, "query_{}".format(pid))
     os.makedirs(query_dir, exist_ok=True)
     contighandler = files.ContigHandler()
-    contighandler.new_format(input_dir, query_dir)
+    contighandler.format(input_dir, query_dir)
 
     logger.info("Selecting loci by specified scheme {}%...".format(occr_level))
     if selected_loci:
@@ -136,10 +136,14 @@ def profiling(output_dir, input_dir, database, threads, occr_level=None, selecte
     make_ref_blastpdb(ref_db, database)
 
     logger.info("Identifying loci and allocating alleles...")
-    args = [(os.path.join(query_dir, filename), temp_dir, database)
-            for filename in os.listdir(query_dir) if filename.endswith(".fa")]
-    with ThreadPoolExecutor(threads) as executor:
-        id_allele_list = list(executor.map(identify_alleles, args))
+    to_do = []
+    with ProcessPoolExecutor(threads) as executor:
+        for filename in os.listdir(query_dir):
+            if contighandler.is_fasta(filename):
+                future = executor.submit(identify_alleles, os.path.join(query_dir, filename), temp_dir, database)
+                to_do.append(future)
+    done_iter = as_completed(to_do)
+    id_allele_list = [done.result() for done in done_iter]
 
     if enable_adding_new_alleles:
         logger.info("Adding new alleles to database...")
@@ -147,10 +151,13 @@ def profiling(output_dir, input_dir, database, threads, occr_level=None, selecte
 
     logger.info("Collecting allele profiles of each genomes...")
     if generate_profiles:
-        collect = []
-        for genome_id, alleles in id_allele_list:
-            profile = profile_by_query(alleles, genome_id, selected_loci, database)
-            collect.append(profile)
+        to_do = []
+        with ProcessPoolExecutor(threads) as executor:
+            for genome_id, alleles in id_allele_list:
+                future = executor.submit(profile_by_query, alleles, genome_id, selected_loci, database)
+                to_do.append(future)
+        done_iter = as_completed(to_do)
+        collect = [done.result() for done in done_iter]
         result = pd.concat(collect, axis=1, sort=False)
         result.to_csv(os.path.join(output_dir, profile_file + ".tsv"), sep="\t")
         if generate_bn:

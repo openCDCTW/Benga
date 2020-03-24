@@ -1,5 +1,6 @@
 import os
 import subprocess
+from functools import reduce
 from collections import Counter, defaultdict
 from concurrent.futures import ProcessPoolExecutor
 
@@ -63,26 +64,18 @@ def collect_allele_info(profiles, ffn_dir):
     Allele frequency and locus frequency are calculated.
     """
     freq = defaultdict(Counter)
-    new_profiles = []
-    for subject, profile in profiles.iteritems():
-        ffn_file = os.path.join(ffn_dir, "{}.ffn".format(subject))
-        seqs = {record.id: record.seq for record in SeqIO.parse(ffn_file, "fasta")}
+    clusters = {}
+    for rows in profiles.iterrows():
+        clusters[rows[0]] = reduce(lambda x, y: x + y, [i.split('\t') for i in rows[1].dropna()], [])
 
-        new_profile = pd.Series(name=subject)
-        for locus, prokka_str in profile.dropna().iteritems():
-            if "\t" not in prokka_str:
-                allele = seqs[prokka_str]
-                freq[locus].update([allele])
-                new_profile.at[locus] = operations.make_seqid(allele)
-            else:
-                prokka_id = prokka_str.split("\t")
-                alleles = [seqs[x] for x in prokka_id]
-                freq[locus].update(alleles)
-                v = "\t".join(operations.make_seqid(x) for x in alleles)
-                new_profile.at[locus] = v
-        new_profiles.append(new_profile)
-    new_profiles = pd.concat(new_profiles, axis=1, sort=False).sort_index().sort_index(axis=1)
-    return new_profiles, freq
+    seqs = {}
+    for ffn_file in os.listdir(ffn_dir):
+        for record in SeqIO.parse(os.path.join(ffn_dir, ffn_file), "fasta"):
+            seqs[record.id] = record.seq
+
+    for locus, alleles in clusters.items():
+        freq[locus].update(list(map(lambda x: seqs[x], alleles)))
+    return freq
 
 
 def reference_self_blastp(output_dir, freq, threads):
@@ -186,7 +179,7 @@ def update_schemes(directory, database, threads):
     profiling(outdir, indir, database, threads, 0)
     profile = pd.read_csv(os.path.join(outdir, 'profile.tsv'), sep='\t', index_col=0, low_memory=False)
     isolates = profile.shape[1]
-    new_schemes = dict(map(lambda rows: (rows[0], (rows[1].notna().sum())), profile.iterrows()))
+    new_schemes = {rows[0]: rows[1].notna().sum() for rows in profile.iterrows()}
 
     locus_meta = db.from_sql("select * from locus_meta;", database=database)
     locus_meta = locus_meta[locus_meta['locus_id'].isin(list(new_schemes))]
@@ -221,14 +214,19 @@ def annotate_configs(input_dir, output_dir, logger=None, threads=8, training_fil
     genome_dir = os.path.join(output_dir, "Genomes")
     os.makedirs(genome_dir, exist_ok=True)
     contighandler = files.ContigHandler()
-    filenames = contighandler.new_format(input_dir, genome_dir)
+    contighandler.format(input_dir, genome_dir)
 
     logger.info("Annotating...")
     annotate_dir = os.path.join(output_dir, "Annotated")
     os.makedirs(annotate_dir, exist_ok=True)
-    c = [cmds.form_prokka_cmd(x, genome_dir, annotate_dir, training_file) for x in filenames]
+
+    prokka_cmd = []
+    for filename in os.listdir(genome_dir):
+        genome_file = os.path.join(genome_dir, filename)
+        outdir = os.path.join(annotate_dir, files.get_fileroot(filename))
+        prokka_cmd.append(cmds.form_prokka_cmd(genome_file=genome_file, outdir=outdir, training_file=training_file))
     with ProcessPoolExecutor(int(threads / 2)) as executor:
-        executor.map(cmds.execute_cmd, c)
+        executor.map(cmds.execute_cmd, prokka_cmd)
 
     logger.info("Moving protein CDS (.ffn) files...")
     ffn_dir = os.path.join(output_dir, "FFN")
@@ -266,11 +264,10 @@ def make_database(output_dir, drop_by_occur, logger=None, threads=2):
 
     logger.info("Collecting allele profiles and making allele frequencies and reference sequence...")
     ffn_dir = os.path.join(output_dir, "FFN")
-    profile_file = os.path.join(output_dir, "allele_profiles.tsv")
-    profiles, freq = collect_allele_info(profiles, ffn_dir)
+    freq = collect_allele_info(profiles, ffn_dir)
 
     logger.info("Checking duplicated loci by self-blastp...")
-    blastp_out_file, ref_length = reference_self_blastp(output_dir, freq, threads)
+    blastp_out_file = reference_self_blastp(output_dir, freq, threads)
 
     logger.info("Filter out high identity loci and drop loci which occurrence less than {}...".format(drop_by_occur))
     filtered_loci = filter_locus(blastp_out_file, total_isolates, drop_by_occur)
@@ -278,8 +275,6 @@ def make_database(output_dir, drop_by_occur, logger=None, threads=2):
 
     logger.info("Updating and saving profiles...")
     freq = {l: freq[l] for l in filtered_loci}
-    profiles = profiles[profiles.index.isin(filtered_loci)]
-    profiles.to_csv(profile_file, sep="\t")
 
     logger.info("Saving allele sequences...")
     refseqs = {locus: counter.most_common(1)[0][0] for locus, counter in freq.items()}

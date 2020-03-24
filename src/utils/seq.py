@@ -1,7 +1,5 @@
-import subprocess
-
 from Bio.Alphabet import generic_dna, generic_protein
-from Bio.Blast.Applications import NcbiblastpCommandline
+from Bio.Blast.Applications import NcbiblastpCommandline, NcbimakeblastdbCommandline
 from Bio.Seq import Seq
 from Bio.SeqRecord import SeqRecord
 from Bio.SeqIO import write
@@ -25,7 +23,8 @@ def save_records(seqs, filename):
 
 
 def compile_blastpdb(input_file, output_file):
-    subprocess.run(" ".join(["makeblastdb", "-in", input_file, "-dbtype", "prot", "-out", output_file]), shell=True)
+    makeblastdb = NcbimakeblastdbCommandline(input_file=input_file, dbtype="prot", out=output_file)
+    makeblastdb()
 
 
 def query_blastpdb(query, db_dir, output_file, cols, threads=2):
