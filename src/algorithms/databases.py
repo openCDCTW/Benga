@@ -214,14 +214,19 @@ def annotate_configs(input_dir, output_dir, logger=None, threads=8, training_fil
     genome_dir = os.path.join(output_dir, "Genomes")
     os.makedirs(genome_dir, exist_ok=True)
     contighandler = files.ContigHandler()
-    filenames = contighandler.new_format(input_dir, genome_dir)
+    contighandler.format(input_dir, genome_dir)
 
     logger.info("Annotating...")
     annotate_dir = os.path.join(output_dir, "Annotated")
     os.makedirs(annotate_dir, exist_ok=True)
-    c = [cmds.form_prokka_cmd(x, genome_dir, annotate_dir, training_file) for x in filenames]
+
+    prokka_cmd = []
+    for filename in os.listdir(genome_dir):
+        genome_file = os.path.join(genome_dir, filename)
+        outdir = os.path.join(annotate_dir, files.get_fileroot(filename))
+        prokka_cmd.append(cmds.form_prokka_cmd(genome_file=genome_file, outdir=outdir, training_file=training_file))
     with ProcessPoolExecutor(int(threads / 2)) as executor:
-        executor.map(cmds.execute_cmd, c)
+        executor.map(cmds.execute_cmd, prokka_cmd)
 
     logger.info("Moving protein CDS (.ffn) files...")
     ffn_dir = os.path.join(output_dir, "FFN")
