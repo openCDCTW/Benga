@@ -7,10 +7,10 @@ from src.utils import files
 def form_prokka_cmd(genome_file, outdir, training_file):
     prefix = files.get_fileroot(genome_file)
     if os.path.exists(training_file):
-        cmd = '--prefix {} --cpus 2 --outdir {} --prodigaltf {} --quiet {}'.format(prefix, outdir, training_file,
-                                                                                   genome_file)
+        cmd = 'prokka --prefix {} --cpus 2 --outdir {} --prodigaltf {} --quiet {}'.format(prefix, outdir, training_file,
+                                                                                          genome_file)
     else:
-        cmd = '--prefix {} --cpus 2 --outdir {} --quiet {}'.format(prefix, outdir, genome_file)
+        cmd = 'prokka --prefix {} --cpus 2 --outdir {} --quiet {}'.format(prefix, outdir, genome_file)
     return cmd
 
 
