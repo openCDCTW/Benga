@@ -14,14 +14,14 @@ from src.utils import files, cmds, operations, logs, seq
 from src.utils import db
 from src.utils.alleles import filter_duplicates
 
-
-MODELS_PATH = os.path.abspath(os.path.join("..", "..", 'models'))
+CURRENT_SCRIPT_DIRECTORY = os.path.dirname(os.path.realpath(__file__))
+MODELS_DIRECTORY = os.path.abspath(os.path.join(CURRENT_SCRIPT_DIRECTORY, "..", "..", 'models'))
 
 
 def identify_alleles(genome_file, outdir, model):
     """Identify CDS from the outcome of prodigal."""
     genome_id = files.get_fileroot(genome_file)
-    training_file = os.path.join(MODELS_PATH, model + '.trn')
+    training_file = os.path.join(MODELS_DIRECTORY, model + '.trn')
     outfile = os.path.join(outdir, genome_id + '.locus.fna')
     prodigal_cmd = cmds.form_prodigal_cmd(genome_file, outfile, training_file)
     cmds.execute_cmd(prodigal_cmd)
