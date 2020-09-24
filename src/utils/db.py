@@ -66,14 +66,15 @@ def to_sql(sql, args={}, database=None):
     engine.dispose()
 
 
-def table_to_sql(table, df, database=None, append=True):
+def table_to_sql(table, df, database=None):
     global DBCONFIG
     if database:
         DBCONFIG["database"] = database
-    if_exists = "append" if append else "fail"
     engine = create_engine(URL(**DBCONFIG))
     with engine.connect() as conn:
-        df.to_sql(table, conn, index=False, chunksize=3000, if_exists=if_exists)
+        data = [row.to_dict() for _, row in df.iterrows()]
+        query = postgresql.insert(Table(table, METADATA)).values(data).on_conflict_do_nothing()
+        conn.execute(query)
     engine.dispose()
 
 
