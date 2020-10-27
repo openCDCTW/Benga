@@ -45,6 +45,7 @@ def tracking(id, database, output_dir, profile_filename):
     accs = list(map(lambda x: x[0], top_n_dist))
     metadata = pd.DataFrame(nosql_client.fetch_attrib({'NCBIAccession': {'$in': accs}}, {'_id': 0, 'profile': 0}))
     metadata["Distance(Loci)"] = metadata['NCBIAccession'].map(distances)
+    metadata = metadata.sort_values("Distance(Loci)")
 
     mismatch = dict()
     profiles = []
