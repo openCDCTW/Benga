@@ -48,7 +48,7 @@ def tracking(id, database, output_dir, profile_filename):
 
     mismatch = dict()
     profiles = []
-    for doc in nosql_client.fetch_attrib({'NCBIAccession': {'$in': accs}}, {'_id': 0, 'profile': 1}):
+    for doc in nosql_client.fetch_attrib({'NCBIAccession': {'$in': accs}}, {'_id': 0, 'profile': 1, 'NCBIAccession': 1}):
         mismatch[doc['NCBIAccession']] = len(set(core_genome) - set(doc['profile']))
         profiles.append(pd.Series(doc['profile'], name=doc['NCBIAccession']))
     metadata["VoidLoci"] = metadata['NCBIAccession'].map(mismatch)
