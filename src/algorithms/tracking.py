@@ -4,42 +4,16 @@ import zipfile
 from src.utils import nosql
 
 
-def distance_against_all(query_profile, track, top_n=100):
-    distances = {}
-    for subject in track.find({}, {'_id': 0, 'BioSample': 1, 'profile': 1}):
-        subject_profile = subject["profile"]
-        same_loci = query_profile.keys() & subject_profile.keys()
-        diff_alleles_count = sum(map(lambda loci: query_profile[loci] != subject_profile[loci], same_loci))
-        diff_loci_count = len((query_profile.keys() | subject_profile.keys()) - same_loci)
-        distances[subject['BioSample']] = diff_alleles_count + diff_loci_count
-    top_n_dist = sorted(distances.items(), key=lambda x: x[1])[0:top_n]
-    return top_n_dist
+def genetic_distance(query, subject):
+    loci = set(query) | set(subject)
+    distance = sum(query.get(locus_id) != subject.get(locus_id) for locus_id in loci)
+    return distance
 
 
-def save_profiles(samples, track, pf_dir):
-    samples = list(map(lambda x: x[0], samples))
-    profiles = track.find({'BioSample': {'$in': samples}}, {'_id': 0, 'BioSample': 1, 'profile': 1})
+def save_profiles(profiles, pf_dir):
     for profile in profiles:
-        s = pd.Series(profile['profile'], name=profile['BioSample'])
-        s.to_csv(os.path.join(pf_dir, profile['BioSample'] + ".tsv"), sep="\t", header=True)
-
-
-def add_metadata(distances, track):
-    samples = list(map(lambda x: x[0], distances))
-    metadata = track.find({'BioSample': {'$in': samples}}, {'_id': 0, 'profile': 0})
-    metadata = pd.DataFrame(list(metadata))
-    metadata['Distance (loci)'] = metadata['BioSample'].map(dict(distances))
-    results = metadata.sort_values('Distance (loci)')
-    return results
-
-
-def calculate_distances(profile_filename, track):
-    query_profile = pd.read_csv(profile_filename, sep="\t", index_col=0, usecols=[0, 1])
-    query_profile = next(query_profile.iteritems())[1].dropna().to_dict()
-    distances = distance_against_all(query_profile, track)
-    results = add_metadata(distances, track)
-    results = results.fillna('')
-    return distances, results
+        outfile = os.path.join(pf_dir, profile.name + ".tsv")
+        profile.to_csv(outfile, sep="\t", header=True)
 
 
 def to_json(id, output_dir, results):
@@ -60,20 +34,38 @@ def to_zip(filename, results_file, prof_dir):
 
 
 def tracking(id, database, output_dir, profile_filename):
-    track_data, metadata_cols = nosql.get_dbtrack(database)
-    metadata_cols = metadata_cols.find_one()['template']
-    distances, results = calculate_distances(profile_filename, track_data)
-    results = results.reindex(metadata_cols, axis=1)
+    nosql_client = nosql.NoSQL(database_name=database)
+    core_genome = nosql_client.core_genome
+
+    profile = pd.read_csv(profile_filename, sep='\t', index_col=0, usecols=[0, 1])
+    query = profile.iloc[:, 0].dropna().to_dict()
+    distances = {doc["NCBIAccession"]: genetic_distance(query, doc["profile"])
+                 for doc in nosql_client.profilesIterator()}
+    top_n_dist = sorted(distances.items(), key=lambda x: x[1])[:100]
+    accs = list(map(lambda x: x[0], top_n_dist))
+    metadata = pd.DataFrame(nosql_client.fetch_attrib({'NCBIAccession': {'$in': accs}}, {'_id': 0, 'profile': 0}))
+    metadata["Distance(Loci)"] = metadata['NCBIAccession'].map(distances)
+
+    mismatch = dict()
+    profiles = []
+    for doc in nosql_client.fetch_attrib({'NCBIAccession': {'$in': accs}}, {'_id': 0, 'profile': 1}):
+        mismatch[doc['NCBIAccession']] = len(set(core_genome) - set(doc['profile']))
+        profiles.append(pd.Series(doc['profile'], name=doc['NCBIAccession']))
+    metadata["VoidLoci"] = metadata['NCBIAccession'].map(mismatch)
+    results = metadata.reindex(nosql_client.fields, axis=1).fillna("")
+
+    nosql_client.disconnect()
+
     results_json = to_json(id, output_dir, results)
 
     results_file = os.path.join(output_dir, id[0:8] + ".tsv")
     results.to_csv(results_file, sep="\t", index=False)
 
-    prof_dir = os.path.join(output_dir, "profiles")
-    os.makedirs(prof_dir, exist_ok=True)
-    save_profiles(distances, track_data, prof_dir)
+    pf_dir = os.path.join(output_dir, "profiles")
+    os.makedirs(pf_dir, exist_ok=True)
+    save_profiles(profiles, pf_dir)
 
     results_zip = os.path.join(output_dir, id[0:8] + '.zip')
-    to_zip(results_zip, results_file, prof_dir)
+    to_zip(results_zip, results_file, pf_dir)
 
     return results_json, results_zip
