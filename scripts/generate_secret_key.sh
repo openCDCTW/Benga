@@ -1,2 +1,0 @@
-#!/usr/bin/env bash
-export SECRET_KEY=$(python -c 'import random, string; result = "".join([random.SystemRandom().choice("{}{}{}".format(string.ascii_letters, string.digits, string.punctuation)) for i in range(50)]); print(result)')
