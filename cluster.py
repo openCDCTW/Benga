@@ -12,13 +12,6 @@ from matplotlib import rcParams
 from matplotlib.ticker import MaxNLocator, FuncFormatter
 
 
-def check_header(file):
-    with open(file, 'r') as handle:
-        header = next(handle).strip().split()
-        if header != ['locus_id', 'allele_id']:
-            raise ValueError
-
-
 @numba.jit(nopython=True, nogil=False)
 def squareform_matrix(X):
     """
@@ -162,12 +155,8 @@ def main():
     dfs = []
     for file in args.input:
         filename = os.path.splitext(os.path.basename(file))[0]
-        try:
-            check_header(file)
-            df = pd.read_csv(file, sep='\t', index_col=0, header=0, usecols=[0, 1], names=['locus_id', filename])
-            dfs.append(df)
-        except ValueError:
-            print(f"Can't parse file {file}")
+        df = pd.read_csv(file, sep='\t', index_col=0, header=0, usecols=[0, 1], names=['locus_id', filename])
+        dfs.append(df)
     profile = pd.concat(dfs, axis=1)
     dendrogram = Dendrogram(profile)
     dendrogram(show_node_info=True)
