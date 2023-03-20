@@ -1,0 +1,14 @@
+name: Benga
+channels:
+  - bioconda
+  - conda-forge
+  - defaults
+dependencies:
+  - biopython
+  - numba
+  - pandas
+  - fastcluster
+  - matplotlib
+  - prokka
+  - roary
+  - bcbio-gff

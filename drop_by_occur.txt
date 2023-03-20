@@ -1,4 +1,0 @@
-Salmonella	0.1
-Listeria	0.6
-Vibrio	0.6
-Klebsiella	0.3
