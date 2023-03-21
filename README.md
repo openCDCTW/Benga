@@ -11,10 +11,10 @@ Bacterial Epidemiology NGs Analysis (BENGA) framework and pipeline.
   * fastcluster
   * matplotlib
   * bcbio-gff
-* ncbi-blast
-* prodigal
-* prokka
-* roary
+* [ncbi-blast](https://blast.ncbi.nlm.nih.gov/doc/blast-help/downloadblastdata.html)
+* [prodigal](https://github.com/hyattpd/Prodigal)
+* [prokka](https://github.com/tseemann/prokka)
+* [roary](https://github.com/sanger-pathogens/Roary)
 
 # Usage
 ### ***cgMLST profiling***
