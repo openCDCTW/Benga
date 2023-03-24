@@ -55,7 +55,7 @@ class SQLiteDatabase:
 
 
 def syscall(cmd, stdout=False, stderr=False):
-    shell = True if isinstance(str, cmd) else False
+    shell = True if isinstance(cmd, str) else False
     if stdout is False:
         stdout_arg = subprocess.DEVNULL
     elif stdout is None:
