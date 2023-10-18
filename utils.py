@@ -95,5 +95,5 @@ def generate_record(record_id, sequence, translate=False):
     if isinstance(sequence, Seq) is False:
         sequence = Seq(sequence)
     if translate:
-        sequence = sequence.translate(table=11)
+        sequence = sequence.translate(table=11, cds=False)
     return SeqRecord(sequence, id=record_id)

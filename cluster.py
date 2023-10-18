@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 import os
-import argparse
+from pathlib import Path
 from collections import defaultdict
 import numba
 import pandas as pd
@@ -140,32 +140,19 @@ def make_newick(node, newick, parentdist, leaf_names):
         return newick
 
 
-def main():
-    parser = argparse.ArgumentParser('cgMLST profiles cluster with single linkage algorithm.')
-    parser.add_argument("-i", "--input", nargs='+',
-                        required=True,
-                        help="Path of cgMLST profile(s).")
-    parser.add_argument("-o", "--output_path",
-                        required=True,
-                        help="Path of output directory.")
-    args = parser.parse_args()
-
-    png_filename = os.path.join(args.output_path, 'dendrogram.png')
-    pdf_filename = os.path.join(args.output_path, 'dendrogram.pdf')
-    svg_filename = os.path.join(args.output_path, 'dendrogram.svg')
-    newick_filename = os.path.join(args.output_path, 'dendrogram.newick')
-    dfs = []
-    for file in args.input:
-        filename = os.path.splitext(os.path.basename(file))[0]
-        df = pd.read_csv(file, sep='\t', index_col=0, header=0, usecols=[0, 1], names=['locus_id', filename])
-        dfs.append(df)
-    profile = pd.concat(dfs, axis=1)
-    dendrogram = Dendrogram(profile)
-    dendrogram(show_node_info=True)
-    for filename in (png_filename, pdf_filename, svg_filename):
-        dendrogram.savefig(filename)
-    dendrogram.to_newick(newick_filename)
-
-
-if __name__ == '__main__':
-    main()
+def cluster(input_dir, output_dir):
+    input_files = list(Path(input_dir).iterdir())
+    png_file = os.path.join(output_dir, 'dendrogram.png')
+    pdf_file = os.path.join(output_dir, 'dendrogram.pdf')
+    svg_file = os.path.join(output_dir, 'dendrogram.svg')
+    nwk_file = os.path.join(output_dir, 'dendrogram.newick')
+    profiles = []
+    for f in input_files:
+        df = pd.read_csv(f, sep='\t', index_col=0, header=0, usecols=[0, 1], names=['locus_id', f.stem])
+        profiles.append(df)
+    profiles = pd.concat(profiles, axis=1)
+    dend = Dendrogram(profiles)
+    dend(show_node_info=True)
+    for file in (png_file, pdf_file, svg_file):
+        dend.savefig(file)
+    dend.to_newick(nwk_file)
