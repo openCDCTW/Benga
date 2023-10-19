@@ -2,6 +2,7 @@
 
 import os
 import sys
+import shutil
 import logging
 import argparse
 from pathlib import Path
@@ -11,8 +12,6 @@ from collections import Counter
 import pandas as pd
 from matplotlib import pyplot as plt
 from Bio import SeqIO
-from Bio.SeqRecord import SeqRecord
-from BCBio import GFF
 
 from utils import syscall, SQLiteDatabase, generate_record
 from profiling import profiling, filter_alignments, sequence_alignment, sequence_encoder
@@ -59,19 +58,9 @@ class LoggerFactory:
         return self._logger
 
 
-def find_all_assemblies(assemblies):
+def find_all_assemblies(dirpath):
     suffix = ('.fa', '.fna', '.fasta')
-    return [x for x in assemblies if x.is_file() and x.suffix in suffix]
-
-
-def clean_feature(src, dst):
-    with open(src) as in_handle, open(dst, 'w') as out_handle:
-        records = []
-        for record in GFF.parse(in_handle):
-            record.annotations = {}
-            record.features = [feature for feature in record.features if feature.type == 'CDS']
-            records.append(record)
-        GFF.write(records, out_handle, include_fasta=True)
+    return [x for x in dirpath.iterdir() if x.is_file() and x.suffix in suffix]
 
 
 def annotate(assembly, output_dir, prodigaltf, locus_tag):
@@ -81,7 +70,9 @@ def annotate(assembly, output_dir, prodigaltf, locus_tag):
     cmd = ['prokka', '--prefix', 'prokka', '--cpus', '1', '--locustag', locus_tag, '--outdir', output_dir, assembly]
     if prodigaltf:
         cmd += ["--prodigaltf", prodigaltf]
-    syscall(cmd, stdout=False)
+    p = syscall(cmd, stdout=False)
+    if p.returncode != 0:
+        print(f"Error: Can't annotate {assembly}.", file=sys.stderr)
 
 
 def batch_process(function, args_ls, processes):
@@ -97,9 +88,14 @@ def collect_gene_sequences(srcpath, outpath, gene_tag2id: dict):
     for i in srcpath.iterdir():
         record_dict = SeqIO.to_dict(SeqIO.parse(i / 'prokka.ffn', 'fasta'))
         for gene_tag, record in record_dict.items():
-            if gene_tag in gene_tag2id:
+            if gene_tag in gene_tag2id and not record.seq.count('N'):
                 with open(outpath / (gene_tag2id[gene_tag] + '.fa'), 'a') as handle:
                     handle.write(record.format('fasta'))
+
+
+def find_common_sequence(seqfile):
+    counter = Counter((record.seq for record in SeqIO.parse(seqfile, 'fasta')))
+    return counter.most_common()[0][0]
 
 
 def plot_genome_coverage(data, figure_path, core=95):
@@ -129,60 +125,67 @@ def check_dependency():
             logger.error(msg=f"Could not determine version of {program_name}")
             sys.exit(0)
         else:
-            # full_path = shutil.which(program_name)
+            full_path = shutil.which(program_name)
             version = child_process.stdout.strip()
             logger.info(msg=f"Using {program_name:10} | {version}")
 
 
-def main(input_files, output_path, threads, prodigaltf):
-    logfile = os.path.join(output_path, 'benga.log')
+def create(input_dir, output_dir, threads, prodigaltf):
+    logfile = os.path.join(output_dir, 'benga.log')
     logger_factory = LoggerFactory()
     logger_factory.addFileHandler(logfile)
     logger_factory.addConsoleHandler()
     logger = logger_factory.create()
     check_dependency()
-    all_assemblies = [Path(f) for f in input_files]
-    output_path = Path(output_path)
-    annot_dirname = output_path/'Annotated'
+    output_dir = Path(output_dir)
+    annot_dirname = output_dir / 'Annotated'
     annot_dirname.mkdir(exist_ok=True)
 
-    all_assemblies = find_all_assemblies(all_assemblies)
+    all_assemblies = find_all_assemblies(Path(input_dir))
     num_assemblies = len(all_assemblies)
     logger.info(f"Find {len(all_assemblies)} files")
     logger.info("Genomes annotation")
     args_ls = [(str(assembly), str(annot_dirname/assembly.stem), prodigaltf, assembly.stem) for assembly in all_assemblies]
     batch_process(annotate, args_ls, threads)
 
-    gff_dirname = output_path/'GFF'
+    gff_dirname = output_dir / 'GFF'
     gff_dirname.mkdir(exist_ok=True)
     for i in annot_dirname.iterdir():
         src = os.path.join(i, 'prokka.gff')
         dst = os.path.join(gff_dirname, i.name + '.gff')
-        clean_feature(src, dst)
+        shutil.copyfile(src, dst)
 
     logger.info("Gene cluster with roary")
-    roary_path = output_path/'roary'
-    syscall(f"roary -p {threads} -i 95 -s -f {roary_path} {gff_dirname/'*.gff'}")
+    roary_path = output_dir / 'roary'
+    syscall(f"roary -p {threads} -i 95 -v -s -f {roary_path} {gff_dirname/'*.gff'}", stdout=None, stderr=None)
 
-    gene_presence_absence = pd.read_csv(roary_path/"gene_presence_absence.csv", index_col=0, usecols=range(13))
-    gene_presence_absence.index = gene_presence_absence.index.str.replace(' ', '_')
+    gene_presence_absence = pd.read_csv(
+        roary_path/"gene_presence_absence.csv",
+        index_col=0, usecols=range(13), low_memory=False
+    )
+    gene_name2cluster_id = {gene: f"L{idx:05}" for idx, gene in enumerate(gene_presence_absence.index, 1)}
+    gene_presence_absence['gene_id'] = gene_presence_absence.index.map(gene_name2cluster_id)
     gene_frequency = dict(
-        zip(gene_presence_absence.index, gene_presence_absence['No. isolates'].div(num_assemblies).mul(100).round(2))
+        zip(gene_presence_absence['gene_id'], gene_presence_absence['No. isolates'].div(num_assemblies).mul(100).round(2))
     )
     gene_clusters = parse_clustered_proteins(os.path.join(roary_path, "clustered_proteins"))
-    gene_tag2id = {gene_tag: gene_id for gene_id, gene_cluster in gene_clusters.items() for gene_tag in gene_cluster}
+    gene_tag2id = {
+        gene_tag: gene_name2cluster_id[gene_id]
+        for gene_id, gene_cluster in gene_clusters.items()
+        for gene_tag in gene_cluster
+    }
 
     logger.info(f"Collect gene sequences.")
     gene_sequences = roary_path / 'gene_sequences'
     collect_gene_sequences(annot_dirname, gene_sequences, gene_tag2id)
-    rep_sequences = {}
-    for i in gene_sequences.iterdir():
-        rep_sequences[i.stem.replace(' ', '_')] = Counter((record.seq.ungap('-') for record in SeqIO.parse(i, 'fasta'))).most_common()[0][0]
-    rep_records = [
-        SeqRecord(gene_seq.translate(table=11, cds=True), id=gene_id)
-        for gene_id, gene_seq in rep_sequences.items()
+    representative_sequences = {seqfile.stem: find_common_sequence(seqfile) for seqfile in gene_sequences.iterdir()}
+    representative_records = [
+        generate_record(gene_id, gene_seq, True)
+        for gene_id, gene_seq in representative_sequences.items()
     ]
-    filter_result = filter_alignments(sequence_alignment(rep_records, rep_records, threads))
+    gene_presence_absence = gene_presence_absence[gene_presence_absence['gene_id'].isin(representative_sequences)]
+    # Some locus maybe not have representative sequence because allele is too less and has gaps.
+    filter_result = filter_alignments(sequence_alignment(representative_records, representative_records, threads))
     duplicated_genes = set()
     for qseqid, sseqid in filter_result:
         if gene_frequency[qseqid] > gene_frequency[sseqid]:
@@ -194,24 +197,21 @@ def main(input_files, output_path, threads, prodigaltf):
                 duplicated_genes.add(qseqid)
         else:
             duplicated_genes.add(sseqid)
-    logger.info(f"Removo {len(duplicated_genes)} fragmented loci.")
-    pangenome = gene_presence_absence.reindex(
-        gene_presence_absence.index[~gene_presence_absence.index.isin(duplicated_genes)])
+    logger.info(f"Removo {len(duplicated_genes)} duplicated loci.")
+    pangenome = gene_presence_absence[~gene_presence_absence['gene_id'].isin(duplicated_genes)]
     pangenome['occurrence'] = pangenome['No. isolates'].div(num_assemblies).mul(100).round(2)
-    pangenome['dna_seq'] = [str(rep_sequences[i]) for i in pangenome.index]
+    pangenome['dna_seq'] = [str(representative_sequences[i]) for i in pangenome['gene_id']]
 
-    pangenome['locus_id'] = [f'locus_{idx:05}' for idx, _ in enumerate(pangenome.index, 1)]
-
-    database = os.path.join(output_path, 'sqlite3.db')
+    database = os.path.join(output_dir, 'sqlite3.db')
     sqlite_db = SQLiteDatabase(database)
     sqlite_db.create_table()
-    sqlite_db.insert('scheme', zip(pangenome['locus_id'], pangenome['dna_seq']))
+    sqlite_db.insert('scheme', zip(pangenome['gene_id'], pangenome['dna_seq']))
     sqlite_db.insert(
         'alleles',
-        ((sequence_encoder(dna_seq), locus_id) for locus_id, dna_seq in zip(pangenome['locus_id'], pangenome['dna_seq']))
+        ((sequence_encoder(dna_seq), locus_id) for locus_id, dna_seq in zip(pangenome['gene_id'], pangenome['dna_seq']))
     )
 
-    profile_path = output_path/'Profile'
+    profile_path = output_dir / 'Profile'
     profile_path.mkdir(exist_ok=True)
 
     args_ls = []
@@ -226,38 +226,38 @@ def main(input_files, output_path, threads, prodigaltf):
         profile = pd.read_csv(x, sep='\t')
         counter.update(profile.dropna()['locus_id'])
 
-    pangenome['frequency'] = pangenome['locus_id'].map({locus_id: n for locus_id, n in counter.items()})
+    logger.info(f"Recalculate frequency of loci.")
+    pangenome['frequency'] = pangenome['gene_id'].map({locus_id: n for locus_id, n in counter.items()})
     pangenome['occurrence'] = pangenome['frequency'].div(num_assemblies).mul(100).round(2)
-    logger.info(f"Removo {pangenome['frequency'].isna().sum()} inflate loci.")
     pangenome = pangenome[pangenome['frequency'].notna()]
     pangenome = pangenome[['Annotation', 'frequency', 'occurrence', 'dna_seq']]
-    pangenome.to_csv(output_path/'pan_genome_info.txt', sep='\t', index=True)
+    pangenome.to_csv(output_dir / 'pan_genome_info.txt', sep='\t', index=True)
 
     plot_genome_coverage(
         pangenome['occurrence'],
-        output_path/'genome_coverage.png',
+        output_dir / 'genome_coverage.png',
     )
     plot_genome_coverage(
         pangenome[pangenome['occurrence'] > 5]['occurrence'],
-        output_path/'genome_coverage_5_prec.png',
+        output_dir / 'genome_coverage_5_prec.png',
     )
     logger.info(f"Down.")
 
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description="Create wgMLST scheme")
-    parser.add_argument("-i", "--input-files", nargs='+',
+    parser.add_argument("-i", "--input-dir",
                         required=True,
-                        help="Path of query assembly files.")
+                        help="Directory containing genomes.")
     parser.add_argument("-o", "--output-dir",
                         required=True,
-                        help="Path of output directory.")
+                        help="Output Directory.")
     parser.add_argument("--prodigaltf",
                         default='',
-                        help="Path of prodigal training file. default:''")
+                        help="Prodigal training file. default:''")
     parser.add_argument("-t", "--threads",
                         type=int,
                         default=2,
                         help="Number of threads. default: 2")
     args = parser.parse_args()
-    main(args.input_files, args.output_dir, args.threads, args.prodigaltf)
+    create(args.input_dir, args.output_dir, args.threads, args.prodigaltf)

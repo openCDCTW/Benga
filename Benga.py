@@ -1,77 +1,57 @@
-import argparse
+#!/usr/bin/env python3
+import click
+from profiling import profiling
+from create_scheme import create
+from extract_scheme import extract
+from cluster import cluster
 
 
+@click.group(context_settings={'help_option_names': ['-h', '--help'], 'show_default': True})
 def main():
-    parser = argparse.ArgumentParser(description="Bacterial Epidemiology NGs Analysis (BENGA) framework and pipeline.")
-    subparsers = parser.add_subparsers()
+    """Bacterial Epidemiology NGs Analysis (BENGA) framework and pipeline."""
 
-    profiling_parser = subparsers.add_parser("profiling", help="Convert genomce sequence to cgMLST profile.")
-    profiling_parser.add_argument(
-        "-i", "--input",
-        required=True,
-        help="Path of query genome."
-    )
-    profiling_parser.add_argument(
-        "-o", "--output",
-        required=True,
-        help="Path of output file."
-    )
-    profiling_parser.add_argument(
-        "-d", "--database",
-        required=True,
-        help="Path of core-genome MLST database."
-    )
-    profiling_parser.add_argument(
-        "--prodigaltf",
-        default='',
-        help="Path of prodigal training file. default: None"
-    )
-    profiling_parser.add_argument(
-        "-t", "--threads",
-        type=int,
-        default=1,
-        help="Number of threads. default: 1"
+
+@main.command("cgmlst_profiling")
+@click.option('-i', '--infile', type=click.Path(dir_okay=False), required=True, help='Path of genome.(FASTA)')
+@click.option('-o', '--outfile', required=True, help='Path of output file.(TSV)')
+@click.option('-d', '--database', required=True, help='Path of core-genome MLST database.')
+@click.option('--prodigaltf', default="", help='Prodigal training file')
+@click.option("-t", "--threads", type=int, default=1, help="Number of threads")
+def cgmlst_profiling(infile, outfile, database, prodigaltf, threads):
+    """Convert genomce sequence to cgMLST profile."""
+    profiling(
+        infile=infile, outfile=outfile, database=database, training_file=prodigaltf, threads=threads
     )
 
-    create_scheme_parser = subparsers.add_parser("create_scheme", help="Create wgMLST scheme.")
-    create_scheme_parser.add_argument(
-        "-i", "--input-files", nargs='+',
-        required=True,
-        help="Path of query assembly files."
-    )
-    create_scheme_parser.add_argument(
-        "-o", "--output-dir",
-        required=True,
-        help="Path of output directory."
-    )
-    create_scheme_parser.add_argument(
-        "--prodigaltf",
-        default='',
-        help="Path of prodigal training file. default:''"
-    )
-    create_scheme_parser.add_argument(
-        "-t", "--threads",
-        type=int,
-        default=2,
-        help="Number of threads. default: 2"
-    )
 
-    extract_scheme_parser = subparsers.add_parser("extract_scheme", help="Extract cgMLST scheme from wgMLST scheme.")
-    extract_scheme_parser.add_argument(
-        "-i", "--input", required=True, help="Path of future create_scheme.py output"
-    )
-    extract_scheme_parser.add_argument(
-        "-o", "--output", required=True, help="Path of sqlite database"
-    )
-    extract_scheme_parser.add_argument(
-        "-l", "--threshold", default=95, type=int,
-        help="Locus minimum occurrence (0-100)"
-    )
-    extract_scheme_parser.add_argument(
-        "--locus_tag", default="Locus",
-        help="Locus tag prefix (default = Locus)"
-    )
-    args = parser.parse_args()
+@main.command("create_scheme")
+@click.option('-i', '--input-dir', type=click.Path(exists=True), required=True,
+              help='Directory containing genomes.')
+@click.option("-o", "--output-dir", type=click.Path(), required=True, default="benga_output",
+              help="Output Directory")
+@click.option("--prodigaltf", type=click.File(), default='', help='Prodigal training file')
+@click.option("-t", "--threads", type=int, default=2, help="Number of threads")
+def create_scheme(input_dir, output_dir, prodigaltf, threads):
+    """Create wgMLST scheme"""
+    create(input_dir, output_dir, threads, prodigaltf)
+
+
+@main.command("extract_scheme")
+@click.option('-i', '--input-dir', required=True, help='Output directory of "create" command.')
+@click.option("-o", "--out-file", required=True, default='cgMLST_scheme', help="Output file of cgMLST scheme")
+@click.option("-l", "--threshold", default=95, type=click.FloatRange(0, 100), help="Locus minimum occurrence")
+@click.option("--locus_tag", default="Locus", help="Locus tag prefix")
+def extract_scheme(input_dir, out_file, threshold, locus_tag):
+    """Extract cgMLST scheme from wgMLST scheme."""
+    extract(input_dir, out_file, threshold, locus_tag)
+
+
+@main.command("cgmlst_cluster")
+@click.option('-i', '--input-dir', required=True, help='Directory containing cgMSLT profiles.')
+@click.option("-o", "--output-dir", required=True, default="cluster", help="Output Directory")
+def cgmlst_cluster(input_dir, output_dir):
+    """Cluster cgMLST profiles with single linkage algorithm."""
+    cluster(input_dir=input_dir, output_dir=output_dir)
 
 
 if __name__ == '__main__':
